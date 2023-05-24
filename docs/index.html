@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Payoneer Demo Shop</title>
+    <meta charset="utf-8"  />
+    <meta name="viewport" content="width=device-width">
+    <!-- Add script tag below here -->
+    <script type="text/javascript" src="https://resources.pi-nightly.integration.oscato.com/web/libraries/checkout-web-sdk/cards-component/cards-component.js"></script>
+</head>
+
+<body>
+     <header>
+        <img src="https://www.payoneer.com/wp-content/uploads/payoneer-new-white-logo.svg"></img>
+        <button onclick="handleToggleDarkModeClick()">Toggle dark mode</button>
+        <h2>Cards Demo</h2>
+     </header>
+     <main id="main-content">
+         <div class="checkout-page">
+            <div>
+                <h1>Checkout page</h1>
+             </div>
+             <div class="checkout-page-details">
+                <div class="payment-details">
+                    <h3>Personal Details</h3>
+                    <p>Alex Smith, alexsmith@gmail.com, +49 188299459</p>
+                    <button>Edit details</button>
+                    <hr>
+                    <h3>Shipping details</h3>
+                    <p>Bayern Street 5, 80336 Munich, Germany</p>
+                    <button>Edit details</button>
+                    <hr>
+                    <div id="component-container">
+                        <!-- Add cards-element below here -->
+                        <cards-component id="cards-form"></cards-component>
+                    </div>
+                    
+                </div>
+                <div class="cart-details-container">
+                <div class="cart-details">
+                    <h3>Shopping Cart</h3>
+                    <p>Black Notebook #1   Qty: 1 <b>$15</b></p>
+                    <hr>
+                    <p>Subtotal <b>$15</b></p>
+                    <p>Shipping <b>$0</b></p>
+                    <hr>
+                    <p>Total <b>$15</b></p>
+                </div>
+                </div>
+            </div>
+         </div>
+     </main>
+</body>
+
+<script>
+    function handleToggleDarkModeClick() {
+        const checkoutPage = document.getElementById("main-content");
+        checkoutPage.classList.toggle("dark-mode");
+    }
+
+    window.addEventListener("load", () => {
+
+            const listRequest = {
+                allowDelete:false,
+                callback: {
+                    cancelUrl: "https://optile.github.io/op-demo-shop/cancel/",
+                    notificationUrl: "https://dev.oscato.com/shop/notify.html",
+                    returnUrl: "https://optile.github.io/op-demo-shop/success/", 
+                    summaryUrl: "https://dev.oscato.com/shop/summary.html"
+                },
+                country: "DE",
+                customer: {
+                    email: "john.doe@example.com",
+                    number: "42"
+                },
+                integration: "DISPLAY_NATIVE",
+                payment: {
+                    amount:1.21,
+                    currency: "EUR",
+                    reference: "Shop 101/20-03-2016"
+                }, 
+                preselection: {
+                    direction:"CHARGE"
+                },
+                presetFirst: false,
+                style:{
+                    language:"en"
+                },
+                transactionId: "tr101",
+                updateOnly:false
+            }
+
+            const options = {
+                method: "POST",
+                body: JSON.stringify(listRequest)
+            }
+
+            fetch("https://api.pi-nightly.integration.oscato.com/demo/lists", options)
+            .then(res => res.json()).then(listResponse => {
+                document.getElementById("cards-form").listurl = listResponse?.links?.self;
+            });
+
+        });
+</script>
+
+
+<style>
+
+    body {
+        width: 100vw;
+        min-height: 100vh;
+        padding: 0;
+        margin: 0;
+        font-family: "Arial";
+        box-sizing: border-box;
+    }
+
+    header {
+        width: 100%;
+        min-height: 60px;
+        box-sizing: border-box;
+        background-color: black;
+        padding-left: 4rem;
+        padding-right: 4rem;
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    header img {
+        height: 30px;
+    }
+
+    header h2 {
+        margin-top: 0;
+        margin-bottom: 0;
+        color: white;
+    }
+
+    main {
+        display: flex;
+        box-sizing: border-box;
+        height: calc(100vh - 60px);
+    }
+
+    main.dark-mode {
+        background-color: rgb(39, 39, 39);
+    }
+
+    hr {
+        margin-top: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .checkout-page {
+        width: 100%;
+        max-width: 1000px;
+        margin-left: auto;
+        margin-right: auto;
+        box-sizing: border-box;
+    }
+
+    .checkout-page h1 {
+        width: 100%;
+        text-align: center;
+    }
+
+    .dark-mode h1 {
+        color: #1dff1d;
+    }
+
+    .checkout-page-details {
+        display: flex;
+        margin: 2rem;
+    }
+
+    .payment-details {
+        flex: 1;
+        padding: 2rem;
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .cart-details-container {
+        flex:1;
+    }
+
+    .cart-details {
+        padding: 2rem;
+        width: 100%;
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+        background-color: rgb(245, 245, 245);
+        box-sizing: border-box;
+    }
+
+    .dark-mode .payment-details {
+        color: #1dff1d;
+    }
+
+    .dark-mode .cart-details {
+        border: 1px solid #1dff1d;
+        color: #1dff1d;
+        background-color: rgb(39, 39, 39);
+    }
+
+    @media (max-width: 700px) {
+
+        .checkout-page-details {
+            flex-direction: column-reverse;
+        }
+
+        .payment-details {
+            width: auto;
+            padding: 0rem;
+        }
+
+        header {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+
+        header img {
+            height: 20px;
+        }
+
+        h2 {
+            font-size: 1.2rem;
+        }
+    }
+
+</style>
+</html>
