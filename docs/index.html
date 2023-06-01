@@ -34,7 +34,12 @@
                         <!-- Add cards-element below here -->
                         <cards-component id="cards-form"></cards-component>
                     </div>
-                    
+                    <div>
+                        <p>Or</p>
+                    </div>
+                    <div>
+                        <button class="redirect-button" onclick="handleStandaloneRedirectClick()">Hosted payment page</button>
+                    </div>
                 </div>
                 <div class="cart-details-container">
                 <div class="cart-details">
@@ -58,49 +63,73 @@
         checkoutPage.classList.toggle("dark-mode");
     }
 
+    function handleStandaloneRedirectClick() {
+        generateList("HOSTED").then(result => {
+            window.location.href = result?.redirect?.url;
+        });
+    }
+
     window.addEventListener("load", () => {
 
-            const listRequest = {
-                allowDelete:false,
-                callback: {
-                    cancelUrl: "https://optile.github.io/op-demo-shop/cancel/",
-                    notificationUrl: "https://dev.oscato.com/shop/notify.html",
-                    returnUrl: "https://optile.github.io/op-demo-shop/success/", 
-                    summaryUrl: "https://dev.oscato.com/shop/summary.html"
-                },
-                country: "DE",
-                customer: {
-                    email: "john.doe@example.com",
-                    number: "42"
-                },
-                integration: "DISPLAY_NATIVE",
-                payment: {
-                    amount: 15.00,
-                    currency: "EUR",
-                    reference: "Shop 101/20-03-2016"
-                }, 
-                preselection: {
-                    direction:"CHARGE"
-                },
-                presetFirst: false,
-                style:{
-                    language:"en"
-                },
-                transactionId: "tr101",
-                updateOnly:false
-            }
+     generateList("DISPLAY_NATIVE").then(result => {
+        document.getElementById("cards-form").listurl = result?.links?.self;        
+     });
 
-            const options = {
-                method: "POST",
-                body: JSON.stringify(listRequest)
-            }
+    });
 
+    function generateList(integrationType) {
+
+        const listRequest = {
+            allowDelete:false,
+            callback: {
+                cancelUrl: window.location.href + "failed.html",
+                notificationUrl: "https://dev.oscato.com/shop/notify.html",
+                returnUrl: window.location.href + "success.html",
+                summaryUrl: "https://dev.oscato.com/shop/summary.html"
+            },
+            country: "DE",
+            customer: {
+                email: "john.doe@example.com",
+                number: "42"
+            },
+            integration: integrationType,
+            payment: {
+                amount: 15.00,
+                currency: "EUR",
+                reference: "Shop 101/20-03-2016"
+            }, 
+            preselection: {
+                direction:"CHARGE"
+            },
+            presetFirst: false,
+            style:{
+                hostedVersion: "v5",
+                language:"en",
+                displayName: "My Store",
+                primaryColor: "#2196F3",
+                logoUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Payoneer_logo.svg/1024px-Payoneer_logo.svg.png",
+                backgroundType: "BACKGROUND_IMAGE",
+                backgroundColor: "#ff4700",
+                backgroundImageUrl: "https://www.payoneer.com/wp-content/uploads/world-map.jpg"
+            },
+            transactionId: "tr101",
+            updateOnly:false
+        }
+
+        const options = {
+            method: "POST",
+            body: JSON.stringify(listRequest)
+        }
+
+        return new Promise((resolve, reject) => {
             fetch("https://api.pi-nightly.integration.oscato.com/demo/lists", options)
             .then(res => res.json()).then(listResponse => {
-                document.getElementById("cards-form").listurl = listResponse?.links?.self;
-            });
+                resolve(listResponse);
+            }).catch(err => reject(err));
+        })
 
-        });
+        
+    }
 </script>
 
 
@@ -204,6 +233,24 @@
         border: 1px solid #1dff1d;
         color: #1dff1d;
         background-color: rgb(39, 39, 39);
+    }
+
+    .redirect-button {
+        color: rgb(255 255 255);
+        width: 100%;
+        border: none;
+        height: 44px;
+        font-size: 18px;
+        margin-top: 10px;
+        font-weight: bold;
+        border-radius: 4px;
+        letter-spacing: 0.46px;
+        background-color: rgb(0 0 0);
+    }
+
+    .redirect-button:hover {
+        cursor: pointer;
+        background-color: rgb(0 0 0 / 80%);
     }
 
     @media (max-width: 700px) {
