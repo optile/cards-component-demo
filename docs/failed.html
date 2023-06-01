@@ -61,7 +61,7 @@
     main {
         display: flex;
         box-sizing: border-box;
-        height: calc(100vh - 60px);
+        min-height: calc(100vh - 60px);
     }
 
     main.dark-mode {
@@ -84,6 +84,21 @@
     .checkout-page {
         width: 100%;
         text-align: center;
+    }
+
+    @media (max-width: 700px) {
+        header {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+
+        header img {
+            height: 20px;
+        }
+
+        h2 {
+            font-size: 1.2rem;
+        }
     }
 
 </style>
