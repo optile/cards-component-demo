@@ -57,6 +57,11 @@
                         <option value="tryotheraccount">Try other account</option>
                         <option value="tryothernetwork">Try other network</option>
                     </select>
+                    <p>Language</p>
+                    <select id="language" value="en">
+                        <option value="en">English</option>
+                        <option value="de">German</option>
+                    </select>
                 </div>
                 </div>
             </div>
@@ -65,6 +70,38 @@
 </body>
 
 <script>
+
+    window.addEventListener("load", () => {
+
+        const amount = getAmount();
+
+        const country = getCountry();
+
+        const language = getLanguage();
+
+        setOutcomeSelect();
+
+        setLanguageSelect();
+
+        document.getElementById("outcome").addEventListener("change", (event) => {
+            const params = new URLSearchParams(window.location.search);
+            params.set("paymentOutcome", event.target.value);
+            window.location.search = params.toString();
+        });
+
+        document.getElementById("language").addEventListener("change", (event) => {
+            const params = new URLSearchParams(window.location.search);
+            params.set("language", event.target.value);
+            window.location.search = params.toString();
+        });
+
+        generateList("DISPLAY_NATIVE", amount, country, language).then(result => {
+            document.getElementById("cards-form").listurl = result?.links?.self;
+            document.getElementById("button-container").style = "display: block;"        
+        });
+
+    });
+
     function handleToggleDarkModeClick() {
         const checkoutPage = document.getElementById("main-content");
         checkoutPage.classList.toggle("dark-mode");
@@ -73,34 +110,13 @@
     function handleStandaloneRedirectClick() {
         
         const amount = getAmount();
-
         const country = getCountry();
+        const language = getLanguage();
 
-        generateList("HOSTED", amount, country).then(result => {
+        generateList("HOSTED", amount, country, language).then(result => {
             window.location.href = result?.redirect?.url;
         });
     }
-
-    window.addEventListener("load", () => {
-
-        const amount = getAmount();
-
-        const country = getCountry();
-
-        setOutcomeSelect();
-
-        document.getElementById("outcome").addEventListener("change", (event) => {
-            const params = new URLSearchParams(window.location.search);
-            params.set("paymentOutcome", event.target.value);
-            window.location.search = params.toString();
-        });
-
-        generateList("DISPLAY_NATIVE", amount, country).then(result => {
-            document.getElementById("cards-form").listurl = result?.links?.self;
-            document.getElementById("button-container").style = "display: block;"        
-        });
-
-    });
 
     function setOutcomeSelect() {
         const params = new URLSearchParams(window.location.search);
@@ -110,9 +126,22 @@
         }
     }
 
+    function setLanguageSelect() {
+        const params = new URLSearchParams(window.location.search);
+        const language = params.get("language");
+        if(language) {
+            document.getElementById("language").value = language;
+        }
+    }
+
     function getCountry() {
         const params = new URLSearchParams(window.location.search);
         return (params.has("paymentOutcome") && params.get("paymentOutcome") === "abort") ? "SE" : "DE";
+    }
+
+    function getLanguage() {
+        const params = new URLSearchParams(window.location.search);
+        return params.has("language") ? params.get("language") : "en";
     }
    
     function getAmount() {
@@ -147,7 +176,7 @@
     }
 
 
-    function generateList(integrationType, amount, country) {
+    function generateList(integrationType, amount, country, language) {
 
         const listRequest = {
             allowDelete:false,
@@ -174,7 +203,7 @@
             presetFirst: false,
             style:{
                 hostedVersion: "v5",
-                language:"en",
+                language: language,
                 displayName: "My Store",
                 primaryColor: "#2196F3",
                 logoUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Payoneer_logo.svg/1024px-Payoneer_logo.svg.png",
