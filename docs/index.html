@@ -55,6 +55,7 @@
                         <option value="success">Success</option>
                         <option value="abort">Abort</option>
                         <option value="retry">Retry</option>
+                        <option value="3ds2">3DS2</option>
                         <option value="tryotheraccount">Try other account</option>
                         <option value="tryothernetwork">Try other network</option>
                     </select>
@@ -161,6 +162,9 @@
                 break;
             case "retry":
                 amount = 1.03;
+                break;
+            case "3ds2":
+                amount = 1.23;
                 break;
             case "tryothernetwork":
                 amount = 1.20;
