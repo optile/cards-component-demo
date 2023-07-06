@@ -60,7 +60,7 @@
                         <option value="tryothernetwork">Try other network</option>
                     </select>
                     <p>Language</p>
-                    <select id="language" value="en">
+                    <select id="language">
                         <option value="zh">Chinese</option>
                         <option value="en">English</option>
                         <option value="fr">French</option>
@@ -142,6 +142,9 @@
         const language = params.get("language");
         if(language) {
             document.getElementById("language").value = language;
+        }
+        else {
+            document.getElementById("language").value = "en";
         }
     }
 
