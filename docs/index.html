@@ -12,8 +12,8 @@
 
 <body>
      <header>
-        <img src="https://www.payoneer.com/wp-content/uploads/payoneer-new-white-logo.svg"></img>
-        <!-- <button onclick="handleToggleDarkModeClick()">Toggle dark mode</button> -->
+        <img src="https://www.payoneer.com/wp-content/uploads/payoneer-white-logo.svg"></img>
+        <button id="toggle-dark" onclick="handleToggleDarkModeClick()">Dark mode</button>
         <h2>Cards Demo</h2>
      </header>
      <main id="main-content">
@@ -136,7 +136,7 @@
             window.location.search = params.toString();
         });
 
-        generateList("DISPLAY_NATIVE", amount, country, language).then(result => {
+        generateList("EMBEDDED", amount, country, language).then(result => {
             document.getElementById("cards-form").listurl = result?.links?.self;
             document.getElementById("button-container").style = "display: block;"        
         });
@@ -146,6 +146,21 @@
     function handleToggleDarkModeClick() {
         const checkoutPage = document.getElementById("main-content");
         checkoutPage.classList.toggle("dark-mode");
+        const cards = document.getElementById("cards-form");
+        if(checkoutPage.classList.contains("dark-mode")) {
+            cards.setStyles({
+                primaryColor: "#727bff",
+                primaryTextColor: "#000000"
+            })
+            document.getElementById("toggle-dark").innerHTML="Light mode"
+        }
+        else {
+            cards.setStyles({
+                primaryColor: null,
+                primaryTextColor: null
+            })
+            document.getElementById("toggle-dark").innerHTML="Dark mode"
+        }
     }
 
     function handleShowDemoCardsClick() {
@@ -313,6 +328,11 @@
         font-size: 1rem;
     }
 
+    button.dark-mode {
+        background-color:  #727bff;
+        color: #000000;
+    }
+
     select {
         padding: 0.5rem;
         font-size: 1rem;
@@ -372,7 +392,7 @@
     }
 
     .dark-mode h1 {
-        color: #1dff1d;
+        color:  #727bff;
     }
 
     .checkout-page-details {
@@ -401,12 +421,12 @@
     }
 
     .dark-mode .payment-details {
-        color: #1dff1d;
+        color: #727bff;
     }
 
     .dark-mode .cart-details {
-        border: 1px solid #1dff1d;
-        color: #1dff1d;
+        border: 1px solid #727bff;
+        color:  #727bff;
         background-color: rgb(39, 39, 39);
     }
 
@@ -460,6 +480,11 @@
         border-radius: 4px;
         letter-spacing: 0.46px;
         background-color: rgb(0 0 0);
+    }
+
+    .dark-mode .redirect-button {
+        background-color:  #727bff;
+        color: #000000;
     }
 
     .redirect-button:hover {
