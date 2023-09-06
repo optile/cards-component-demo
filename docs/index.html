@@ -163,6 +163,10 @@
             })
         });
 
+        const numbers = document.getElementsByClassName("demo-card-number");
+        console.log(numbers)
+        Array.from(numbers).forEach(element => element.addEventListener("click", copyToClipboard));
+
         generateList("EMBEDDED", amount, country, language).then(result => {
             document.getElementById("cards-form").listurl = result?.links?.self;
             document.getElementById("button-container").style = "display: block;"        
@@ -213,6 +217,18 @@
         generateList("HOSTED", amount, country, language).then(result => {
             window.location.href = result?.redirect?.url;
         });
+    }
+
+    function copyToClipboard(event) {
+        const element = event.target;
+        const text = element.textContent;
+        navigator.clipboard.writeText(text);
+        element.style.backgroundColor = "#6dd18c";
+        element.innerHTML = "Copied"
+        setTimeout(() => {
+            element.style.backgroundColor = "#e9e9e9";
+            element.innerHTML = text;
+        }, 2000)
     }
 
     function setOutcomeSelect() {
@@ -496,6 +512,11 @@
         background-color: #e9e9e9;
         border: 1px solid gray;
         text-align: center;
+    }
+
+    .demo-card-number:hover {
+        cursor: pointer;
+        background-color: #f8f7f7;
     }
 
     .close-button-container {
