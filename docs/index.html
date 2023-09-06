@@ -103,6 +103,16 @@
                         <option value="sv">Swedish</option>
                         <option value="th">Thai</option>
                     </select>
+                    <div class="color-controls">
+                        <div>
+                            <p>Pay button color</p>
+                            <input id="button-color-picker" value="#252526" id="color" type="color"></input>
+                        </div>
+                        <div>
+                            <p>Pay button text color</p>
+                            <input id="button-text-color-picker" value="#ffffff" id="color" type="color"></input>
+                        </div>
+                    </div>
                 </div>
                 </div>
             </div>
@@ -134,6 +144,22 @@
             const params = new URLSearchParams(window.location.search);
             params.set("language", event.target.value);
             window.location.search = params.toString();
+        });
+
+        document.getElementById("button-color-picker").addEventListener("input", (event) => {
+            const newColor = event.target.value;
+            const cards = document.getElementById("cards-form");
+            cards.setStyles({
+                primaryColor: newColor
+            })
+        });
+
+        document.getElementById("button-text-color-picker").addEventListener("input", (event) => {
+            const newColor = event.target.value;
+            const cards = document.getElementById("cards-form");
+            cards.setStyles({
+                primaryTextColor: newColor
+            })
         });
 
         generateList("EMBEDDED", amount, country, language).then(result => {
@@ -428,6 +454,12 @@
         border: 1px solid #727bff;
         color:  #727bff;
         background-color: rgb(39, 39, 39);
+    }
+
+    .color-controls {
+        display: flex;
+        width: 100%;
+        justify-content: space-between;
     }
 
     .demo-cards-container {
