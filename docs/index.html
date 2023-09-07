@@ -67,8 +67,7 @@
                         <cards-component id="cards-form"></cards-component>
                     </div>
                     <div id="button-container" style="display: none;">
-                        <p>Or</p>
-                        <button class="redirect-button" onclick="handleStandaloneRedirectClick()">Hosted payment page</button>
+                        <button class="redirect-button" onclick="handleStandaloneRedirectClick()">Proceed to payment</button>
                     </div>
                 </div>
                 <div class="cart-details-container">
@@ -76,12 +75,22 @@
                     <h3>Shopping Cart</h3>
                     <p>Black Notebook #1   Qty: 1 <b>$15</b></p>
                     <hr>
-                    <p>Subtotal <b>$15</b></p>
-                    <p>Shipping <b>$0</b></p>
-                    <hr>
                     <p>Total <b>$15</b></p>
                     <hr>
-                    <p>Payment outcome</p>
+                    <h4>Integration</h4>
+                    <form id="integration-form">
+                    <div class="option-controls">
+                        <div class="option-control-container">
+                            <input type="radio" id="embedded" name="integration" value="embedded" checked />
+                            <label for="embedded">Embedded</label>
+                        </div>
+                        <div class="option-control-container">
+                            <input type="radio" id="hosted" name="integration" value="hosted" />
+                            <label for="hosted">Hosted</label>
+                        </div>
+                    </div>
+                    </form>
+                    <h4>Payment outcome</h4>
                     <select id="outcome" value="success">
                         <option value="success">Success</option>
                         <option value="abort">Abort</option>
@@ -90,7 +99,7 @@
                         <option value="tryotheraccount">Try other account</option>
                         <option value="tryothernetwork">Try other network</option>
                     </select>
-                    <p>Language</p>
+                    <h4>Language</h4>
                     <select id="language">
                         <option value="zh">Chinese</option>
                         <option value="en">English</option>
@@ -104,13 +113,14 @@
                         <option value="sv">Swedish</option>
                         <option value="th">Thai</option>
                     </select>
-                    <div class="color-controls">
-                        <div>
-                            <p>Pay button color</p>
+                    <h4>Styling</h4>
+                    <div class="option-controls">
+                        <div class="option-control-container">
+                            <p>Primary color</p>
                             <input id="button-color-picker" value="#252526" id="color" type="color"></input>
                         </div>
-                        <div>
-                            <p>Pay button text color</p>
+                        <div class="option-control-container">
+                            <p>Primary text color</p>
                             <input id="button-text-color-picker" value="#ffffff" id="color" type="color"></input>
                         </div>
                     </div>
@@ -124,6 +134,8 @@
 <script>
 
     window.addEventListener("DOMContentLoaded", () => {
+
+        document.getElementById("embedded").checked = true;
 
         const amount = getAmount();
 
@@ -163,16 +175,33 @@
             })
         });
 
+        document.getElementById("embedded").addEventListener("change", (event) => {
+            handleSelectEmbedded()
+        });
+
+        document.getElementById("hosted").addEventListener("change", (event) => {
+            handleSelectHosted()
+        });
+
         const numbers = document.getElementsByClassName("demo-card-number");
-        console.log(numbers)
+
         Array.from(numbers).forEach(element => element.addEventListener("click", copyToClipboard));
 
         generateList("EMBEDDED", amount, country, language).then(result => {
             document.getElementById("cards-form").listurl = result?.links?.self;
-            document.getElementById("button-container").style = "display: block;"        
         });
 
     });
+
+    function handleSelectHosted() {
+        document.getElementById("button-container").style = "display: block;"
+        document.getElementById("component-container").style = "display: none;"
+    }
+
+    function handleSelectEmbedded() {
+        document.getElementById("button-container").style = "display: none;"
+        document.getElementById("component-container").style = "display: block;"
+    }
 
     function handleToggleDarkModeClick() {
         const checkoutPage = document.getElementById("main-content");
@@ -405,6 +434,16 @@
         color: white;
     }
 
+    h4 {
+        margin-top: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+
+    p {
+        margin-top: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+
     main {
         display: flex;
         box-sizing: border-box;
@@ -473,10 +512,14 @@
         background-color: rgb(39, 39, 39);
     }
 
-    .color-controls {
+    .option-controls {
         display: flex;
         width: 100%;
         justify-content: space-between;
+    }
+
+    .option-control-container {
+        flex: 1;
     }
 
     .demo-cards-container {
