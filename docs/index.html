@@ -113,15 +113,17 @@
                         <option value="sv">Swedish</option>
                         <option value="th">Thai</option>
                     </select>
-                    <h4>Styling</h4>
-                    <div class="option-controls">
-                        <div class="option-control-container">
-                            <p>Primary color</p>
-                            <input id="button-color-picker" value="#252526" id="color" type="color"></input>
-                        </div>
-                        <div class="option-control-container">
-                            <p>Primary text color</p>
-                            <input id="button-text-color-picker" value="#ffffff" id="color" type="color"></input>
+                    <div id="styling-options">
+                        <h4>Styling</h4>
+                        <div class="option-controls">
+                            <div class="option-control-container">
+                                <div>Primary color</div>
+                                <input id="button-color-picker" value="#252526" id="color" type="color"></input>
+                            </div>
+                            <div class="option-control-container">
+                                <div>Primary text color</div>
+                                <input id="button-text-color-picker" value="#ffffff" id="color" type="color"></input>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -176,11 +178,11 @@
         });
 
         document.getElementById("embedded").addEventListener("change", (event) => {
-            handleSelectEmbedded()
+            handleSelectEmbedded();
         });
 
         document.getElementById("hosted").addEventListener("change", (event) => {
-            handleSelectHosted()
+            handleSelectHosted();
         });
 
         const numbers = document.getElementsByClassName("demo-card-number");
@@ -196,11 +198,13 @@
     function handleSelectHosted() {
         document.getElementById("button-container").style = "display: block;"
         document.getElementById("component-container").style = "display: none;"
+        document.getElementById("styling-options").style = "display: none;"
     }
 
     function handleSelectEmbedded() {
         document.getElementById("button-container").style = "display: none;"
         document.getElementById("component-container").style = "display: block;"
+        document.getElementById("styling-options").style = "display: block;"
     }
 
     function handleToggleDarkModeClick() {
@@ -435,13 +439,23 @@
     }
 
     h4 {
-        margin-top: 0.75rem;
-        margin-bottom: 0.75rem;
+        margin-top: 1rem;
+        margin-bottom: 1rem;
     }
 
     p {
         margin-top: 0.75rem;
         margin-bottom: 0.75rem;
+    }
+
+    input[type="radio"] {
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    input[type="color"] {
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
     }
 
     main {
@@ -479,7 +493,6 @@
 
     .checkout-page-details {
         display: flex;
-        margin: 2rem;
     }
 
     .payment-details {
