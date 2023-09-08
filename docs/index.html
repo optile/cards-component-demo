@@ -3,28 +3,34 @@
 
 <head>
     <title>Payoneer Cards Demo</title>
-    <link rel="shortcut icon" type="image/png" href="https://www.payoneer.com/wp-content/themes/payo/assets/img/favicons/favicon-32x32.png">
-    <meta charset="utf-8"  />
+    <link rel="shortcut icon" type="image/png"
+        href="public/favicon-32x32.png">
+    <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width">
     <meta name="format-detection" content="telephone=no" />
+    <link rel="stylesheet" href="styles.css">
+    <script type="text/javascript" src="index.js"></script>
     <!-- Add script tag below here -->
-    <script defer type="text/javascript" src="https://resources.pi-nightly.integration.oscato.com/web/libraries/checkout-web-sdk/cards-component/cards-component.js"></script>
+    <script type="text/javascript"
+        src="https://resources.pi-nightly.integration.oscato.com/web/libraries/checkout-web-sdk/cards-component/cards-component.js"></script>
 </head>
 
 <body>
-     <header>
-        <img src="https://www.payoneer.com/wp-content/uploads/payoneer-white-logo.svg"></img>
+    <header>
+        <img src="public/payoneer-white-logo.svg"></img>
         <!-- <button id="toggle-dark" onclick="handleToggleDarkModeClick()">Dark mode</button>-->
         <h2>Cards Demo</h2>
-     </header>
-     <main id="main-content">
-         <div class="demo-cards-container">
+    </header>
+    <main id="main-content">
+        <div class="demo-cards-container">
             <button id="demo-show" class="demo-cards-button" onclick="handleShowDemoCardsClick()">
                 <div>Demo card numbers</div>
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-credit-card" viewBox="0 0 16 16">
-                    <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm2-1a1 1 0 0 0-1 1v1h14V4a1 1 0 0 0-1-1H2zm13 4H1v5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V7z"/>
-                    <path d="M2 10a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-1z"/>
-                  </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                    class="bi bi-credit-card" viewBox="0 0 16 16">
+                    <path
+                        d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4zm2-1a1 1 0 0 0-1 1v1h14V4a1 1 0 0 0-1-1H2zm13 4H1v5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V7z" />
+                    <path d="M2 10a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-1z" />
+                </svg>
             </button>
             <div id="demo-cards" class="demo-cards" style="display: none;">
                 <div class="close-button-container">
@@ -34,25 +40,31 @@
                 <table>
                     <tr>
                         <td>Mastercard</td>
-                        <td><div class="demo-card-number">5444 4444 4444 4445</div></td>
+                        <td>
+                            <div class="demo-card-number">5444 4444 4444 4445</div>
+                        </td>
                     </tr>
                     <tr>
                         <td>Visa</td>
-                        <td><div class="demo-card-number">4444 3333 2222 1111</div></td>
+                        <td>
+                            <div class="demo-card-number">4444 3333 2222 1111</div>
+                        </td>
                     </tr>
                     <tr>
                         <td>Amex</td>
-                        <td><div class="demo-card-number">3434 3434 3434 343</div></td>
+                        <td>
+                            <div class="demo-card-number">3434 3434 3434 343</div>
+                        </td>
                     </tr>
                 </table>
                 <p>Remaining card details can be any value that passes validation</p>
             </div>
-         </div>
-         <div class="checkout-page">
+        </div>
+        <div class="checkout-page">
             <div>
                 <h1>Checkout page</h1>
-             </div>
-             <div class="checkout-page-details">
+            </div>
+            <div class="checkout-page-details">
                 <div class="payment-details">
                     <h3>Personal Details</h3>
                     <p>Alex Smith, alexsmith@example.com, +49 188299459</p>
@@ -67,577 +79,72 @@
                         <cards-component id="cards-form"></cards-component>
                     </div>
                     <div id="button-container" style="display: none;">
-                        <button class="redirect-button" onclick="handleStandaloneRedirectClick()">Proceed to payment</button>
+                        <button class="redirect-button" onclick="handleStandaloneRedirectClick()">Proceed to
+                            payment</button>
                     </div>
                 </div>
                 <div class="cart-details-container">
-                <div class="cart-details">
-                    <h3>Shopping Cart</h3>
-                    <p>Black Notebook #1   Qty: 1 <b>$15</b></p>
-                    <hr>
-                    <p>Total <b>$15</b></p>
-                    <hr>
-                    <h4>Integration</h4>
-                    <form id="integration-form">
-                    <div class="option-controls">
-                        <div class="option-control-container">
-                            <input type="radio" id="embedded" name="integration" value="embedded" checked />
-                            <label for="embedded">Embedded</label>
-                        </div>
-                        <div class="option-control-container">
-                            <input type="radio" id="hosted" name="integration" value="hosted" />
-                            <label for="hosted">Hosted</label>
+                    <div class="cart-details">
+                        <h3>Shopping Cart</h3>
+                        <p>Black Notebook #1 Qty: 1 <b>$15</b></p>
+                        <hr>
+                        <p>Total <b>$15</b></p>
+                        <hr>
+                        <h4>Integration</h4>
+                        <form id="integration-form">
+                            <div class="option-controls">
+                                <div class="option-control-container">
+                                    <input type="radio" id="embedded" name="integration" value="embedded" checked />
+                                    <label for="embedded">Embedded</label>
+                                </div>
+                                <div class="option-control-container">
+                                    <input type="radio" id="hosted" name="integration" value="hosted" />
+                                    <label for="hosted">Hosted</label>
+                                </div>
+                            </div>
+                        </form>
+                        <h4>Payment outcome</h4>
+                        <select id="outcome" value="success">
+                            <option value="success">Success</option>
+                            <option value="abort">Abort</option>
+                            <option value="retry">Retry</option>
+                            <option value="3ds2">3DS2</option>
+                            <option value="tryotheraccount">Try other account</option>
+                            <option value="tryothernetwork">Try other network</option>
+                        </select>
+                        <h4>Language</h4>
+                        <select id="language">
+                            <option value="zh">Chinese</option>
+                            <option value="en">English</option>
+                            <option value="fr">French</option>
+                            <option value="de">German</option>
+                            <option value="el">Greek</option>
+                            <option value="ja">Japanese</option>
+                            <option value="ro">Romanian</option>
+                            <option value="ru">Russian</option>
+                            <option value="es">Spanish</option>
+                            <option value="sv">Swedish</option>
+                            <option value="th">Thai</option>
+                        </select>
+                        <div id="styling-options">
+                            <h4>Styling</h4>
+                            <div class="option-controls">
+                                <div class="option-control-container">
+                                    <div>Primary color</div>
+                                    <input id="button-color-picker" value="#252526" id="color" type="color"></input>
+                                </div>
+                                <div class="option-control-container">
+                                    <div>Primary text color</div>
+                                    <input id="button-text-color-picker" value="#ffffff" id="color"
+                                        type="color"></input>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    </form>
-                    <h4>Payment outcome</h4>
-                    <select id="outcome" value="success">
-                        <option value="success">Success</option>
-                        <option value="abort">Abort</option>
-                        <option value="retry">Retry</option>
-                        <option value="3ds2">3DS2</option>
-                        <option value="tryotheraccount">Try other account</option>
-                        <option value="tryothernetwork">Try other network</option>
-                    </select>
-                    <h4>Language</h4>
-                    <select id="language">
-                        <option value="zh">Chinese</option>
-                        <option value="en">English</option>
-                        <option value="fr">French</option>
-                        <option value="de">German</option>
-                        <option value="el">Greek</option>
-                        <option value="ja">Japanese</option>
-                        <option value="ro">Romanian</option>
-                        <option value="ru">Russian</option>
-                        <option value="es">Spanish</option>
-                        <option value="sv">Swedish</option>
-                        <option value="th">Thai</option>
-                    </select>
-                    <div id="styling-options">
-                        <h4>Styling</h4>
-                        <div class="option-controls">
-                            <div class="option-control-container">
-                                <div>Primary color</div>
-                                <input id="button-color-picker" value="#252526" id="color" type="color"></input>
-                            </div>
-                            <div class="option-control-container">
-                                <div>Primary text color</div>
-                                <input id="button-text-color-picker" value="#ffffff" id="color" type="color"></input>
-                            </div>
-                        </div>
-                    </div>
-                </div>
                 </div>
             </div>
-         </div>
-     </main>
+        </div>
+    </main>
 </body>
 
-<script>
-
-    window.addEventListener("DOMContentLoaded", () => {
-
-        document.getElementById("embedded").checked = true;
-
-        const amount = getAmount();
-
-        const country = getCountry();
-
-        const language = getLanguage();
-
-        setOutcomeSelect();
-
-        setLanguageSelect();
-
-        document.getElementById("outcome").addEventListener("change", (event) => {
-            const params = new URLSearchParams(window.location.search);
-            params.set("paymentOutcome", event.target.value);
-            window.location.search = params.toString();
-        });
-
-        document.getElementById("language").addEventListener("change", (event) => {
-            const params = new URLSearchParams(window.location.search);
-            params.set("language", event.target.value);
-            window.location.search = params.toString();
-        });
-
-        document.getElementById("button-color-picker").addEventListener("input", (event) => {
-            const newColor = event.target.value;
-            const cards = document.getElementById("cards-form");
-            cards.setStyles({
-                primaryColor: newColor
-            })
-        });
-
-        document.getElementById("button-text-color-picker").addEventListener("input", (event) => {
-            const newColor = event.target.value;
-            const cards = document.getElementById("cards-form");
-            cards.setStyles({
-                primaryTextColor: newColor
-            })
-        });
-
-        document.getElementById("embedded").addEventListener("change", (event) => {
-            handleSelectEmbedded();
-        });
-
-        document.getElementById("hosted").addEventListener("change", (event) => {
-            handleSelectHosted();
-        });
-
-        const numbers = document.getElementsByClassName("demo-card-number");
-
-        Array.from(numbers).forEach(element => element.addEventListener("click", copyToClipboard));
-
-        generateList("EMBEDDED", amount, country, language).then(result => {
-            document.getElementById("cards-form").listurl = result?.links?.self;
-        });
-
-    });
-
-    function handleSelectHosted() {
-        document.getElementById("button-container").style = "display: block;"
-        document.getElementById("component-container").style = "display: none;"
-        document.getElementById("styling-options").style = "display: none;"
-    }
-
-    function handleSelectEmbedded() {
-        document.getElementById("button-container").style = "display: none;"
-        document.getElementById("component-container").style = "display: block;"
-        document.getElementById("styling-options").style = "display: block;"
-    }
-
-    function handleToggleDarkModeClick() {
-        const checkoutPage = document.getElementById("main-content");
-        checkoutPage.classList.toggle("dark-mode");
-        const cards = document.getElementById("cards-form");
-        if(checkoutPage.classList.contains("dark-mode")) {
-            cards.setStyles({
-                primaryColor: "#727bff",
-                primaryTextColor: "#000000"
-            })
-            document.getElementById("toggle-dark").innerHTML="Light mode"
-        }
-        else {
-            cards.setStyles({
-                primaryColor: null,
-                primaryTextColor: null
-            })
-            document.getElementById("toggle-dark").innerHTML="Dark mode"
-        }
-    }
-
-    function handleShowDemoCardsClick() {
-        const button = document.getElementById("demo-show");
-        button.style = "display: none;"
-        const demoCards = document.getElementById("demo-cards");
-        demoCards.style = "display: block;"
-    }
-
-    function handleHideDemoCardsClick() {
-        const button = document.getElementById("demo-show");
-        button.style = "display: flex;"
-        const demoCards = document.getElementById("demo-cards");
-        demoCards.style = "display: none;"
-    }
-
-    function handleStandaloneRedirectClick() {
-        
-        const amount = getAmount();
-        const country = getCountry();
-        const language = getLanguage();
-
-        generateList("HOSTED", amount, country, language).then(result => {
-            window.location.href = result?.redirect?.url;
-        });
-    }
-
-    function copyToClipboard(event) {
-        const element = event.target;
-        const text = element.textContent;
-        navigator.clipboard.writeText(text);
-        element.style.backgroundColor = "#6dd18c";
-        element.innerHTML = "Copied"
-        setTimeout(() => {
-            element.style.backgroundColor = "#e9e9e9";
-            element.innerHTML = text;
-        }, 2000)
-    }
-
-    function setOutcomeSelect() {
-        const params = new URLSearchParams(window.location.search);
-        const paymentOutcome = params.get("paymentOutcome");
-        if(paymentOutcome) {
-            document.getElementById("outcome").value = paymentOutcome;
-        }
-    }
-
-    function setLanguageSelect() {
-        const params = new URLSearchParams(window.location.search);
-        const language = params.get("language");
-        if(language) {
-            document.getElementById("language").value = language;
-        }
-        else {
-            document.getElementById("language").value = "en";
-        }
-    }
-
-    function getCountry() {
-        const params = new URLSearchParams(window.location.search);
-        return (params.has("paymentOutcome") && params.get("paymentOutcome") === "abort") ? "SE" : "DE";
-    }
-
-    function getLanguage() {
-        const params = new URLSearchParams(window.location.search);
-        return params.has("language") ? params.get("language") : "en";
-    }
-   
-    function getAmount() {
-        const params = new URLSearchParams(window.location.search);
-
-        const paymentOutcome = params.get("paymentOutcome") ? params.get("paymentOutcome") : null;
-
-        let amount;
-
-        switch(paymentOutcome) {
-            case "success":
-                amount = 15.00;
-                break;
-            case "abort":
-                amount = 15.00;
-                break;
-            case "retry":
-                amount = 1.03;
-                break;
-            case "3ds2":
-                amount = 1.23;
-                break;
-            case "tryothernetwork":
-                amount = 1.20;
-                break;
-            case "tryotheraccount":
-                amount = 1.21;
-                break;
-            default:
-                amount = 15.00;
-                break;
-        }
-
-        return amount;
-    }
-
-
-    function generateList(integrationType, amount, country, language) {
-
-        const listRequest = {
-            allowDelete:false,
-            callback: {
-                cancelUrl: "https://optile.github.io/cards-component-demo/failed.html",
-                notificationUrl: "https://dev.oscato.com/shop/notify.html",
-                returnUrl: "https://optile.github.io/cards-component-demo/success.html",
-                summaryUrl: "https://dev.oscato.com/shop/summary.html"
-            },
-            country: country,
-            customer: {
-                email: "john.doe@example.com",
-                number: "42"
-            },
-            integration: integrationType,
-            payment: {
-                amount: amount,
-                currency: "EUR",
-                reference: "Shop 101/20-03-2016"
-            }, 
-            preselection: {
-                direction:"CHARGE",
-                networkCodes: [
-                    "AMEX", "VISA", "MASTERCARD"
-                ]
-            },
-            presetFirst: false,
-            style:{
-                hostedVersion: "v5",
-                language: language,
-                displayName: "My Store",
-                primaryColor: "#2196F3",
-                logoUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Payoneer_logo.svg/1024px-Payoneer_logo.svg.png",
-                backgroundType: "BACKGROUND_IMAGE",
-                backgroundColor: "#ff4700",
-                backgroundImageUrl: "https://www.payoneer.com/wp-content/uploads/world-map.jpg"
-            },
-            transactionId: "tr101",
-            updateOnly:false
-        }
-
-        const options = {
-            method: "POST",
-            body: JSON.stringify(listRequest)
-        }
-
-        return new Promise((resolve, reject) => {
-            fetch("https://api.pi-nightly.integration.oscato.com/demo/lists", options)
-            .then(res => res.json()).then(listResponse => {
-                resolve(listResponse);
-            }).catch(err => reject(err));
-        })
-
-        
-    }
-</script>
-
-
-<style>
-
-    body {
-        width: 100vw;
-        min-height: 100vh;
-        padding: 0;
-        margin: 0;
-        font-family: "Arial";
-        box-sizing: border-box;
-    }
-
-    button {
-        cursor: pointer;
-        padding: 0.5rem;
-        font-size: 1rem;
-    }
-
-    button.dark-mode {
-        background-color:  #727bff;
-        color: #000000;
-    }
-
-    select {
-        padding: 0.5rem;
-        font-size: 1rem;
-    }
-
-    header {
-        width: 100%;
-        min-height: 60px;
-        box-sizing: border-box;
-        background-color: black;
-        padding-left: 4rem;
-        padding-right: 4rem;
-        padding-top: 0.5rem;
-        padding-bottom: 0.5rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    header img {
-        height: 30px;
-    }
-
-    header h2 {
-        margin-top: 0;
-        margin-bottom: 0;
-        color: white;
-    }
-
-    h4 {
-        margin-top: 1rem;
-        margin-bottom: 1rem;
-    }
-
-    p {
-        margin-top: 0.75rem;
-        margin-bottom: 0.75rem;
-    }
-
-    input[type="radio"] {
-        margin-top: 0.5rem;
-        margin-bottom: 0.5rem;
-    }
-
-    input[type="color"] {
-        margin-top: 0.5rem;
-        margin-bottom: 0.5rem;
-    }
-
-    main {
-        display: flex;
-        box-sizing: border-box;
-        min-height: calc(100vh - 60px);
-        position: relative;
-        padding: 1rem;
-    }
-
-    main.dark-mode {
-        background-color: rgb(39, 39, 39);
-    }
-
-    hr {
-        margin-top: 2rem;
-        margin-bottom: 2rem;
-    }
-
-    .checkout-page {
-        width: 100%;
-        max-width: 1000px;
-        margin-left: auto;
-        margin-right: auto;
-        box-sizing: border-box;
-    }
-
-    .checkout-page h1 {
-        width: 100%;
-        text-align: center;
-    }
-
-    .dark-mode h1 {
-        color:  #727bff;
-    }
-
-    .checkout-page-details {
-        display: flex;
-    }
-
-    .payment-details {
-        flex: 1;
-        padding: 2rem;
-        margin-top: 1rem;
-        margin-bottom: 1rem;
-    }
-
-    .cart-details-container {
-        flex:1;
-    }
-
-    .cart-details {
-        padding: 2rem;
-        width: 100%;
-        margin-top: 1rem;
-        margin-bottom: 1rem;
-        background-color: rgb(245, 245, 245);
-        box-sizing: border-box;
-    }
-
-    .dark-mode .payment-details {
-        color: #727bff;
-    }
-
-    .dark-mode .cart-details {
-        border: 1px solid #727bff;
-        color:  #727bff;
-        background-color: rgb(39, 39, 39);
-    }
-
-    .option-controls {
-        display: flex;
-        width: 100%;
-        justify-content: space-between;
-    }
-
-    .option-control-container {
-        flex: 1;
-    }
-
-    .demo-cards-container {
-        position: fixed;
-        z-index: 1000;
-        right: 0.5rem;
-        bottom: 2rem;
-        max-width: 320px;
-    }
-
-    .demo-cards-button {
-        display: inline-flex;
-        gap: 5px;
-        align-items: center;
-        padding: 0.5rem;
-    }
-
-    .demo-cards {
-        padding: 1rem;
-        background-color: white;
-        border-radius: 4px;
-        border: 1px solid gray;
-    }
-
-    table {
-        table-layout: auto;
-        width: 100%;
-    }
-
-    .demo-card-number {
-        padding: 0.5rem;
-        border-radius: 4px;
-        background-color: #e9e9e9;
-        border: 1px solid gray;
-        text-align: center;
-    }
-
-    .demo-card-number:hover {
-        cursor: pointer;
-        background-color: #f8f7f7;
-    }
-
-    .close-button-container {
-        text-align: right;
-    }
-
-    .redirect-button {
-        color: rgb(255 255 255);
-        width: 100%;
-        border: none;
-        height: 44px;
-        font-size: 18px;
-        margin-top: 10px;
-        font-weight: bold;
-        border-radius: 4px;
-        letter-spacing: 0.46px;
-        background-color: rgb(0 0 0);
-    }
-
-    .dark-mode .redirect-button {
-        background-color:  #727bff;
-        color: #000000;
-    }
-
-    .redirect-button:hover {
-        cursor: pointer;
-        background-color: rgb(0 0 0 / 80%);
-    }
-
-    @media (max-width: 700px) {
-
-        .checkout-page-details {
-            flex-direction: column-reverse;
-        }
-
-        .payment-details {
-            width: auto;
-            padding: 0rem;
-        }
-
-        header {
-            padding-left: 1rem;
-            padding-right: 1rem;
-        }
-
-        header img {
-            height: 20px;
-        }
-
-        td {
-            padding-left: 0.125rem;
-            padding-right: 0.125rem;
-            font-size: 0.9rem;
-        }
-
-        h2 {
-            font-size: 1.2rem;
-        }
-
-        .demo-cards-container {
-            top: 1rem;
-            bottom: auto;
-        }
-    }
-
-</style>
 </html>
