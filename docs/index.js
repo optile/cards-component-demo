@@ -145,6 +145,7 @@ function copyToClipboard(event) {
     setTimeout(() => {
         element.style.backgroundColor = "#e9e9e9";
         element.innerHTML = text;
+        handleHideDemoCardsClick();
     }, 2000)
 }
 
