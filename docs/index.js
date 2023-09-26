@@ -242,7 +242,7 @@ function generateList(integrationType, amount, country, language) {
         preselection: {
             direction:"CHARGE",
             networkCodes: [
-                "AMEX", "VISA", "MASTERCARD"
+                "AMEX", "VISA", "MASTERCARD", "JCB"
             ]
         },
         presetFirst: false,
