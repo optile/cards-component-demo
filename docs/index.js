@@ -254,7 +254,7 @@ function generateList(integrationType, amount, country, language) {
             logoUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Payoneer_logo.svg/1024px-Payoneer_logo.svg.png",
             backgroundType: "BACKGROUND_IMAGE",
             backgroundColor: "#ff4700",
-            backgroundImageUrl: "https://www.payoneer.com/wp-content/uploads/world-map.jpg"
+            backgroundImageUrl: "https://optile.github.io/cards-component-demo/public/map.jpg"
         },
         transactionId: "tr101",
         updateOnly:false
