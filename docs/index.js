@@ -236,6 +236,8 @@ function generateList(integrationType, amount, country, language) {
         integration: integrationType,
         payment: {
             amount: amount,
+            netAmount: (amount-0.01),
+            taxAmount: 0.01,
             currency: "EUR",
             reference: "Shop 101/20-03-2016"
         }, 
