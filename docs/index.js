@@ -67,7 +67,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
     // Immediately generate an EMBEDDED list session for use by cards component
     generateList("EMBEDDED", amount, country, language).then(result => {
-        document.getElementById("cards-form").listurl = result?.links?.self;
+        document.getElementById("cards-form").listurl = result.links.self;
     });
 
 });
@@ -131,7 +131,7 @@ function handleStandaloneRedirectClick() {
     const language = getLanguage();
 
     generateList("HOSTED", amount, country, language).then(result => {
-        window.location.href = result?.redirect?.url;
+        window.location.href = result.redirect.url;
     });
 }
 
