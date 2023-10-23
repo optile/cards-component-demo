@@ -200,7 +200,7 @@ function getTheme() {
 // Returns hosted page style settings given a particular theme
 function getThemeSettings(theme, setting) {
     const payoneerSettings = {
-        displayName: "Garden Store",
+        displayName: "Payoneer Demo Store",
         primaryColor: "#2196F3",
         logoUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Payoneer_logo.svg/1024px-Payoneer_logo.svg.png",
         backgroundType: "BACKGROUND_IMAGE",
