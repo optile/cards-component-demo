@@ -200,7 +200,7 @@ function getTheme() {
 // Returns hosted page style settings given a particular theme
 function getThemeSettings(theme, setting) {
     const payoneerSettings = {
-        displayName: "Payoneer Demo Store",
+        displayName: "My Store",
         primaryColor: "#2196F3",
         logoUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Payoneer_logo.svg/1024px-Payoneer_logo.svg.png",
         backgroundType: "BACKGROUND_IMAGE",
@@ -209,7 +209,7 @@ function getThemeSettings(theme, setting) {
     }
 
     const gardenSettings = {
-        displayName: "Garden Store",
+        displayName: "Garden Pro",
         primaryColor: "#67a300",
         logoUrl: "https://optile.github.io/cards-component-demo/public/garden.png",
         backgroundType: "BACKGROUND_IMAGE",
