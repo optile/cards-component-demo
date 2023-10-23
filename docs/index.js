@@ -66,7 +66,7 @@ window.addEventListener("DOMContentLoaded", () => {
     Array.from(numbers).forEach(element => element.addEventListener("click", copyToClipboard));
 
     // Immediately generate an EMBEDDED list session for use by cards component
-    generateList("EMBEDDED", amount, country, language).then(result => {
+    generateList("EMBEDDED", amount, country, language, null).then(result => {
         document.getElementById("cards-form").listurl = result.links.self;
     });
 
@@ -77,6 +77,7 @@ function handleSelectHosted() {
     document.getElementById("button-container").style = "display: block;"
     document.getElementById("component-container").style = "display: none;"
     document.getElementById("styling-options").style = "display: none;"
+    document.getElementById("hosted-theme").style = "display: block;"
 }
 
 // Show styling options and only cards component
@@ -84,6 +85,7 @@ function handleSelectEmbedded() {
     document.getElementById("button-container").style = "display: none;"
     document.getElementById("component-container").style = "display: block;"
     document.getElementById("styling-options").style = "display: block;"
+    document.getElementById("hosted-theme").style = "display: none;"
 }
 
 // Secret function for toggling dark theme so we can check styling options support
@@ -129,8 +131,9 @@ function handleStandaloneRedirectClick() {
     const amount = getAmount();
     const country = getCountry();
     const language = getLanguage();
+    const theme = getTheme()
 
-    generateList("HOSTED", amount, country, language).then(result => {
+    generateList("HOSTED", amount, country, language, theme).then(result => {
         window.location.href = result.redirect.url;
     });
 }
@@ -182,6 +185,48 @@ function getLanguage() {
     return params.has("language") ? params.get("language") : "en";
 }
 
+function getTheme() {
+    if(document.getElementById("payoneer-theme").checked) {
+        return "payoneer"
+    }
+    else if(document.getElementById("garden-theme").checked) {
+        return "garden"
+    }
+    else {
+        console.error("Error fetching theme")
+    }
+}
+
+// Returns hosted page style settings given a particular theme
+function getThemeSettings(theme, setting) {
+    const payoneerSettings = {
+        displayName: "Garden Store",
+        primaryColor: "#2196F3",
+        logoUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Payoneer_logo.svg/1024px-Payoneer_logo.svg.png",
+        backgroundType: "BACKGROUND_IMAGE",
+        backgroundColor: "#ff4700",
+        backgroundImageUrl: "https://optile.github.io/cards-component-demo/public/map.jpg"
+    }
+
+    const gardenSettings = {
+        displayName: "Garden Store",
+        primaryColor: "#67a300",
+        logoUrl: "https://optile.github.io/cards-component-demo/public/garden.png",
+        backgroundType: "BACKGROUND_IMAGE",
+        backgroundColor: "#ff4700",
+        backgroundImageUrl: "https://unsplash.com/photos/4PG6wLlVag4/download?ixid=M3wxMjA3fDB8MXxzZWFyY2h8M3x8Z2FyZGVuaW5nfGVufDB8fHx8MTY5ODAwOTM4MXww&force=true&w=1920"
+    }
+
+    switch(theme) {
+        case "payoneer":
+            return payoneerSettings[setting];
+        case "garden":
+            return gardenSettings[setting];
+        default:
+            return payoneerSettings[setting];
+    } 
+}
+
 // Returns amount value based on query parameter (used for triggering different payment scenarios in TESTPSP)
 function getAmount() {
     const params = new URLSearchParams(window.location.search);
@@ -218,7 +263,7 @@ function getAmount() {
 }
 
 // List generator function which uses our unauthenticated pi-nightly list creation service for demo list sesssions
-function generateList(integrationType, amount, country, language) {
+function generateList(integrationType, amount, country, language, theme) {
 
     const listRequest = {
         allowDelete:false,
@@ -251,12 +296,12 @@ function generateList(integrationType, amount, country, language) {
         style:{
             hostedVersion: "v5",
             language: language,
-            displayName: "My Store",
-            primaryColor: "#2196F3",
-            logoUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Payoneer_logo.svg/1024px-Payoneer_logo.svg.png",
-            backgroundType: "BACKGROUND_IMAGE",
-            backgroundColor: "#ff4700",
-            backgroundImageUrl: "https://optile.github.io/cards-component-demo/public/map.jpg"
+            displayName: getThemeSettings(theme, "displayName"),
+            primaryColor: getThemeSettings(theme, "primaryColor"),
+            logoUrl: getThemeSettings(theme, "logoUrl"),
+            backgroundType: getThemeSettings(theme, "backgroundType"),
+            backgroundColor: getThemeSettings(theme, "backgroundColor"),
+            backgroundImageUrl: getThemeSettings(theme, "backgroundImageUrl"),
         },
         transactionId: "tr101",
         updateOnly:false

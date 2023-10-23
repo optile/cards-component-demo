@@ -212,6 +212,10 @@ table {
     background-color: rgb(0 0 0 / 80%);
 }
 
+.hosted-theme-chooser {
+    display: none;
+}
+
 @media (max-width: 700px) {
 
     .checkout-page-details {
