@@ -81,6 +81,7 @@ window.addEventListener("DOMContentLoaded", () => {
         // User can select primary color which sets background of pay button
         document.getElementById("button-color-picker").addEventListener("input", (event) => {
             const newColor = event.target.value;
+            const cards = document.getElementById("payoneer-cards-component");
             cards.setStyles({
                 primaryColor: newColor
             })
@@ -88,7 +89,8 @@ window.addEventListener("DOMContentLoaded", () => {
 
         // User can select primary text color which sets text color of pay button
         document.getElementById("button-text-color-picker").addEventListener("input", (event) => {
-            const newColor = event.target.value;s
+            const newColor = event.target.value;
+            const cards = document.getElementById("payoneer-cards-component");
             cards.setStyles({
                 primaryTextColor: newColor
             })
