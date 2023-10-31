@@ -32,23 +32,7 @@ window.addEventListener("DOMContentLoaded", () => {
         window.location.search = params.toString();
     });
 
-    // User can select primary color which sets background of pay button
-    document.getElementById("button-color-picker").addEventListener("input", (event) => {
-        const newColor = event.target.value;
-        const cards = document.getElementById("cards-form");
-        cards.setStyles({
-            primaryColor: newColor
-        })
-    });
-
-    // User can select primary text color which sets text color of pay button
-    document.getElementById("button-text-color-picker").addEventListener("input", (event) => {
-        const newColor = event.target.value;
-        const cards = document.getElementById("cards-form");
-        cards.setStyles({
-            primaryTextColor: newColor
-        })
-    });
+    
 
     // User can see embedded cards component
     document.getElementById("embedded").addEventListener("change", (event) => {
@@ -67,8 +51,49 @@ window.addEventListener("DOMContentLoaded", () => {
 
     // Immediately generate an EMBEDDED list session for use by cards component
     generateList("EMBEDDED", amount, country, language, null).then(result => {
-        document.getElementById("cards-form").listurl = result.links.self;
+        // document.getElementById("cards-form").listurl = result.links.self;
+        
+        // List id from my newly created list session
+        const listId = result.identification.longId;
+
+        // created a separate async function that I call with the list ID from the list session
+        initCheckoutWeb(listId)
+
     });
+
+    async function initCheckoutWeb(listId) {
+
+        // configurations for the Checkout Web SDK
+        const configs = {
+            env: "pi-nightly.integration", // test | live | int-env-name
+            listId: listId
+        }
+        
+        // Initialises the SDK
+        const checkout = await new Payoneer.CheckoutWeb(configs);
+
+        // Was expecting to provide an element id, but through trial and error I found it is the element reference
+        const container = document.getElementById("component-container")
+
+        // Cards form renders to page, but is not showing anything
+        const cards = checkout.dropIn("cards", {}).mount(container);
+
+        // User can select primary color which sets background of pay button
+        document.getElementById("button-color-picker").addEventListener("input", (event) => {
+            const newColor = event.target.value;
+            cards.setStyles({
+                primaryColor: newColor
+            })
+        });
+
+        // User can select primary text color which sets text color of pay button
+        document.getElementById("button-text-color-picker").addEventListener("input", (event) => {
+            const newColor = event.target.value;s
+            cards.setStyles({
+                primaryTextColor: newColor
+            })
+        });
+    }
 
 });
 
@@ -92,7 +117,7 @@ function handleSelectEmbedded() {
 function handleToggleDarkModeClick() {
     const checkoutPage = document.getElementById("main-content");
     checkoutPage.classList.toggle("dark-mode");
-    const cards = document.getElementById("cards-form");
+    const cards = document.getElementById("payoneer-cards-component");
     if(checkoutPage.classList.contains("dark-mode")) {
         cards.setStyles({
             primaryColor: "#727bff",
