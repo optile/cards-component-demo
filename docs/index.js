@@ -105,8 +105,12 @@ window.addEventListener("DOMContentLoaded", () => {
                     message.style = "display: flex;";
                     return new Promise((resolve) => {
                         setTimeout(() => {
-                            message.style = "display: none;";
-                            resolve(true);
+                            message.style = "background-color: green; display: flex;";
+                            message.innerHTML = "onBeforeCharge success! &#10003;"
+                            setTimeout(() => {
+                                message.style = "background-color: orange; display: none;";
+                                resolve(true);
+                            }, 1000)
                         }, 1000)
                     });
                 });
