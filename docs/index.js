@@ -95,6 +95,28 @@ window.addEventListener("DOMContentLoaded", () => {
                 primaryTextColor: newColor
             })
         });
+
+        function didCardsRender() {
+            const cardsElement = document.getElementById("payoneer-cards-component");
+            if(cardsElement) {
+                cardsElement.onBeforeCharge(async () => {
+                    console.log("On before charge called");
+                    const message = document.getElementById("on-before-charge-message");
+                    message.style = "display: flex;";
+                    return new Promise((resolve) => {
+                        setTimeout(() => {
+                            message.style = "display: none;";
+                            resolve(true);
+                        }, 1000)
+                    });
+                });
+            }
+            else {
+                setTimeout(didCardsRender, 50);
+            }
+        }
+
+        didCardsRender();
     }
 
 });

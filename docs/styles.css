@@ -216,6 +216,15 @@ table {
     display: none;
 }
 
+.on-before-charge-message {
+    background-color: orange;
+    color: white;
+    padding: 1rem;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
 @media (max-width: 700px) {
 
     .checkout-page-details {
