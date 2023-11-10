@@ -102,6 +102,7 @@ window.addEventListener("DOMContentLoaded", () => {
                 cardsElement.onBeforeCharge(async () => {
                     console.log("On before charge called");
                     const message = document.getElementById("on-before-charge-message");
+                    message.innerHTML = "Awaiting onBeforeCharge result..."
                     message.style = "display: flex;";
                     return new Promise((resolve) => {
                         setTimeout(() => {
