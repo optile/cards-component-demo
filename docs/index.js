@@ -54,19 +54,19 @@ window.addEventListener("DOMContentLoaded", () => {
         // document.getElementById("cards-form").listurl = result.links.self;
         
         // List id from my newly created list session
-        const listId = result.identification.longId;
+        const longId = result.identification.longId;
 
         // created a separate async function that I call with the list ID from the list session
-        initCheckoutWeb(listId)
+        initCheckoutWeb(longId)
 
     });
 
-    async function initCheckoutWeb(listId) {
+    async function initCheckoutWeb(longId) {
 
         // configurations for the Checkout Web SDK
         const configs = {
             env: "pi-nightly.integration", // test | live | int-env-name
-            listId: listId
+            longId: longId
         }
         
         // Initialises the SDK
