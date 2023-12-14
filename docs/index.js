@@ -6,6 +6,8 @@ window.addEventListener("DOMContentLoaded", () => {
     // Calculates payment amount based on payment outcome query parameter
     const amount = getAmount();
 
+    const isError = getError();
+
     // Sets country based on query parameter (used for triggering abort scenario with merchant risk rule)
     const country = getCountry();
 
@@ -54,7 +56,7 @@ window.addEventListener("DOMContentLoaded", () => {
         // document.getElementById("cards-form").listurl = result.links.self;
         
         // List id from my newly created list session
-        const longId = result.identification.longId;
+        const longId = isError ? "657af292bd2dx24c0a9cf07cl3jphnlp1iruhlio061evom047" : result.identification.longId;
 
         // created a separate async function that I call with the list ID from the list session
         initCheckoutWeb(longId)
@@ -110,9 +112,19 @@ window.addEventListener("DOMContentLoaded", () => {
                             message.innerHTML = "onBeforeCharge success! &#10003;"
                             setTimeout(() => {
                                 message.style = "background-color: orange; display: none;";
-                                resolve(true);
+                                resolve(false);
                             }, 1000)
                         }, 1000)
+                    });
+                });
+
+                cardsElement.onBeforeError(async(componentName, errorData) => {
+                    const message = document.getElementById("on-before-charge-message");
+                    message.innerHTML = "onBeforeError - custom error message"
+                    message.style = "background-color: red; display: flex;";
+                    return new Promise((resolve) => {
+                        cardsElement.removeComponent();
+                        resolve(false);
                     });
                 });
             }
@@ -233,6 +245,11 @@ function getCountry() {
     return (params.has("paymentOutcome") && params.get("paymentOutcome") === "abort") ? "SE" : "DE";
 }
 
+function getError() {
+    const params = new URLSearchParams(window.location.search);
+    return (params.has("paymentOutcome") && params.get("paymentOutcome") === "error") ? true : false;
+}
+
 // Returns language value based on query parameter
 function getLanguage() {
     const params = new URLSearchParams(window.location.search);
@@ -291,6 +308,9 @@ function getAmount() {
 
     switch(paymentOutcome) {
         case "success":
+            amount = 15.00;
+            break;
+        case "error":
             amount = 15.00;
             break;
         case "abort":
