@@ -162,6 +162,7 @@ hr {
 
 marquee {
     margin-bottom: 0.25rem;
+    color: gray;
 }
 
 .demo-cards {
