@@ -74,6 +74,9 @@ window.addEventListener("DOMContentLoaded", () => {
         // Initialises the SDK
         const checkout = await new Payoneer.CheckoutWeb(configs);
 
+        const availableComponents = checkout.availableDropInComponents();
+        document.getElementById("available-components").textContent =["Available components:"].concat(availableComponents.map(comp => comp.name)).join(" ");
+
         // Was expecting to provide an element id, but through trial and error I found it is the element reference
         const container = document.getElementById("component-container")
 
