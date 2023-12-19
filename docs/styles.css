@@ -160,6 +160,10 @@ hr {
     padding: 0.5rem;
 }
 
+marquee {
+    margin-bottom: 0.25rem;
+}
+
 .demo-cards {
     padding: 1rem;
     background-color: white;
