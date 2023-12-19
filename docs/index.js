@@ -147,6 +147,7 @@ function handleSelectHosted() {
     document.getElementById("component-container").style = "display: none;"
     document.getElementById("styling-options").style = "display: none;"
     document.getElementById("hosted-theme").style = "display: block;"
+    document.getElementById("available-components").style = "display: none;"
 }
 
 // Show styling options and only cards component
@@ -155,6 +156,7 @@ function handleSelectEmbedded() {
     document.getElementById("component-container").style = "display: block;"
     document.getElementById("styling-options").style = "display: block;"
     document.getElementById("hosted-theme").style = "display: none;"
+    document.getElementById("available-components").style = "display: block;"
 }
 
 // Secret function for toggling dark theme so we can check styling options support
