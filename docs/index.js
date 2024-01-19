@@ -68,14 +68,23 @@ window.addEventListener("DOMContentLoaded", () => {
         // configurations for the Checkout Web SDK
         const configs = {
             env: "pi-nightly.integration", // test | live | int-env-name
-            longId: longId
+            longId: longId,
+            onBeforeError: async(_checkout, componentName, errorData) => {
+                console.error(errorData);
+                const message = document.getElementById("on-before-charge-message");
+                message.innerHTML = `onBeforeError called in ${componentName}`;
+                message.style = "background-color: red; display: flex;";
+                return new Promise((resolve) => {
+                    resolve(false);
+                });
+            }
         }
         
         // Initialises the SDK
         const checkout = await new Payoneer.CheckoutWeb(configs);
 
         const availableComponents = checkout.availableDropInComponents();
-        document.getElementById("available-components").textContent =["Available components:"].concat(availableComponents.map(comp => comp.name)).join(" ");
+        document.getElementById("available-components").textContent =["Available components: "].concat(availableComponents.map(comp => comp.name)).join(" ");
 
         // Was expecting to provide an element id, but through trial and error I found it is the element reference
         const container = document.getElementById("component-container")
@@ -118,16 +127,6 @@ window.addEventListener("DOMContentLoaded", () => {
                                 resolve(true);
                             }, 1000)
                         }, 1000)
-                    });
-                });
-
-                cardsElement.onBeforeError(async(componentName, errorData) => {
-                    const message = document.getElementById("on-before-charge-message");
-                    message.innerHTML = "onBeforeError - custom error message"
-                    message.style = "background-color: red; display: flex;";
-                    return new Promise((resolve) => {
-                        cardsElement.removeComponent();
-                        resolve(false);
                     });
                 });
             }
