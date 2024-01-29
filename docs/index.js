@@ -71,11 +71,27 @@ window.addEventListener("DOMContentLoaded", () => {
             longId: longId,
             onBeforeError: async(_checkout, componentName, errorData) => {
                 console.error(errorData);
-                const message = document.getElementById("on-before-charge-message");
+                const message = document.getElementById("custom-override-message");
                 message.innerHTML = `onBeforeError called in ${componentName}`;
                 message.style = "background-color: red; display: flex;";
                 return new Promise((resolve) => {
                     resolve(false);
+                });
+            },
+            onBeforeCharge: async () => {
+                console.log("On before charge called");
+                const message = document.getElementById("custom-override-message");
+                message.innerHTML = "Awaiting onBeforeCharge result..."
+                message.style = "display: flex;";
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        message.style = "background-color: green; display: flex;";
+                        message.innerHTML = "onBeforeCharge success! &#10003;"
+                        setTimeout(() => {
+                            message.style = "background-color: orange; display: none;";
+                            resolve(true);
+                        }, 1000)
+                    }, 1000)
                 });
             }
         }
@@ -92,7 +108,7 @@ window.addEventListener("DOMContentLoaded", () => {
         // Cards form renders to page, but is not showing anything
         const cards = checkout.dropIn("cards", {}).mount(container);
 
-        // User can select primary color which sets background of pay button
+        // TODO - replace this with proper method when API available - User can select primary color which sets background of pay button
         document.getElementById("button-color-picker").addEventListener("input", (event) => {
             const newColor = event.target.value;
             const cards = document.getElementById("payoneer-cards-component");
@@ -101,7 +117,7 @@ window.addEventListener("DOMContentLoaded", () => {
             })
         });
 
-        // User can select primary text color which sets text color of pay button
+        // TODO - replace this with proper method when API available - User can select primary text color which sets text color of pay button
         document.getElementById("button-text-color-picker").addEventListener("input", (event) => {
             const newColor = event.target.value;
             const cards = document.getElementById("payoneer-cards-component");
@@ -109,33 +125,6 @@ window.addEventListener("DOMContentLoaded", () => {
                 primaryTextColor: newColor
             })
         });
-
-        function didCardsRender() {
-            const cardsElement = document.getElementById("payoneer-cards-component");
-            if(cardsElement) {
-                cardsElement.onBeforeCharge(async () => {
-                    console.log("On before charge called");
-                    const message = document.getElementById("on-before-charge-message");
-                    message.innerHTML = "Awaiting onBeforeCharge result..."
-                    message.style = "display: flex;";
-                    return new Promise((resolve) => {
-                        setTimeout(() => {
-                            message.style = "background-color: green; display: flex;";
-                            message.innerHTML = "onBeforeCharge success! &#10003;"
-                            setTimeout(() => {
-                                message.style = "background-color: orange; display: none;";
-                                resolve(true);
-                            }, 1000)
-                        }, 1000)
-                    });
-                });
-            }
-            else {
-                setTimeout(didCardsRender, 50);
-            }
-        }
-
-        didCardsRender();
     }
 
 });
