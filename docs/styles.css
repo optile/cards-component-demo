@@ -7,7 +7,7 @@ body {
     box-sizing: border-box;
 }
 
-button {
+.payment-details > button {
     cursor: pointer;
     padding: 0.5rem;
     font-size: 1rem;
@@ -80,8 +80,8 @@ main.dark-mode {
 }
 
 hr {
-    margin-top: 2rem;
-    margin-bottom: 2rem;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
 }
 
 .checkout-page {
@@ -110,6 +110,17 @@ hr {
     padding: 2rem;
     margin-top: 1rem;
     margin-bottom: 1rem;
+}
+
+.personal-details-section {
+    position: relative;
+}
+
+.personal-details-section > svg {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 10;
 }
 
 .cart-details-container {
@@ -229,6 +240,27 @@ table {
     align-items: center;
     justify-content: center;
     margin-bottom: 0.5rem;
+}
+
+.custom-pay-button  {
+    width: 100%; 
+    background: linear-gradient(to bottom right, #20dc86, #107447);
+    color: white; 
+    border: none; 
+    margin-top: 1rem;
+    height: 55px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border-radius: 10px;
+}
+
+.custom-pay-button:hover {
+    filter: brightness(1.2);
+    cursor: pointer;
+}
+
+.custom-pay-button:active {
+    filter: brightness(0.8);
 }
 
 @media (max-width: 700px) {

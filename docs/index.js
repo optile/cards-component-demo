@@ -3,6 +3,9 @@ window.addEventListener("DOMContentLoaded", () => {
     // Set the chosen integration to embedded by default
     document.getElementById("embedded").checked = true;
 
+    // Set the chosen payment button type to default option by default
+    
+
     // Calculates payment amount based on payment outcome query parameter
     const amount = getAmount();
 
@@ -13,6 +16,22 @@ window.addEventListener("DOMContentLoaded", () => {
 
     // Sets language based on query parameter
     const language = getLanguage();
+
+
+    // Sets pay button type
+    const payButtonType = getPayButtonType();
+
+    if(payButtonType === "default") {
+        document.getElementById("default-option").checked = true;
+    }
+    else if(payButtonType === "custom") {
+        document.getElementById("styling-options").style = "display: none";
+        document.getElementById("custom-pay-button-container").style = "display: block";
+        document.getElementById("custom-option").checked = true;
+    }
+    else {
+        document.getElementById("default-option").checked = true;
+    }
 
     // Update the select menu for outcome based on query param
     setOutcomeSelect();
@@ -38,12 +57,22 @@ window.addEventListener("DOMContentLoaded", () => {
 
     // User can see embedded cards component
     document.getElementById("embedded").addEventListener("change", (event) => {
-        handleSelectEmbedded();
+        handleSelectEmbedded(event);
     });
 
     // User can see button which redirects to hosted payment page
     document.getElementById("hosted").addEventListener("change", (event) => {
-        handleSelectHosted();
+        handleSelectHosted(event);
+    });
+
+    // Pay button is displayed inside cards component
+    document.getElementById("default-option").addEventListener("change", (event) => {
+        handleSelectDefaultPayButton(event);
+    });
+
+    // Pay button is displayed inside cards component
+    document.getElementById("custom-option").addEventListener("change", (event) => {
+        handleSelectCustomPayButton(event);
     });
 
     // User can copy a demo card number to paste into the card number input
@@ -106,7 +135,14 @@ window.addEventListener("DOMContentLoaded", () => {
         const container = document.getElementById("component-container")
 
         // Cards form renders to page, but is not showing anything
-        const cards = checkout.dropIn("cards", {}).mount(container);
+        const cards = checkout.dropIn("cards", {
+            hidePaymentButton: !(payButtonType === "default")
+        }).mount(container);
+
+        document.getElementById("custom-pay-button").addEventListener("click", (event) => {
+            event.preventDefault();
+            cards.pay();
+        });
 
         // TODO - replace this with proper method when API available - User can select primary color which sets background of pay button
         document.getElementById("button-color-picker").addEventListener("input", (event) => {
@@ -127,24 +163,40 @@ window.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // Hide styling options and show only redirect to hosted button
+    function handleSelectHosted() {
+        document.getElementById("button-container").style = "display: block;"
+        document.getElementById("component-container").style = "display: none;"
+        document.getElementById("styling-options").style = "display: none;"
+        document.getElementById("hosted-theme").style = "display: block;"
+        document.getElementById("available-components").style = "display: none;"
+        document.getElementById("custom-pay-button-container").style = "display: none;"
+        document.getElementById("payment-button-choice").style = "display: none;"
+    }
+
+    // Show styling options and only cards component
+    function handleSelectEmbedded() {
+        document.getElementById("button-container").style = "display: none;"
+        document.getElementById("component-container").style = "display: block;"
+        document.getElementById("styling-options").style = payButtonType === "default" ? "display: block;" : "display: none;";
+        document.getElementById("hosted-theme").style = "display: none;"
+        document.getElementById("available-components").style = "display: block;"
+        document.getElementById("custom-pay-button-container").style = payButtonType === "custom" ? "display: block;" : "display: none;";
+        document.getElementById("payment-button-choice").style = payButtonType === "custom" ? "display: block;" : "display: none;";
+    }
+
 });
 
-// Hide styling options and show only redirect to hosted button
-function handleSelectHosted() {
-    document.getElementById("button-container").style = "display: block;"
-    document.getElementById("component-container").style = "display: none;"
-    document.getElementById("styling-options").style = "display: none;"
-    document.getElementById("hosted-theme").style = "display: block;"
-    document.getElementById("available-components").style = "display: none;"
+function handleSelectDefaultPayButton(event) {
+    const params = new URLSearchParams(window.location.search);
+        params.set("payButtonType", event.target.value);
+        window.location.search = params.toString();
 }
 
-// Show styling options and only cards component
-function handleSelectEmbedded() {
-    document.getElementById("button-container").style = "display: none;"
-    document.getElementById("component-container").style = "display: block;"
-    document.getElementById("styling-options").style = "display: block;"
-    document.getElementById("hosted-theme").style = "display: none;"
-    document.getElementById("available-components").style = "display: block;"
+function handleSelectCustomPayButton(event) {
+    const params = new URLSearchParams(window.location.search);
+        params.set("payButtonType", event.target.value);
+        window.location.search = params.toString();
 }
 
 // Secret function for toggling dark theme so we can check styling options support
@@ -247,6 +299,11 @@ function getError() {
 function getLanguage() {
     const params = new URLSearchParams(window.location.search);
     return params.has("language") ? params.get("language") : "en";
+}
+
+function getPayButtonType() {
+    const params = new URLSearchParams(window.location.search);
+    return params.has("payButtonType") ? params.get("payButtonType") : "default";
 }
 
 function getTheme() {

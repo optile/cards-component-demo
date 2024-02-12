@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="styles.css">
     <script type="text/javascript" src="index.js"></script>
     <!-- Add script tag below here -->
-    <script type="text/javascript" src="https://resources.pi-nightly.integration.oscato.com/web/libraries/checkout-web/umd/checkout-web.min.js"></script>
+    <script type="text/javascript" src="http://localhost:8300/build/umd/checkout-web.js"></script>
 </head>
 
 <body>
@@ -65,15 +65,25 @@
             </div>
             <div class="checkout-page-details">
                 <div class="payment-details">
-                    <h3>Personal Details</h3>
-                    <p>Alex Smith, alexsmith@example.com, +49 188299459</p>
-                    <button>Edit details</button>
+                    <div class="personal-details-section">
+                        <h3>Personal Details</h3>
+                        <p>Alex Smith, alexsmith@example.com, +49 188299459</p>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
+                            <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+                            <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
+                        </svg>
+                    </div>
                     <hr>
+                    <div class="personal-details-section">
                     <h3>Shipping details</h3>
                     <p>Bayern Street 5, 80336 Munich, Germany</p>
-                    <button>Edit details</button>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
+                        <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+                        <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
+                      </svg>
+                    </div>
                     <hr>
-                    <div><marquee id="available-components"></marquee></div>
+                    <h3>Payment methods</h3>
                     <div id="custom-override-message" class="on-before-charge-message">Performing onBeforeCharge task</div>
                     <div id="component-container">
                         <!-- Add cards-element below here -->
@@ -91,6 +101,7 @@
                         <hr>
                         <p>Total <b>$15</b></p>
                         <hr>
+                        <div><marquee id="available-components"></marquee></div>
                         <h4>Integration</h4>
                         <form id="integration-form">
                             <div class="option-controls">
@@ -128,6 +139,21 @@
                             <option value="sv">Swedish</option>
                             <option value="th">Thai</option>
                         </select>
+                        <div id="payment-button-choice">
+                            <h4>Payment button type</h4>
+                            <form id="payment-button-choice-form">
+                                <div class="option-controls">
+                                    <div class="option-control-container">
+                                        <input type="radio" id="default-option" name="button-option" value="default" />
+                                        <label for="default-option">Default pay button</label>
+                                    </div>
+                                    <div class="option-control-container">
+                                        <input type="radio" id="custom-option" name="button-option" value="custom" />
+                                        <label for="custom-option">Custom pay button</label>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
                         <div id="styling-options">
                             <h4>Styling</h4>
                             <div class="option-controls">
@@ -142,17 +168,20 @@
                                 </div>
                             </div>
                         </div>
+                        <div id="custom-pay-button-container" style="display: none;">
+                            <button id="custom-pay-button" class="custom-pay-button">Pay</button>
+                        </div>
                         <div id="hosted-theme" class="hosted-theme-chooser">
                             <h4>Hosted page theme</h4>
                             <form id="hosted-theme-form">
                                 <div class="option-controls">
                                     <div class="option-control-container">
                                         <input type="radio" id="payoneer-theme" name="theme" value="payoneer" checked />
-                                        <label for="payoneer">Payoneer</label>
+                                        <label for="payoneer-theme">Payoneer</label>
                                     </div>
                                     <div class="option-control-container">
                                         <input type="radio" id="garden-theme" name="theme" value="garden" />
-                                        <label for="garden">Garden</label>
+                                        <label for="garden-theme">Garden</label>
                                     </div>
                                 </div>
                             </form>
