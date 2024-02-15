@@ -377,7 +377,7 @@ function setLanguageSelect() {
 // Returns country value based on query parameter
 function getCountry() {
     const params = new URLSearchParams(window.location.search);
-    return (params.has("paymentOutcome") && params.get("paymentOutcome") === "abort") ? "SE" : "DE";
+    return (params.has("paymentOutcome") && params.get("paymentOutcome") === "abort") ? "SE" : "US";
 }
 
 // Checks query params to see if error case was selected
@@ -493,14 +493,18 @@ function generateList(integrationType, amount, country, language, theme) {
         country: country,
         customer: {
             email: "john.doe@example.com",
-            number: "42"
+            number: "42",
+            name: {
+                firstName: "John",
+                lastName: "Doe"
+            }
         },
         integration: integrationType,
         payment: {
             amount: amount,
             netAmount: (amount-0.01),
             taxAmount: 0.01,
-            currency: "EUR",
+            currency: "USD",
             reference: "Shop 101/20-03-2016"
         }, 
         preselection: {
