@@ -155,7 +155,7 @@ hr {
 
 .payment-method-icon-container svg {
     height: 32px;
-    width: 32px;
+    width: 100%;
     fill: #858585;
 }
 
