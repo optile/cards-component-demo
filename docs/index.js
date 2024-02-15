@@ -67,6 +67,8 @@ window.addEventListener("DOMContentLoaded", async () => {
         showCardsPaymentMethod(true);
 
         const container = document.getElementById("component-container")
+
+        // Already drop in cards component so that it renders immediately
         const cards = checkout.dropIn("cards", {
             hidePaymentButton: !(payButtonType === "default")
         }).mount(container);
