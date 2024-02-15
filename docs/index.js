@@ -59,18 +59,17 @@ window.addEventListener("DOMContentLoaded", async () => {
     const availableComponents = checkout.availableDropInComponents();
     document.getElementById("available-components").textContent =["Available components: "].concat(availableComponents.map(comp => comp.name)).join(" ");
     
+    // Monitor selection of cards option in payment list
+    const cardsRadio = document.getElementById("card-radio");
+    const otherRadio = document.getElementById("other-radio");
+
     if(availableComponents.find(component => component.name === "cards")) {
         showCardsPaymentMethod(true);
-        showOtherPaymentMethod(true);
 
         const container = document.getElementById("component-container")
         const cards = checkout.dropIn("cards", {
             hidePaymentButton: !(payButtonType === "default")
         }).mount(container);
-
-        // Monitor selection of cards option in payment list
-        const cardsRadio = document.getElementById("card-radio");
-        const otherRadio = document.getElementById("other-radio");
 
         cardsRadio.addEventListener("change", (event) => {
             if(event.target.checked) {
@@ -82,6 +81,16 @@ window.addEventListener("DOMContentLoaded", async () => {
             }
         });
 
+        function customPayButtonListener(event) {
+            event.preventDefault();
+            if(cards) {
+                cards.pay();
+            }
+        }
+    }
+
+    if(availableComponents.find(component => component.name === "afterpay")) {
+        showOtherPaymentMethod(true);
         otherRadio.addEventListener("change", (event) => {
             if(event.target.checked) {
                 document.getElementById("custom-pay-button").removeEventListener("click", customPayButtonListener);
@@ -90,13 +99,9 @@ window.addEventListener("DOMContentLoaded", async () => {
                 showOtherPaymentComponent(true)
             }
         });
-
-        function customPayButtonListener(event) {
-            event.preventDefault();
-            if(cards) {
-                cards.pay();
-            }
-        }
+    }
+    else {
+        cardsRadio.click()
     }
 
     function showCardsPaymentMethod(boolean) {
