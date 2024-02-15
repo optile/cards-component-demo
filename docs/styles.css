@@ -149,6 +149,10 @@ hr {
     height: 32px;
 }
 
+.payment-method-icon-container.afterpay {
+    width: 64px;
+}
+
 .payment-method-icon-container svg {
     height: 32px;
     width: 32px;
