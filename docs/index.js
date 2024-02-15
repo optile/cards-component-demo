@@ -506,7 +506,7 @@ function generateList(integrationType, amount, country, language, theme) {
         preselection: {
             direction:"CHARGE",
             networkCodes: [
-                "AMEX", "VISA", "MASTERCARD", "JCB"
+                "AMEX", "VISA", "MASTERCARD", "JCB", "AFTERPAY"
             ]
         },
         presetFirst: false,
