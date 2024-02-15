@@ -112,6 +112,49 @@ hr {
     margin-bottom: 1rem;
 }
 
+.loading-bar {
+    width: 100%;
+    background-color: #ebebeb;
+    min-height: 45px;
+    border-radius: 5px;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.payment-method-select-container {
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 1rem;
+    border: 1px solid #b6b6b6;
+    padding: 0.5rem;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.payment-method-component-container {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    display: none;
+}
+
+.payment-method-select-container:hover {
+    cursor: pointer;
+}
+
+.payment-method-icon-container {
+    width: 32px;
+    height: 32px;
+}
+
+.payment-method-icon-container svg {
+    height: 32px;
+    width: 32px;
+    fill: #858585;
+}
+
 .personal-details-section {
     position: relative;
 }
@@ -120,7 +163,7 @@ hr {
     position: absolute;
     top: 1rem;
     right: 1rem;
-    z-index: 10;
+    z-index: 1;
 }
 
 .cart-details-container {
@@ -212,6 +255,7 @@ table {
     height: 44px;
     font-size: 18px;
     margin-top: 10px;
+    margin-bottom: 10px;
     font-weight: bold;
     border-radius: 4px;
     letter-spacing: 0.46px;

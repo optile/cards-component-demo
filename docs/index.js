@@ -1,15 +1,7 @@
-window.addEventListener("DOMContentLoaded", () => {
-
-    // Set the chosen integration to embedded by default
-    document.getElementById("embedded").checked = true;
-
-    // Set the chosen payment button type to default option by default
-    
+window.addEventListener("DOMContentLoaded", async () => {
 
     // Calculates payment amount based on payment outcome query parameter
     const amount = getAmount();
-
-    const isError = getError();
 
     // Sets country based on query parameter (used for triggering abort scenario with merchant risk rule)
     const country = getCountry();
@@ -17,9 +9,155 @@ window.addEventListener("DOMContentLoaded", () => {
     // Sets language based on query parameter
     const language = getLanguage();
 
+    // Sets whether there should be a list fetching error or not
+    const isError = getError();
 
     // Sets pay button type
     const payButtonType = getPayButtonType();
+
+    // Generate a list session
+    const listResult = await generateList("EMBEDDED", amount, country, language, null);
+
+    const longId = isError ? "657af292bd2dx24c0a9cf07cl3jphnlp1iruhlio061evom047" : listResult.identification.longId;
+
+    // configurations for the Checkout Web SDK
+    const configs = {
+        env: "pi-nightly.integration", // test | live | int-env-name
+        longId: longId,
+        preload: ["cards"], // loads cards script as soon as page loads so that rendering using dropIn is fast
+        onBeforeError: async(_checkout, componentName, errorData) => {
+            console.error("On before error called", errorData);
+            const message = document.getElementById("custom-override-message");
+            message.innerHTML = `onBeforeError called in ${componentName}`;
+            message.style = "background-color: red; display: flex;";
+            return new Promise((resolve) => {
+                resolve(false);
+            });
+        },
+        onBeforeCharge: async () => {
+            console.log("On before charge called");
+            const message = document.getElementById("custom-override-message");
+            message.innerHTML = "Awaiting onBeforeCharge result..."
+            message.style = "display: flex;";
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    message.style = "background-color: green; display: flex;";
+                    message.innerHTML = "onBeforeCharge success! &#10003;"
+                    setTimeout(() => {
+                        message.style = "background-color: orange; display: none;";
+                        resolve(true);
+                    }, 1000)
+                }, 1000)
+            });
+        }
+    }
+    
+    // Initialises the SDK
+    const checkout = await new Payoneer.CheckoutWeb(configs);
+
+    // Checks which dropin components are available based on the list response
+    const availableComponents = checkout.availableDropInComponents();
+    document.getElementById("available-components").textContent =["Available components: "].concat(availableComponents.map(comp => comp.name)).join(" ");
+    
+    if(availableComponents.find(component => component.name === "cards")) {
+        showCardsPaymentMethod(true);
+        showOtherPaymentMethod(true);
+
+        const container = document.getElementById("component-container")
+        const cards = checkout.dropIn("cards", {
+            hidePaymentButton: !(payButtonType === "default")
+        }).mount(container);
+
+        // Monitor selection of cards option in payment list
+        const cardsRadio = document.getElementById("card-radio");
+        const otherRadio = document.getElementById("other-radio");
+
+        cardsRadio.addEventListener("change", (event) => {
+            if(event.target.checked) {
+                showCardsPaymentComponent(true);
+                showCardsOptions(true);
+                // Adds a click event handler to the custom pay button that triggers payment in cards component
+                document.getElementById("custom-pay-button").addEventListener("click", customPayButtonListener);
+                showOtherPaymentComponent(false);
+            }
+        });
+
+        otherRadio.addEventListener("change", (event) => {
+            if(event.target.checked) {
+                document.getElementById("custom-pay-button").removeEventListener("click", customPayButtonListener);
+                showCardsPaymentComponent(false);
+                showCardsOptions(false);
+                showOtherPaymentComponent(true)
+            }
+        });
+
+        function customPayButtonListener(event) {
+            event.preventDefault();
+            if(cards) {
+                cards.pay();
+            }
+        }
+    }
+
+    function showCardsPaymentMethod(boolean) {
+        const cardsPaymentMethod = document.getElementById("cards-payment-method");
+        if(boolean) {
+            cardsPaymentMethod.style = "display: block;";
+        }
+        else {
+            cardsPaymentMethod.style = "display: none;";
+        }
+    }
+
+    function showCardsPaymentComponent(boolean) {
+        const cardsComponentContainer = document.getElementById("cards-container");
+        if(boolean) {
+            cardsComponentContainer.style = "display: block;";
+        }
+        else {
+            cardsComponentContainer.style = "display: none;";
+        }
+    }
+
+    function showCardsOptions(boolean) {
+        const cardsOptions = document.getElementById("cards-options");
+        if(boolean) {
+            cardsOptions.style = "display: block;";
+        }
+        else {
+            cardsOptions.style = "display: none;";
+        }
+    }
+
+    function showOtherPaymentMethod(boolean) {
+        const otherPaymentMethod = document.getElementById("other-payment-method");
+        if(boolean) {
+            otherPaymentMethod.style = "display: block;";
+        }
+        else {
+            otherPaymentMethod.style = "display: none;";
+        }
+    }
+
+    function showOtherPaymentComponent(boolean) {
+        const otherComponentContainer = document.getElementById("other-container");
+        if(boolean) {
+            otherComponentContainer.style = "display: block;";
+        }
+        else {
+            otherComponentContainer.style = "display: none;";
+        }
+    }
+
+    // Update the UI once the list response is received so that components become visible
+    document.getElementById("loading-message").style = "display: none;";
+    document.getElementById("payment-methods").style = "display: block;";
+
+
+    // Other setup tasks
+
+    // Set the chosen integration to embedded by default
+    document.getElementById("embedded").checked = true;
 
     if(payButtonType === "default") {
         document.getElementById("default-option").checked = true;
@@ -53,8 +191,6 @@ window.addEventListener("DOMContentLoaded", () => {
         window.location.search = params.toString();
     });
 
-    
-
     // User can see embedded cards component
     document.getElementById("embedded").addEventListener("change", (event) => {
         handleSelectEmbedded(event);
@@ -70,98 +206,25 @@ window.addEventListener("DOMContentLoaded", () => {
         handleSelectDefaultPayButton(event);
     });
 
-    // Pay button is displayed inside cards component
+    // Pay button is displayed underneath store options and hidden in cards component
     document.getElementById("custom-option").addEventListener("change", (event) => {
         handleSelectCustomPayButton(event);
     });
 
-    // User can copy a demo card number to paste into the card number input
-    const numbers = document.getElementsByClassName("demo-card-number");
+    //
+    setUpDemoCards()
 
-    Array.from(numbers).forEach(element => element.addEventListener("click", copyToClipboard));
+    // TODO - replace this with proper method when API available - User can select primary color which sets background of pay button
+    document.getElementById("button-color-picker").addEventListener("input", updatePayButtonBackgroundColor);
 
-    // Immediately generate an EMBEDDED list session for use by cards component
-    generateList("EMBEDDED", amount, country, language, null).then(result => {
-        // document.getElementById("cards-form").listurl = result.links.self;
-        
-        // List id from my newly created list session
-        const longId = isError ? "657af292bd2dx24c0a9cf07cl3jphnlp1iruhlio061evom047" : result.identification.longId;
+    // TODO - replace this with proper method when API available - User can select primary text color which sets text color of pay button
+    document.getElementById("button-text-color-picker").addEventListener("input", updatePayButtonTextColor);
 
-        // created a separate async function that I call with the list ID from the list session
-        initCheckoutWeb(longId)
-
+    // Generates a HOSTED list session and redirects when pay button is clicked in HOSTED scenario
+    document.getElementById("hosted-redirect-button").addEventListener("click", (event) => {
+        event.preventDefault();
+        handleStandaloneRedirectClick();
     });
-
-    async function initCheckoutWeb(longId) {
-
-        // configurations for the Checkout Web SDK
-        const configs = {
-            env: "pi-nightly.integration", // test | live | int-env-name
-            longId: longId,
-            onBeforeError: async(_checkout, componentName, errorData) => {
-                console.error(errorData);
-                const message = document.getElementById("custom-override-message");
-                message.innerHTML = `onBeforeError called in ${componentName}`;
-                message.style = "background-color: red; display: flex;";
-                return new Promise((resolve) => {
-                    resolve(false);
-                });
-            },
-            onBeforeCharge: async () => {
-                console.log("On before charge called");
-                const message = document.getElementById("custom-override-message");
-                message.innerHTML = "Awaiting onBeforeCharge result..."
-                message.style = "display: flex;";
-                return new Promise((resolve) => {
-                    setTimeout(() => {
-                        message.style = "background-color: green; display: flex;";
-                        message.innerHTML = "onBeforeCharge success! &#10003;"
-                        setTimeout(() => {
-                            message.style = "background-color: orange; display: none;";
-                            resolve(true);
-                        }, 1000)
-                    }, 1000)
-                });
-            }
-        }
-        
-        // Initialises the SDK
-        const checkout = await new Payoneer.CheckoutWeb(configs);
-
-        const availableComponents = checkout.availableDropInComponents();
-        document.getElementById("available-components").textContent =["Available components: "].concat(availableComponents.map(comp => comp.name)).join(" ");
-
-        // Was expecting to provide an element id, but through trial and error I found it is the element reference
-        const container = document.getElementById("component-container")
-
-        // Cards form renders to page, but is not showing anything
-        const cards = checkout.dropIn("cards", {
-            hidePaymentButton: !(payButtonType === "default")
-        }).mount(container);
-
-        document.getElementById("custom-pay-button").addEventListener("click", (event) => {
-            event.preventDefault();
-            cards.pay();
-        });
-
-        // TODO - replace this with proper method when API available - User can select primary color which sets background of pay button
-        document.getElementById("button-color-picker").addEventListener("input", (event) => {
-            const newColor = event.target.value;
-            const cards = document.getElementById("payoneer-cards-component");
-            cards.setStyles({
-                primaryColor: newColor
-            })
-        });
-
-        // TODO - replace this with proper method when API available - User can select primary text color which sets text color of pay button
-        document.getElementById("button-text-color-picker").addEventListener("input", (event) => {
-            const newColor = event.target.value;
-            const cards = document.getElementById("payoneer-cards-component");
-            cards.setStyles({
-                primaryTextColor: newColor
-            })
-        });
-    }
 
     // Hide styling options and show only redirect to hosted button
     function handleSelectHosted() {
@@ -169,7 +232,6 @@ window.addEventListener("DOMContentLoaded", () => {
         document.getElementById("component-container").style = "display: none;"
         document.getElementById("styling-options").style = "display: none;"
         document.getElementById("hosted-theme").style = "display: block;"
-        document.getElementById("available-components").style = "display: none;"
         document.getElementById("custom-pay-button-container").style = "display: none;"
         document.getElementById("payment-button-choice").style = "display: none;"
     }
@@ -180,19 +242,47 @@ window.addEventListener("DOMContentLoaded", () => {
         document.getElementById("component-container").style = "display: block;"
         document.getElementById("styling-options").style = payButtonType === "default" ? "display: block;" : "display: none;";
         document.getElementById("hosted-theme").style = "display: none;"
-        document.getElementById("available-components").style = "display: block;"
         document.getElementById("custom-pay-button-container").style = payButtonType === "custom" ? "display: block;" : "display: none;";
-        document.getElementById("payment-button-choice").style = payButtonType === "custom" ? "display: block;" : "display: none;";
+        document.getElementById("payment-button-choice").style = "display: block;";
     }
 
 });
 
+function setUpDemoCards() {
+    // User can copy a demo card number to paste into the card number input
+    const numbers = document.getElementsByClassName("demo-card-number");
+
+    Array.from(numbers).forEach(element => element.addEventListener("click", copyToClipboard));
+
+    
+}
+
+// Update background color of default pay button
+function updatePayButtonBackgroundColor(event) {
+    const newColor = event.target.value;
+    const cards = document.getElementById("payoneer-cards-component");
+    cards.setStyles({
+        primaryColor: newColor
+    });
+}
+
+// Update text color of default pay button
+function updatePayButtonTextColor(event) {
+    const newColor = event.target.value;
+    const cards = document.getElementById("payoneer-cards-component");
+    cards.setStyles({
+        primaryTextColor: newColor
+    })
+}
+
+// Handler for choosing the default payment button option (button displayed in cards component)
 function handleSelectDefaultPayButton(event) {
     const params = new URLSearchParams(window.location.search);
         params.set("payButtonType", event.target.value);
         window.location.search = params.toString();
 }
 
+// Handler for choosing the custom pay button option (store custom button is displayed)
 function handleSelectCustomPayButton(event) {
     const params = new URLSearchParams(window.location.search);
         params.set("payButtonType", event.target.value);
@@ -290,6 +380,7 @@ function getCountry() {
     return (params.has("paymentOutcome") && params.get("paymentOutcome") === "abort") ? "SE" : "DE";
 }
 
+// Checks query params to see if error case was selected
 function getError() {
     const params = new URLSearchParams(window.location.search);
     return (params.has("paymentOutcome") && params.get("paymentOutcome") === "error") ? true : false;
@@ -301,11 +392,13 @@ function getLanguage() {
     return params.has("language") ? params.get("language") : "en";
 }
 
+// Checks URL params to see if default or custom pay button was chosen
 function getPayButtonType() {
     const params = new URLSearchParams(window.location.search);
     return params.has("payButtonType") ? params.get("payButtonType") : "default";
 }
 
+// Checks which of the two hosted page theme options is selected
 function getTheme() {
     if(document.getElementById("payoneer-theme").checked) {
         return "payoneer"

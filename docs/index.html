@@ -85,14 +85,51 @@
                     <hr>
                     <h3>Payment methods</h3>
                     <div id="custom-override-message" class="on-before-charge-message">Performing onBeforeCharge task</div>
-                    <div id="component-container">
-                        <!-- Add cards-element below here -->
-                        <!-- <payoneer-cards id="cards-form"></payoneer-cards> -->
+                    <div id="loading-message">
+                        <div class="loading-bar"></div>
+                        <div class="loading-bar"></div>
                     </div>
-                    <div id="button-container" style="display: none;">
-                        <button class="redirect-button" onclick="handleStandaloneRedirectClick()">Proceed to
-                            payment</button>
-                    </div>
+                    <form id="payment-methods">
+                        <div id="cards-payment-method" style="display: none;">
+                            <label for="card-radio" id="cards-select-container" class="payment-method-select-container">
+                                <div>
+                                    <input id="card-radio" type="radio" name="payment-option" value="cards">
+                                    Credit / Debit card
+                                </div>
+                                <div class="payment-method-icon-container">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-credit-card" viewBox="0 0 16 16">
+                                        <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v1h14V4a1 1 0 0 0-1-1zm13 4H1v5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1z"/>
+                                        <path d="M2 10a1 1 0 0 1 1-1h1a1 1 0 0 1 1 1v1a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/>
+                                    </svg>
+                                </div>
+                            </label>
+                            <div id="cards-container" class="payment-method-component-container">
+                                <div id="component-container">
+                                    <!-- Add cards-element below here -->
+                                    <!-- <payoneer-cards id="cards-form"></payoneer-cards> -->
+                                </div>
+                                <div id="button-container" style="display: none;">
+                                    <button id="hosted-redirect-button" class="redirect-button">Proceed to
+                                        payment</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="other-payment-method" style="display: none;">
+                            <label for="other-radio" id="other-select-container" class="payment-method-select-container">
+                                <div>
+                                    <input id="other-radio" type="radio" name="payment-option" value="other">
+                                    Other payment method
+                                </div>
+                                <div class="payment-method-icon-container">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-bank" viewBox="0 0 16 16">
+                                        <path d="m8 0 6.61 3h.89a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-.5.5H15v7a.5.5 0 0 1 .485.38l.5 2a.498.498 0 0 1-.485.62H.5a.498.498 0 0 1-.485-.62l.5-2A.5.5 0 0 1 1 13V6H.5a.5.5 0 0 1-.5-.5v-2A.5.5 0 0 1 .5 3h.89zM3.777 3h8.447L8 1zM2 6v7h1V6zm2 0v7h2.5V6zm3.5 0v7h1V6zm2 0v7H12V6zM13 6v7h1V6zm2-1V4H1v1zm-.39 9H1.39l-.25 1h13.72z"/>
+                                    </svg>
+                                </div>
+                            </label>
+                            <div id="other-container" class="payment-method-component-container">
+                            </div>
+                        </div>
+                    </form>
                 </div>
                 <div class="cart-details-container">
                     <div class="cart-details">
@@ -102,89 +139,91 @@
                         <p>Total <b>$15</b></p>
                         <hr>
                         <div><marquee id="available-components"></marquee></div>
-                        <h4>Integration</h4>
-                        <form id="integration-form">
-                            <div class="option-controls">
-                                <div class="option-control-container">
-                                    <input type="radio" id="embedded" name="integration" value="embedded" checked />
-                                    <label for="embedded">Embedded</label>
-                                </div>
-                                <div class="option-control-container">
-                                    <input type="radio" id="hosted" name="integration" value="hosted" />
-                                    <label for="hosted">Hosted</label>
-                                </div>
-                            </div>
-                        </form>
-                        <h4>Payment outcome</h4>
-                        <select id="outcome" value="success">
-                            <option value="success">Success</option>
-                            <option value="error">Error</option>
-                            <option value="abort">Abort</option>
-                            <option value="retry">Retry</option>
-                            <option value="3ds2">3DS2</option>
-                            <option value="tryotheraccount">Try other account</option>
-                            <option value="tryothernetwork">Try other network</option>
-                        </select>
-                        <h4>Language</h4>
-                        <select id="language">
-                            <option value="zh">Chinese</option>
-                            <option value="en">English</option>
-                            <option value="fr">French</option>
-                            <option value="de">German</option>
-                            <option value="el">Greek</option>
-                            <option value="ja">Japanese</option>
-                            <option value="ro">Romanian</option>
-                            <option value="ru">Russian</option>
-                            <option value="es">Spanish</option>
-                            <option value="sv">Swedish</option>
-                            <option value="th">Thai</option>
-                        </select>
-                        <div id="payment-button-choice">
-                            <h4>Payment button type</h4>
-                            <form id="payment-button-choice-form">
+                        <div id="cards-options" style="display: none;">
+                            <h4>Integration</h4>
+                            <form id="integration-form">
                                 <div class="option-controls">
                                     <div class="option-control-container">
-                                        <input type="radio" id="default-option" name="button-option" value="default" />
-                                        <label for="default-option">Default pay button</label>
+                                        <input type="radio" id="embedded" name="integration" value="embedded" checked />
+                                        <label for="embedded">Embedded</label>
                                     </div>
                                     <div class="option-control-container">
-                                        <input type="radio" id="custom-option" name="button-option" value="custom" />
-                                        <label for="custom-option">Custom pay button</label>
+                                        <input type="radio" id="hosted" name="integration" value="hosted" />
+                                        <label for="hosted">Hosted</label>
                                     </div>
                                 </div>
                             </form>
-                        </div>
-                        <div id="styling-options">
-                            <h4>Styling</h4>
-                            <div class="option-controls">
-                                <div class="option-control-container">
-                                    <div>Primary color</div>
-                                    <input id="button-color-picker" value="#252526" type="color"></input>
+                            <h4>Payment outcome</h4>
+                            <select id="outcome" value="success">
+                                <option value="success">Success</option>
+                                <option value="error">Error</option>
+                                <option value="abort">Abort</option>
+                                <option value="retry">Retry</option>
+                                <option value="3ds2">3DS2</option>
+                                <option value="tryotheraccount">Try other account</option>
+                                <option value="tryothernetwork">Try other network</option>
+                            </select>
+                            <h4>Language</h4>
+                            <select id="language">
+                                <option value="zh">Chinese</option>
+                                <option value="en">English</option>
+                                <option value="fr">French</option>
+                                <option value="de">German</option>
+                                <option value="el">Greek</option>
+                                <option value="ja">Japanese</option>
+                                <option value="ro">Romanian</option>
+                                <option value="ru">Russian</option>
+                                <option value="es">Spanish</option>
+                                <option value="sv">Swedish</option>
+                                <option value="th">Thai</option>
+                            </select>
+                            <div id="payment-button-choice">
+                                <h4>Payment button type</h4>
+                                <form id="payment-button-choice-form">
+                                    <div class="option-controls">
+                                        <div class="option-control-container">
+                                            <input type="radio" id="default-option" name="button-option" value="default" />
+                                            <label for="default-option">Default pay button</label>
+                                        </div>
+                                        <div class="option-control-container">
+                                            <input type="radio" id="custom-option" name="button-option" value="custom" />
+                                            <label for="custom-option">Custom pay button</label>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            <div id="styling-options">
+                                <h4>Styling</h4>
+                                <div class="option-controls">
+                                    <div class="option-control-container">
+                                        <div>Primary color</div>
+                                        <input id="button-color-picker" value="#252526" type="color"></input>
+                                    </div>
+                                    <div class="option-control-container">
+                                        <div>Primary text color</div>
+                                        <input id="button-text-color-picker" value="#ffffff"
+                                            type="color"></input>
+                                    </div>
                                 </div>
-                                <div class="option-control-container">
-                                    <div>Primary text color</div>
-                                    <input id="button-text-color-picker" value="#ffffff"
-                                        type="color"></input>
-                                </div>
+                            </div>
+                            <div id="hosted-theme" class="hosted-theme-chooser">
+                                <h4>Hosted page theme</h4>
+                                <form id="hosted-theme-form">
+                                    <div class="option-controls">
+                                        <div class="option-control-container">
+                                            <input type="radio" id="payoneer-theme" name="theme" value="payoneer" checked />
+                                            <label for="payoneer-theme">Payoneer</label>
+                                        </div>
+                                        <div class="option-control-container">
+                                            <input type="radio" id="garden-theme" name="theme" value="garden" />
+                                            <label for="garden-theme">Garden</label>
+                                        </div>
+                                    </div>
+                                </form>
                             </div>
                         </div>
                         <div id="custom-pay-button-container" style="display: none;">
                             <button id="custom-pay-button" class="custom-pay-button">Pay</button>
-                        </div>
-                        <div id="hosted-theme" class="hosted-theme-chooser">
-                            <h4>Hosted page theme</h4>
-                            <form id="hosted-theme-form">
-                                <div class="option-controls">
-                                    <div class="option-control-container">
-                                        <input type="radio" id="payoneer-theme" name="theme" value="payoneer" checked />
-                                        <label for="payoneer-theme">Payoneer</label>
-                                    </div>
-                                    <div class="option-control-container">
-                                        <input type="radio" id="garden-theme" name="theme" value="garden" />
-                                        <label for="garden-theme">Garden</label>
-                                    </div>
-                                </div>
-                            </form>
                         </div>
                     </div>
                 </div>
