@@ -138,8 +138,8 @@
                         <hr>
                         <p>Total <b>$15</b></p>
                         <hr>
-                        <div><marquee id="available-components"></marquee></div>
-                        <div id="cards-options" style="display: none;">
+                        <div>
+                            <marquee id="available-components"></marquee></div>
                             <h4>Integration</h4>
                             <form id="integration-form">
                                 <div class="option-controls">
@@ -192,38 +192,39 @@
                                     </div>
                                 </form>
                             </div>
-                            <div id="styling-options">
-                                <h4>Styling</h4>
-                                <div class="option-controls">
-                                    <div class="option-control-container">
-                                        <div>Primary color</div>
-                                        <input id="button-color-picker" value="#252526" type="color"></input>
-                                    </div>
-                                    <div class="option-control-container">
-                                        <div>Primary text color</div>
-                                        <input id="button-text-color-picker" value="#ffffff"
-                                            type="color"></input>
-                                    </div>
-                                </div>
-                            </div>
-                            <div id="hosted-theme" class="hosted-theme-chooser">
-                                <h4>Hosted page theme</h4>
-                                <form id="hosted-theme-form">
+                            <div id="cards-options" style="display: none;">
+                                <div id="styling-options">
+                                    <h4>Styling</h4>
                                     <div class="option-controls">
                                         <div class="option-control-container">
-                                            <input type="radio" id="payoneer-theme" name="theme" value="payoneer" checked />
-                                            <label for="payoneer-theme">Payoneer</label>
+                                            <div>Primary color</div>
+                                            <input id="button-color-picker" value="#252526" type="color"></input>
                                         </div>
                                         <div class="option-control-container">
-                                            <input type="radio" id="garden-theme" name="theme" value="garden" />
-                                            <label for="garden-theme">Garden</label>
+                                            <div>Primary text color</div>
+                                            <input id="button-text-color-picker" value="#ffffff"
+                                                type="color"></input>
                                         </div>
                                     </div>
-                                </form>
+                                </div>
+                                <div id="hosted-theme" class="hosted-theme-chooser">
+                                    <h4>Hosted page theme</h4>
+                                    <form id="hosted-theme-form">
+                                        <div class="option-controls">
+                                            <div class="option-control-container">
+                                                <input type="radio" id="payoneer-theme" name="theme" value="payoneer" checked />
+                                                <label for="payoneer-theme">Payoneer</label>
+                                            </div>
+                                            <div class="option-control-container">
+                                                <input type="radio" id="garden-theme" name="theme" value="garden" />
+                                                <label for="garden-theme">Garden</label>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            <div id="custom-pay-button-container" style="display: none;">
+                                <button id="custom-pay-button" class="custom-pay-button">Pay</button>
                             </div>
-                        </div>
-                        <div id="custom-pay-button-container" style="display: none;">
-                            <button id="custom-pay-button" class="custom-pay-button">Pay</button>
                         </div>
                     </div>
                 </div>
