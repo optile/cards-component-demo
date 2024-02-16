@@ -63,6 +63,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     const cardsRadio = document.getElementById("card-radio");
     const otherRadio = document.getElementById("other-radio");
 
+    // Check if cards is available as a drop-in component and render cards option in payment methods if so
     if(availableComponents.find(component => component.name === "cards")) {
         showCardsPaymentMethod(true);
 
@@ -73,6 +74,7 @@ window.addEventListener("DOMContentLoaded", async () => {
             hidePaymentButton: !(payButtonType === "default")
         }).mount(container);
 
+        // When cards is selected, display the payoneer-cards component (and some extra configuration settings related to cards)
         cardsRadio.addEventListener("change", (event) => {
             if(event.target.checked) {
                 showCardsPaymentComponent(true);
@@ -83,14 +85,20 @@ window.addEventListener("DOMContentLoaded", async () => {
             }
         });
 
+        // If custom pay button is clicked, then this calls the pay method on cards instance
         function customPayButtonListener(event) {
             event.preventDefault();
             if(cards) {
                 cards.pay();
             }
         }
+        // Show this component by default if it is the only one in the available components
+        if(availableComponents.length === 1) {
+            cardsRadio.click()
+        }
     }
 
+    // If Afterpay is available as a drop-in component, show it in the payment methods list
     if(availableComponents.find(component => component.name === "afterpay")) {
         showOtherPaymentMethod(true);
         otherRadio.addEventListener("change", (event) => {
@@ -101,9 +109,10 @@ window.addEventListener("DOMContentLoaded", async () => {
                 showOtherPaymentComponent(true)
             }
         });
-    }
-    else {
-        cardsRadio.click()
+        // Show this component by default if it is the only one in the available components
+        if(availableComponents.length === 1) {
+            otherRadio.click()
+        }
     }
 
     function showCardsPaymentMethod(boolean) {
