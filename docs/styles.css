@@ -7,6 +7,15 @@ body {
     box-sizing: border-box;
 }
 
+@keyframes placeholderShimmer {
+    0% {
+        background-position: -468px 0;
+    }
+    100% {
+        background-position: 468px 0;
+    }
+}
+
 .payment-details > button {
     cursor: pointer;
     padding: 0.5rem;
@@ -119,6 +128,14 @@ hr {
     border-radius: 5px;
     margin-top: 0.5rem;
     margin-bottom: 0.5rem;
+    animation-name: placeholderShimmer;
+    background-size: 800px 104px;
+    background-image: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%);
+    background-repeat: no-repeat;
+    animation-duration: 1s;
+    animation-fill-mode: forwards;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
 }
 
 .payment-method-select-container {
@@ -135,8 +152,8 @@ hr {
 }
 
 .payment-method-component-container {
-    margin-top: 0.5rem;
-    margin-bottom: 0.5rem;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
     display: none;
 }
 

@@ -59,7 +59,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     const availableComponents = checkout.availableDropInComponents();
     document.getElementById("available-components").textContent =["Available components: "].concat(availableComponents.map(comp => comp.name)).join(" ");
     
-    // Monitor selection of cards option in payment list
+    // Radio button inputs for the Payoneer-provided payment methods
     const cardsRadio = document.getElementById("card-radio");
     const otherRadio = document.getElementById("other-radio");
 
@@ -67,6 +67,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     if(availableComponents.find(component => component.name === "cards")) {
         showCardsPaymentMethod(true);
 
+        // This is a container for the payoneer-cards component, hidden by default and shown when cards radio is clicked
         const container = document.getElementById("component-container")
 
         // Already drop in cards component so that it renders immediately
@@ -101,6 +102,9 @@ window.addEventListener("DOMContentLoaded", async () => {
     // If Afterpay is available as a drop-in component, show it in the payment methods list
     if(availableComponents.find(component => component.name === "afterpay")) {
         showOtherPaymentMethod(true);
+
+        // Placeholder for dropping in the Afterpay payment component
+
         otherRadio.addEventListener("change", (event) => {
             if(event.target.checked) {
                 document.getElementById("custom-pay-button").removeEventListener("click", customPayButtonListener);
