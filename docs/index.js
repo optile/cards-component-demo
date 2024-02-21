@@ -25,7 +25,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         env: "pi-nightly.integration", // test | live | int-env-name
         longId: longId,
         preload: ["cards"], // loads cards script as soon as page loads so that rendering using dropIn is fast
-        onBeforeError: async(_checkout, componentName, errorData) => {
+        /*onBeforeError: async(_checkout, componentName, errorData) => {
             console.error("On before error called", errorData);
             const message = document.getElementById("custom-override-message");
             message.innerHTML = `onBeforeError called in ${componentName}`;
@@ -33,7 +33,7 @@ window.addEventListener("DOMContentLoaded", async () => {
             return new Promise((resolve) => {
                 resolve(false);
             });
-        },
+        },*/
         onBeforeCharge: async () => {
             console.log("On before charge called");
             const message = document.getElementById("custom-override-message");
