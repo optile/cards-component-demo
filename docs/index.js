@@ -150,6 +150,7 @@ async function initPayment() {
         preload: ["cards"], // loads cards script as soon as page loads so that rendering using dropIn is fast
         onBeforeError: async(_checkout, componentName, errorData) => {
             console.error("On before error called",_checkout, componentName, errorData);
+            document.getElementById("payment-methods").style.display = "none";
             const message = document.getElementById("custom-override-message");
             message.innerHTML = `onBeforeError called in ${componentName}`;
             message.style = "background-color: red; display: flex;";
@@ -177,7 +178,7 @@ async function initPayment() {
     
     // Initialises the SDK
     const checkout = await new Payoneer.CheckoutWeb(configs);
-
+    
     document.getElementById("loading-message").style.display = "none";
 
     if(checkout.state === "LOADED") {
