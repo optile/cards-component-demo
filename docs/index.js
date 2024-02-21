@@ -1,195 +1,6 @@
 window.addEventListener("DOMContentLoaded", async () => {
-
-    // Calculates payment amount based on payment outcome query parameter
-    const amount = getAmount();
-
-    // Sets country based on query parameter (used for triggering abort scenario with merchant risk rule)
-    const country = getCountry();
-
-    // Sets language based on query parameter
-    const language = getLanguage();
-
-    // Sets whether there should be a list fetching error or not
-    const isError = getError();
-
-    // Sets pay button type
-    const payButtonType = getPayButtonType();
-
-    // Generate a list session
-    const listResult = await generateList("EMBEDDED", amount, country, language, null);
-
-    const longId = isError ? "657af292bd2dx24c0a9cf07cl3jphnlp1iruhlio061evom047" : listResult.identification.longId;
-
-    // configurations for the Checkout Web SDK
-    const configs = {
-        env: "pi-nightly.integration", // test | live | int-env-name
-        longId: longId,
-        preload: ["cards"], // loads cards script as soon as page loads so that rendering using dropIn is fast
-        /*onBeforeError: async(_checkout, componentName, errorData) => {
-            console.error("On before error called", errorData);
-            const message = document.getElementById("custom-override-message");
-            message.innerHTML = `onBeforeError called in ${componentName}`;
-            message.style = "background-color: red; display: flex;";
-            return new Promise((resolve) => {
-                resolve(false);
-            });
-        },*/
-        onBeforeCharge: async () => {
-            console.log("On before charge called");
-            const message = document.getElementById("custom-override-message");
-            message.innerHTML = "Awaiting onBeforeCharge result..."
-            message.style = "display: flex;";
-            return new Promise((resolve) => {
-                setTimeout(() => {
-                    message.style = "background-color: green; display: flex;";
-                    message.innerHTML = "onBeforeCharge success! &#10003;"
-                    setTimeout(() => {
-                        message.style = "background-color: orange; display: none;";
-                        resolve(true);
-                    }, 1000)
-                }, 1000)
-            });
-        }
-    }
-    
-    // Initialises the SDK
-    const checkout = await new Payoneer.CheckoutWeb(configs);
-
-    // Checks which dropin components are available based on the list response
-    const availableComponents = checkout.availableDropInComponents();
-    document.getElementById("available-components").textContent =["Available components: "].concat(availableComponents.map(comp => comp.name)).join(" ");
-    
-    // Radio button inputs for the Payoneer-provided payment methods
-    const cardsRadio = document.getElementById("card-radio");
-    const otherRadio = document.getElementById("other-radio");
-
-    // Check if cards is available as a drop-in component and render cards option in payment methods if so
-    if(availableComponents.find(component => component.name === "cards")) {
-        showCardsPaymentMethod(true);
-
-        // This is a container for the payoneer-cards component, hidden by default and shown when cards radio is clicked
-        const container = document.getElementById("component-container")
-
-        // Already drop in cards component so that it renders immediately
-        const cards = checkout.dropIn("cards", {
-            hidePaymentButton: !(payButtonType === "default")
-        }).mount(container);
-
-        // When cards is selected, display the payoneer-cards component (and some extra configuration settings related to cards)
-        cardsRadio.addEventListener("change", (event) => {
-            if(event.target.checked) {
-                showCardsPaymentComponent(true);
-                showCardsOptions(true);
-                // Adds a click event handler to the custom pay button that triggers payment in cards component
-                document.getElementById("custom-pay-button").addEventListener("click", customPayButtonListener);
-                showOtherPaymentComponent(false);
-            }
-        });
-
-        // If custom pay button is clicked, then this calls the pay method on cards instance
-        function customPayButtonListener(event) {
-            event.preventDefault();
-            if(cards) {
-                cards.pay();
-            }
-        }
-        // Show this component by default if it is the only one in the available components
-        if(availableComponents.length === 1) {
-            cardsRadio.click()
-        }
-    }
-
-    // If Afterpay is available as a drop-in component, show it in the payment methods list
-    if(availableComponents.find(component => component.name === "afterpay")) {
-        showOtherPaymentMethod(true);
-
-        // Placeholder for dropping in the Afterpay payment component
-
-        otherRadio.addEventListener("change", (event) => {
-            if(event.target.checked) {
-                document.getElementById("custom-pay-button").removeEventListener("click", customPayButtonListener);
-                showCardsPaymentComponent(false);
-                showCardsOptions(false);
-                showOtherPaymentComponent(true)
-            }
-        });
-        // Show this component by default if it is the only one in the available components
-        if(availableComponents.length === 1) {
-            otherRadio.click()
-        }
-    }
-
-    function showCardsPaymentMethod(boolean) {
-        const cardsPaymentMethod = document.getElementById("cards-payment-method");
-        if(boolean) {
-            cardsPaymentMethod.style = "display: block;";
-        }
-        else {
-            cardsPaymentMethod.style = "display: none;";
-        }
-    }
-
-    function showCardsPaymentComponent(boolean) {
-        const cardsComponentContainer = document.getElementById("cards-container");
-        if(boolean) {
-            cardsComponentContainer.style = "display: block;";
-        }
-        else {
-            cardsComponentContainer.style = "display: none;";
-        }
-    }
-
-    function showCardsOptions(boolean) {
-        const cardsOptions = document.getElementById("cards-options");
-        if(boolean) {
-            cardsOptions.style = "display: block;";
-        }
-        else {
-            cardsOptions.style = "display: none;";
-        }
-    }
-
-    function showOtherPaymentMethod(boolean) {
-        const otherPaymentMethod = document.getElementById("other-payment-method");
-        if(boolean) {
-            otherPaymentMethod.style = "display: block;";
-        }
-        else {
-            otherPaymentMethod.style = "display: none;";
-        }
-    }
-
-    function showOtherPaymentComponent(boolean) {
-        const otherComponentContainer = document.getElementById("other-container");
-        if(boolean) {
-            otherComponentContainer.style = "display: block;";
-        }
-        else {
-            otherComponentContainer.style = "display: none;";
-        }
-    }
-
-    // Update the UI once the list response is received so that components become visible
-    document.getElementById("loading-message").style = "display: none;";
-    document.getElementById("payment-methods").style = "display: block;";
-
-
-    // Other setup tasks
-
-    // Set the chosen integration to embedded by default
-    document.getElementById("embedded").checked = true;
-
-    if(payButtonType === "default") {
-        document.getElementById("default-option").checked = true;
-    }
-    else if(payButtonType === "custom") {
-        document.getElementById("styling-options").style = "display: none";
-        document.getElementById("custom-pay-button-container").style = "display: block";
-        document.getElementById("custom-option").checked = true;
-    }
-    else {
-        document.getElementById("default-option").checked = true;
-    }
+    // Sets up pay button according to which type is requested, default or custom
+    setUpPayButton()
 
     // Update the select menu for outcome based on query param
     setOutcomeSelect();
@@ -198,40 +9,12 @@ window.addEventListener("DOMContentLoaded", async () => {
     setLanguageSelect();
 
     // User can select payment outcome
-    document.getElementById("outcome").addEventListener("change", (event) => {
-        const params = new URLSearchParams(window.location.search);
-        params.set("paymentOutcome", event.target.value);
-        window.location.search = params.toString();
-    });
+    setUpPaymentOutcomeListener();
 
     // User can select language used in cards component
-    document.getElementById("language").addEventListener("change", (event) => {
-        const params = new URLSearchParams(window.location.search);
-        params.set("language", event.target.value);
-        window.location.search = params.toString();
-    });
+    setUpLanguageSelectListener();
 
-    // User can see embedded cards component
-    document.getElementById("embedded").addEventListener("change", (event) => {
-        handleSelectEmbedded(event);
-    });
-
-    // User can see button which redirects to hosted payment page
-    document.getElementById("hosted").addEventListener("change", (event) => {
-        handleSelectHosted(event);
-    });
-
-    // Pay button is displayed inside cards component
-    document.getElementById("default-option").addEventListener("change", (event) => {
-        handleSelectDefaultPayButton(event);
-    });
-
-    // Pay button is displayed underneath store options and hidden in cards component
-    document.getElementById("custom-option").addEventListener("change", (event) => {
-        handleSelectCustomPayButton(event);
-    });
-
-    //
+    // Sets up the demo cards tool that is shown on right hand side of screen
     setUpDemoCards()
 
     // TODO - replace this with proper method when API available - User can select primary color which sets background of pay button
@@ -244,6 +27,48 @@ window.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("hosted-redirect-button").addEventListener("click", (event) => {
         event.preventDefault();
         handleStandaloneRedirectClick();
+    });
+
+    // Sets up chooser between hosted and embedded
+    setUpIntegrationSelector();
+
+    try {
+        initPayment();
+    } catch(e) {
+        console.error("could not initiate payment", e.message)
+    }
+
+});
+
+function setUpLanguageSelectListener() {
+    document.getElementById("language").addEventListener("change", (event) => {
+        const params = new URLSearchParams(window.location.search);
+        params.set("language", event.target.value);
+        window.location.search = params.toString();
+    });
+}
+
+// User can select payment outcome
+function setUpPaymentOutcomeListener() {
+    document.getElementById("outcome").addEventListener("change", (event) => {
+        const params = new URLSearchParams(window.location.search);
+        params.set("paymentOutcome", event.target.value);
+        window.location.search = params.toString();
+    });
+}
+
+// Sets up chooser between hosted and embedded
+function setUpIntegrationSelector() {
+    const payButtonType = getPayButtonType();
+
+    // User can see embedded cards component
+    document.getElementById("embedded").addEventListener("change", (event) => {
+        handleSelectEmbedded(event);
+    });
+
+    // User can see button which redirects to hosted payment page
+    document.getElementById("hosted").addEventListener("change", (event) => {
+        handleSelectHosted(event);
     });
 
     // Hide styling options and show only redirect to hosted button
@@ -265,8 +90,216 @@ window.addEventListener("DOMContentLoaded", async () => {
         document.getElementById("custom-pay-button-container").style = payButtonType === "custom" ? "display: block;" : "display: none;";
         document.getElementById("payment-button-choice").style = "display: block;";
     }
+}
 
-});
+function setUpPayButton() {
+    // Sets pay button type
+    const payButtonType = getPayButtonType();
+
+    // Set the chosen integration to embedded by default
+    document.getElementById("embedded").checked = true;
+
+    if(payButtonType === "default") {
+        document.getElementById("default-option").checked = true;
+    }
+    else if(payButtonType === "custom") {
+        document.getElementById("styling-options").style = "display: none";
+        document.getElementById("custom-pay-button-container").style = "display: block";
+        document.getElementById("custom-option").checked = true;
+    }
+    else {
+        document.getElementById("default-option").checked = true;
+    }
+
+    // Pay button is displayed inside cards component
+    document.getElementById("default-option").addEventListener("change", (event) => {
+        handleSelectDefaultPayButton(event);
+    });
+
+    // Pay button is displayed underneath store options and hidden in cards component
+    document.getElementById("custom-option").addEventListener("change", (event) => {
+        handleSelectCustomPayButton(event);
+    });
+}
+
+async function initPayment() {
+
+    // Calculates payment amount based on payment outcome query parameter
+    const amount = getAmount();
+
+    // Sets country based on query parameter (used for triggering abort scenario with merchant risk rule)
+    const country = getCountry();
+
+    // Sets language based on query parameter
+    const language = getLanguage();
+
+    // Sets whether there should be a list fetching error or not
+    const isError = getError();
+
+    const payButtonType = getPayButtonType();
+
+    // Generate a list session
+    const listResult = await generateList("EMBEDDED", amount, country, language, null);
+
+    const longId = isError ? "657af292bd2dx24c0a9cf07cl3jphnlp1iruhlio061evom047" : listResult.identification.longId;
+
+    // configurations for the Checkout Web SDK
+    const configs = {
+        env: "pi-nightly.integration", // test | live | int-env-name
+        longId: longId,
+        preload: ["cards"], // loads cards script as soon as page loads so that rendering using dropIn is fast
+        onBeforeError: async(_checkout, componentName, errorData) => {
+            console.error("On before error called",_checkout, componentName, errorData);
+            const message = document.getElementById("custom-override-message");
+            message.innerHTML = `onBeforeError called in ${componentName}`;
+            message.style = "background-color: red; display: flex;";
+            return new Promise((resolve) => {
+                resolve(false);
+            });
+        },
+        onBeforeCharge: async () => {
+            console.log("On before charge called");
+            const message = document.getElementById("custom-override-message");
+            message.innerHTML = "Awaiting onBeforeCharge result..."
+            message.style = "display: flex;";
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    message.style = "background-color: green; display: flex;";
+                    message.innerHTML = "onBeforeCharge success! &#10003;"
+                    setTimeout(() => {
+                        message.style = "background-color: orange; display: none;";
+                        resolve(true);
+                    }, 1000)
+                }, 1000)
+            });
+        }
+    }
+    
+    // Initialises the SDK
+    const checkout = await new Payoneer.CheckoutWeb(configs);
+
+    document.getElementById("loading-message").style.display = "none";
+
+    if(checkout.state === "LOADED") {
+        document.getElementById("loading-message").style = "display: none;";
+
+        // Checks which dropin components are available based on the list response
+        const availableComponents = checkout.availableDropInComponents();
+        document.getElementById("available-components").textContent =["Available components: "].concat(availableComponents.map(comp => comp.name)).join(" ");
+        
+        // Radio button inputs for the Payoneer-provided payment methods
+        const cardsRadio = document.getElementById("card-radio");
+        const otherRadio = document.getElementById("other-radio");
+
+        // Check if cards is available as a drop-in component and render cards option in payment methods if so
+        if(availableComponents.find(component => component.name === "cards")) {
+            showCardsPaymentMethod(true);
+
+            // This is a container for the payoneer-cards component, hidden by default and shown when cards radio is clicked
+            const container = document.getElementById("component-container")
+
+            // Already drop in cards component so that it renders immediately
+            const cards = checkout.dropIn("cards", {
+                hidePaymentButton: !(payButtonType === "default")
+            }).mount(container);
+
+            // When cards is selected, display the payoneer-cards component (and some extra configuration settings related to cards)
+            cardsRadio.addEventListener("change", (event) => {
+                if(event.target.checked) {
+                    showCardsPaymentComponent(true);
+                    showCardsOptions(true);
+                    // Adds a click event handler to the custom pay button that triggers payment in cards component
+                    document.getElementById("custom-pay-button").addEventListener("click", customPayButtonListener);
+                    showOtherPaymentComponent(false);
+                }
+            });
+
+            // If custom pay button is clicked, then this calls the pay method on cards instance
+            function customPayButtonListener(event) {
+                event.preventDefault();
+                if(cards) {
+                    cards.pay();
+                }
+            }
+            // Show this component by default if it is the only one in the available components
+            if(availableComponents.length === 1) {
+                cardsRadio.click()
+            }
+        }
+
+        // If Afterpay is available as a drop-in component, show it in the payment methods list
+        if(availableComponents.find(component => component.name === "afterpay")) {
+            showOtherPaymentMethod(true);
+
+            // Placeholder for dropping in the Afterpay payment component
+
+            otherRadio.addEventListener("change", (event) => {
+                if(event.target.checked) {
+                    document.getElementById("custom-pay-button").removeEventListener("click", customPayButtonListener);
+                    showCardsPaymentComponent(false);
+                    showCardsOptions(false);
+                    showOtherPaymentComponent(true)
+                }
+            });
+            // Show this component by default if it is the only one in the available components
+            if(availableComponents.length === 1) {
+                otherRadio.click()
+            }
+        }
+        // Update the UI once the list response is received so that components become visible
+        document.getElementById("payment-methods").style = "display: block;";
+    }
+}
+
+function showCardsPaymentMethod(boolean) {
+    const cardsPaymentMethod = document.getElementById("cards-payment-method");
+    if(boolean) {
+        cardsPaymentMethod.style = "display: block;";
+    }
+    else {
+        cardsPaymentMethod.style = "display: none;";
+    }
+}
+
+function showCardsPaymentComponent(boolean) {
+    const cardsComponentContainer = document.getElementById("cards-container");
+    if(boolean) {
+        cardsComponentContainer.style = "display: block;";
+    }
+    else {
+        cardsComponentContainer.style = "display: none;";
+    }
+}
+
+function showCardsOptions(boolean) {
+    const cardsOptions = document.getElementById("cards-options");
+    if(boolean) {
+        cardsOptions.style = "display: block;";
+    }
+    else {
+        cardsOptions.style = "display: none;";
+    }
+}
+
+function showOtherPaymentMethod(boolean) {
+    const otherPaymentMethod = document.getElementById("other-payment-method");
+    if(boolean) {
+        otherPaymentMethod.style = "display: block;";
+    }
+    else {
+        otherPaymentMethod.style = "display: none;";
+    }
+}
+
+function showOtherPaymentComponent(boolean) {
+    const otherComponentContainer = document.getElementById("other-container");
+    if(boolean) {
+        otherComponentContainer.style = "display: block;";
+    }
+    else {
+        otherComponentContainer.style = "display: none;";
+    }
+}
 
 function setUpDemoCards() {
     // User can copy a demo card number to paste into the card number input
