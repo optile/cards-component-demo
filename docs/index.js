@@ -147,7 +147,7 @@ async function initPayment() {
     const configs = {
         env: "pi-nightly.integration", // test | live | int-env-name
         longId: longId,
-        preload: ["cards"], // loads cards script as soon as page loads so that rendering using dropIn is fast
+        preload: ["cards", "afterpay"], // loads cards and afterpay script as soon as page loads so that rendering using dropIn is fast
         onBeforeError: async(_checkout, componentName, errorData) => {
             console.error("On before error called",_checkout, componentName, errorData);
             document.getElementById("payment-methods").style.display = "none";
@@ -178,8 +178,33 @@ async function initPayment() {
     
     // Initialises the SDK
     const checkout = await new Payoneer.CheckoutWeb(configs);
-    
+
     document.getElementById("loading-message").style.display = "none";
+
+    function createPaymentListener(paymentComponent) {
+        return function(event) {
+            event.preventDefault();
+            paymentComponent.pay();
+        };
+    }
+
+    // Reference to the current listener to enable removal
+    let currentPaymentListener = null;
+
+    // Function to update the payment method listener
+    function updateCustomPaymentButton(component) {
+        const payButton = document.getElementById("custom-pay-button");
+
+        // If there's an existing listener, remove it
+        if (currentPaymentListener) {
+            payButton.removeEventListener('click', currentPaymentListener);
+        }
+
+        currentPaymentListener = createPaymentListener(component);
+
+        // Add the new listener
+        payButton.addEventListener('click', currentPaymentListener);
+    }
 
     if(checkout.state === "LOADED") {
         document.getElementById("loading-message").style = "display: none;";
@@ -207,21 +232,14 @@ async function initPayment() {
             // When cards is selected, display the payoneer-cards component (and some extra configuration settings related to cards)
             cardsRadio.addEventListener("change", (event) => {
                 if(event.target.checked) {
+                    updateCustomPaymentButton(cards);
                     showCardsPaymentComponent(true);
                     showCardsOptions(true);
                     // Adds a click event handler to the custom pay button that triggers payment in cards component
-                    document.getElementById("custom-pay-button").addEventListener("click", customPayButtonListener);
                     showOtherPaymentComponent(false);
                 }
             });
 
-            // If custom pay button is clicked, then this calls the pay method on cards instance
-            function customPayButtonListener(event) {
-                event.preventDefault();
-                if(cards) {
-                    cards.pay();
-                }
-            }
             // Show this component by default if it is the only one in the available components
             if(availableComponents.length === 1) {
                 cardsRadio.click()
@@ -233,15 +251,24 @@ async function initPayment() {
             showOtherPaymentMethod(true);
 
             // Placeholder for dropping in the Afterpay payment component
+            const container = document.getElementById("other-container")
+
+            // Already drop in cards component so that it renders immediately
+            const afterpay = checkout.dropIn("afterpay", {
+                
+            }).mount(container);
+
+            console.log(afterpay)
 
             otherRadio.addEventListener("change", (event) => {
                 if(event.target.checked) {
-                    document.getElementById("custom-pay-button").removeEventListener("click", customPayButtonListener);
+                    updateCustomPaymentButton(afterpay);
                     showCardsPaymentComponent(false);
                     showCardsOptions(false);
                     showOtherPaymentComponent(true)
                 }
             });
+
             // Show this component by default if it is the only one in the available components
             if(availableComponents.length === 1) {
                 otherRadio.click()
