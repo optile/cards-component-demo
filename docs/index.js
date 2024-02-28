@@ -77,6 +77,20 @@ function hideHostedButtonContainers() {
     });
 }
 
+function showEmbeddedPaymentContainers() {
+    const containers = document.querySelectorAll(".payment-component-container");
+    containers.forEach(container => {
+        container.style.display = "block";
+    });
+}
+
+function hideEmbeddedPaymentContainers() {
+    const containers = document.querySelectorAll(".payment-component-container");
+    containers.forEach(container => {
+        container.style.display = "none";
+    });
+}
+
 // Sets up chooser between hosted and embedded
 function setUpIntegrationSelector() {
     const payButtonType = getPayButtonType();
@@ -94,8 +108,8 @@ function setUpIntegrationSelector() {
     // Hide styling options and show only redirect to hosted button
     function handleSelectHosted() {
 
-        showHostedButtonContainers()
-        document.getElementById("component-container").style = "display: none;"
+        showHostedButtonContainers();
+        hideEmbeddedPaymentContainers();
         document.getElementById("styling-options").style = "display: none;"
         document.getElementById("hosted-theme").style = "display: block;"
         document.getElementById("custom-pay-button-container").style = "display: none;"
@@ -105,7 +119,7 @@ function setUpIntegrationSelector() {
     // Show styling options and only cards component
     function handleSelectEmbedded() {
         hideHostedButtonContainers()
-        document.getElementById("component-container").style = "display: block;"
+        showEmbeddedPaymentContainers();
         document.getElementById("styling-options").style = payButtonType === "default" ? "display: block;" : "display: none;";
         document.getElementById("hosted-theme").style = "display: none;"
         document.getElementById("custom-pay-button-container").style = payButtonType === "custom" ? "display: block;" : "display: none;";
@@ -243,7 +257,7 @@ async function initPayment() {
             showCardsPaymentMethod(true);
 
             // This is a container for the payoneer-cards component, hidden by default and shown when cards radio is clicked
-            const container = document.getElementById("component-container")
+            const container = document.getElementById("cards-component-container")
 
             // Already drop in cards component so that it renders immediately
             const cards = checkout.dropIn("cards", {
