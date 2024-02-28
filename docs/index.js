@@ -23,10 +23,16 @@ window.addEventListener("DOMContentLoaded", async () => {
     // TODO - replace this with proper method when API available - User can select primary text color which sets text color of pay button
     document.getElementById("button-text-color-picker").addEventListener("input", updatePayButtonTextColor);
 
-    // Generates a HOSTED list session and redirects when pay button is clicked in HOSTED scenario
-    document.getElementById("hosted-redirect-button").addEventListener("click", (event) => {
+    // Generates a HOSTED list session and redirects when pay button is clicked in HOSTED scenario for cards
+    document.getElementById("cards-hosted-redirect-button").addEventListener("click", (event) => {
         event.preventDefault();
-        handleStandaloneRedirectClick();
+        handleStandaloneRedirectClick("cards");
+    });
+
+    // Generates a HOSTED list session and redirects when pay button is clicked in HOSTED scenario for cards
+    document.getElementById("afterpay-hosted-redirect-button").addEventListener("click", (event) => {
+        event.preventDefault();
+        handleStandaloneRedirectClick("afterpay");
     });
 
     // Sets up chooser between hosted and embedded
@@ -57,6 +63,20 @@ function setUpPaymentOutcomeListener() {
     });
 }
 
+function showHostedButtonContainers() {
+    const containers = document.querySelectorAll(".redirect-button-container");
+    containers.forEach(container => {
+        container.style.display = "block";
+    });
+}
+
+function hideHostedButtonContainers() {
+    const containers = document.querySelectorAll(".redirect-button-container");
+    containers.forEach(container => {
+        container.style.display = "none";
+    });
+}
+
 // Sets up chooser between hosted and embedded
 function setUpIntegrationSelector() {
     const payButtonType = getPayButtonType();
@@ -73,7 +93,8 @@ function setUpIntegrationSelector() {
 
     // Hide styling options and show only redirect to hosted button
     function handleSelectHosted() {
-        document.getElementById("button-container").style = "display: block;"
+
+        showHostedButtonContainers()
         document.getElementById("component-container").style = "display: none;"
         document.getElementById("styling-options").style = "display: none;"
         document.getElementById("hosted-theme").style = "display: block;"
@@ -83,7 +104,7 @@ function setUpIntegrationSelector() {
 
     // Show styling options and only cards component
     function handleSelectEmbedded() {
-        document.getElementById("button-container").style = "display: none;"
+        hideHostedButtonContainers()
         document.getElementById("component-container").style = "display: block;"
         document.getElementById("styling-options").style = payButtonType === "default" ? "display: block;" : "display: none;";
         document.getElementById("hosted-theme").style = "display: none;"
@@ -215,7 +236,7 @@ async function initPayment() {
         
         // Radio button inputs for the Payoneer-provided payment methods
         const cardsRadio = document.getElementById("card-radio");
-        const otherRadio = document.getElementById("other-radio");
+        const afterpayRadio = document.getElementById("afterpay-radio");
 
         // Check if cards is available as a drop-in component and render cards option in payment methods if so
         if(availableComponents.find(component => component.name === "cards")) {
@@ -236,7 +257,7 @@ async function initPayment() {
                     showCardsPaymentComponent(true);
                     showCardsOptions(true);
                     // Adds a click event handler to the custom pay button that triggers payment in cards component
-                    showOtherPaymentComponent(false);
+                    showAfterpayPaymentComponent(false);
                 }
             });
 
@@ -248,10 +269,10 @@ async function initPayment() {
 
         // If Afterpay is available as a drop-in component, show it in the payment methods list
         if(availableComponents.find(component => component.name === "afterpay")) {
-            showOtherPaymentMethod(true);
+            showAfterpayPaymentMethod(true);
 
             // Placeholder for dropping in the Afterpay payment component
-            const container = document.getElementById("other-container")
+            const container = document.getElementById("afterpay-component-container")
 
             // Already drop in cards component so that it renders immediately
             const afterpay = checkout.dropIn("afterpay", {
@@ -260,18 +281,18 @@ async function initPayment() {
 
             console.log(afterpay)
 
-            otherRadio.addEventListener("change", (event) => {
+            afterpayRadio.addEventListener("change", (event) => {
                 if(event.target.checked) {
                     updateCustomPaymentButton(afterpay);
                     showCardsPaymentComponent(false);
                     showCardsOptions(false);
-                    showOtherPaymentComponent(true)
+                    showAfterpayPaymentComponent(true)
                 }
             });
 
             // Show this component by default if it is the only one in the available components
             if(availableComponents.length === 1) {
-                otherRadio.click()
+                afterpayRadio.click()
             }
         }
         // Update the UI once the list response is received so that components become visible
@@ -309,23 +330,23 @@ function showCardsOptions(boolean) {
     }
 }
 
-function showOtherPaymentMethod(boolean) {
-    const otherPaymentMethod = document.getElementById("other-payment-method");
+function showAfterpayPaymentMethod(boolean) {
+    const afterpayPaymentMethod = document.getElementById("afterpay-payment-method");
     if(boolean) {
-        otherPaymentMethod.style = "display: block;";
+        afterpayPaymentMethod.style = "display: block;";
     }
     else {
-        otherPaymentMethod.style = "display: none;";
+        afterpayPaymentMethod.style = "display: none;";
     }
 }
 
-function showOtherPaymentComponent(boolean) {
-    const otherComponentContainer = document.getElementById("other-container");
+function showAfterpayPaymentComponent(boolean) {
+    const afterpayComponentContainer = document.getElementById("afterpay-container");
     if(boolean) {
-        otherComponentContainer.style = "display: block;";
+        afterpayComponentContainer.style = "display: block;";
     }
     else {
-        otherComponentContainer.style = "display: none;";
+        afterpayComponentContainer.style = "display: none;";
     }
 }
 
@@ -408,14 +429,14 @@ function handleHideDemoCardsClick() {
 }
 
 // When user clicks on proceed to payment, generates a HOSTED list session and redirects to hosted page
-function handleStandaloneRedirectClick() {
+function handleStandaloneRedirectClick(method) {
     
     const amount = getAmount();
     const country = getCountry();
     const language = getLanguage();
     const theme = getTheme()
 
-    generateList("HOSTED", amount, country, language, theme).then(result => {
+    generateList("HOSTED", amount, country, language, theme, method).then(result => {
         window.location.href = result.redirect.url;
     });
 }
@@ -561,8 +582,19 @@ function getAmount() {
 }
 
 // List generator function which uses our unauthenticated pi-nightly list creation service for demo list sesssions
-function generateList(integrationType, amount, country, language, theme) {
+function generateList(integrationType, amount, country, language, theme, method) {
 
+    function getPreselection(paymentMethod) {
+        switch(paymentMethod) {
+            case "cards":
+                return [ "AMEX", "VISA", "MASTERCARD", "JCB"];
+            case "afterpay":
+                return [ "AFTERPAY"];
+            default:
+                return ["AMEX", "VISA", "MASTERCARD", "JCB", "AFTERPAY"]
+        }
+    }
+    
     const listRequest = {
         allowDelete:false,
         callback: {
@@ -590,9 +622,7 @@ function generateList(integrationType, amount, country, language, theme) {
         }, 
         preselection: {
             direction:"CHARGE",
-            networkCodes: [
-                "AMEX", "VISA", "MASTERCARD", "JCB", "AFTERPAY"
-            ]
+            networkCodes: getPreselection(method)
         },
         presetFirst: false,
         style:{
