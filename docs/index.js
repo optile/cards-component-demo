@@ -290,7 +290,7 @@ async function initPayment() {
 
             // Already drop in cards component so that it renders immediately
             const afterpay = checkout.dropIn("afterpay", {
-                
+                hidePaymentButton: !(payButtonType === "default")
             }).mount(container);
 
             console.log(afterpay)
