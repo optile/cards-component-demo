@@ -619,11 +619,38 @@ function generateList(integrationType, amount, country, language, theme, method)
         },
         country: country,
         customer: {
-            email: "john.doe@example.com",
-            number: "42",
+            number: "777",
             name: {
                 firstName: "John",
                 lastName: "Doe"
+            },
+            birthday: "1977-09-13",
+            email: "afterpay_visa_successful@payoneer.com",
+            addresses: {
+                billing: {
+                        street: "Fake Street.",
+                        houseNumber: "123",
+                        zip: "80339",
+                        state: "Californa",
+                        city: "Los Angeles",
+                        country: "US",
+                        name: {
+                        firstName: "First",
+                        lastName: "Last"
+                    }
+                },
+                shipping: {
+                    street: "Fake Street.",
+                    houseNumber: "123",
+                    zip: "80339",
+                    state: "Californa",
+                    city: "Los Angeles",
+                    country: "US",
+                    name: {
+                        firstName: "First",
+                        lastName: "Last"
+                    }
+                }
             }
         },
         integration: integrationType,
