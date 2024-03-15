@@ -631,7 +631,7 @@ function generateList(integrationType, amount, country, language, theme, method)
                         street: "Fake Street.",
                         houseNumber: "123",
                         zip: "80339",
-                        state: "Californa",
+                        state: "California",
                         city: "Los Angeles",
                         country: "US",
                         name: {
@@ -643,7 +643,7 @@ function generateList(integrationType, amount, country, language, theme, method)
                     street: "Fake Street.",
                     houseNumber: "123",
                     zip: "80339",
-                    state: "Californa",
+                    state: "California",
                     city: "Los Angeles",
                     country: "US",
                     name: {

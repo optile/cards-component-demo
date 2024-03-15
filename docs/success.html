@@ -16,8 +16,8 @@
      <main id="main-content">
          <div class="checkout-page">
             <div>
-                <h1>Success!</h1>
-                <p>Your payment was successful</p>
+                <h1 id="title"></h1>
+                <p id="message"></p>
                 <a href="https://optile.github.io/cards-component-demo">Start again</a>
              </div>
          </div>
@@ -31,5 +31,26 @@
     }
 
 </style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const params = new URLSearchParams(window.location.search);
+        const title = document.getElementById("title");
+        const message = document.getElementById("message");
+        const reason = params.get("interactionReason");
+        if(reason && reason === "OK") {
+            title.textContent="Success!";
+            message.textContent="Your payment was successful";
+        }
+        else if(reason && reason === "PENDING") {
+            title.textContent="Payment in progress";
+            message.textContent="Your payment is being processed, please wait for a confirmation email";
+        }
+        else {
+            title.textContent="Something went wrong";
+            message.textContent="We couldn't find the payment result, please wait for a confirmation email";
+        }
+    });
+</script>
 
 </html>
