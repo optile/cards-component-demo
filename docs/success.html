@@ -42,7 +42,7 @@
             title.textContent="Success!";
             message.textContent="Your payment was successful";
         }
-        else if(reason && reason === "PENDING") {
+        else if(reason && (reason === "PENDING" || reason === "SCHEDULED")) {
             title.textContent="Payment in progress";
             message.textContent="Your payment is being processed, please wait for a confirmation email";
         }
