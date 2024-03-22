@@ -185,10 +185,21 @@ async function initPayment() {
         preload: ["cards", "afterpay"], // loads cards and afterpay script as soon as page loads so that rendering using dropIn is fast
         onBeforeError: async(_checkout, componentName, errorData) => {
             console.error("On before error called",_checkout, componentName, errorData);
-            document.getElementById("payment-methods").style.display = "none";
-            const message = document.getElementById("custom-override-message");
-            message.innerHTML = `onBeforeError called in ${componentName}`;
-            message.style = "background-color: red; display: flex;";
+            switch(componentName) {
+                case "cards":
+                    document.getElementById("cards-payment-method").style.display = "none";
+                    break;
+                case "afterpay":
+                    document.getElementById("afterpay-payment-method").style.display = "none";
+                    break;
+                default:
+                    document.getElementById("payment-methods").style.display = "none";
+                    const message = document.getElementById("custom-override-message");
+                    message.innerHTML = `onBeforeError called in ${componentName}`;
+                    message.style = "background-color: red; display: flex;";
+                    break;
+            }
+            
             return new Promise((resolve) => {
                 resolve(false);
             });
@@ -213,6 +224,8 @@ async function initPayment() {
     
     // Initialises the SDK
     const checkout = await new Payoneer.CheckoutWeb(configs);
+
+    window.checkout = checkout;
 
     document.getElementById("loading-message").style.display = "none";
 
@@ -292,8 +305,6 @@ async function initPayment() {
             const afterpay = checkout.dropIn("afterpay", {
                 hidePaymentButton: !(payButtonType === "default")
             }).mount(container);
-
-            console.log(afterpay)
 
             afterpayRadio.addEventListener("change", (event) => {
                 if(event.target.checked) {
