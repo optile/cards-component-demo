@@ -259,6 +259,7 @@ async function initPayment() {
 
         // Checks which dropin components are available based on the list response
         const availableComponents = checkout.availableDropInComponents();
+        console.log(availableComponents)
         document.getElementById("available-components").textContent =["Available components: "].concat(availableComponents.map(comp => comp.name)).join(" ");
         
         // Radio button inputs for the Payoneer-provided payment methods
@@ -678,7 +679,7 @@ function generateList(integrationType, amount, country, language, theme, method)
         },
         presetFirst: false,
         style:{
-            hostedVersion: "v5",
+            hostedVersion: (method === "cards" ? "v5": "v4"),
             language: language,
             displayName: getThemeSettings(theme, "displayName"),
             primaryColor: getThemeSettings(theme, "primaryColor"),
