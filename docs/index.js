@@ -47,11 +47,36 @@ window.addEventListener("DOMContentLoaded", async () => {
   setUpIntegrationSelector();
 
   try {
-    initPayment();
+    loadCheckoutWeb();
   } catch (e) {
     console.error("could not initiate payment", e.message);
   }
 });
+
+function loadCheckoutWeb() {
+  const searchParams = new URLSearchParams(window.location.search);
+  const head = document.getElementsByTagName("head")[0];
+  const js = document.createElement("script");
+
+  js.type = "text/javascript";
+
+  js.onload = () => {
+    initPayment();
+  };
+
+  if (
+    searchParams.has("listUrl") &&
+    searchParams.get("listUrl").includes("sandbox")
+  ) {
+    js.src =
+      "https://resources.sandbox.oscato.com/web/libraries/checkout-web/umd/checkout-web.min.js";
+  } else {
+    js.src =
+      "https://resources.pi-nightly.integration.oscato.com/web/libraries/checkout-web/umd/checkout-web.min.js";
+  }
+
+  head.appendChild(js);
+}
 
 function setUpLanguageSelectListener() {
   document.getElementById("language").addEventListener("change", (event) => {
