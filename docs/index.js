@@ -707,11 +707,11 @@ function generateList(
   function getPreselection(paymentMethod) {
     switch (paymentMethod) {
       case "cards":
-        return ["AMEX", "VISA", "MASTERCARD", "JCB"];
+        return ["AMEX", "VISA", "MASTERCARD", "JCB", "DISCOVER"];
       case "afterpay":
         return ["AFTERPAY"];
       default:
-        return ["AMEX", "VISA", "MASTERCARD", "JCB", "AFTERPAY"];
+        return ["AMEX", "VISA", "MASTERCARD", "JCB", "AFTERPAY", "DISCOVER"];
     }
   }
 
