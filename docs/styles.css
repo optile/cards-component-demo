@@ -138,6 +138,10 @@ hr {
     animation-timing-function: linear;
 }
 
+.hidden {
+    display: none;
+}
+
 .payment-method-select-container {
     width: 100%;
     box-sizing: border-box;
@@ -162,8 +166,21 @@ hr {
 }
 
 .payment-method-icon-container {
-    width: 32px;
+    max-width: 100px;
     height: 32px;
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.payment-method.selected .payment-method-icon-container {
+    display: none;
+}
+
+.payment-method-icon-container img {
+    height: 20px;
+    margin-right: 2px;
 }
 
 .payment-method-icon-container.afterpay {

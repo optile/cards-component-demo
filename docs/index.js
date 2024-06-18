@@ -219,8 +219,7 @@ async function initPayment() {
             "none";
           break;
         case "afterpay":
-          document.getElementById("afterpay-payment-method").style.display =
-            "none";
+          document.getElementById("afterpay-payment-method").classList.add("hidden");
           break;
         default:
           document.getElementById("payment-methods").style.display = "none";
@@ -254,7 +253,8 @@ async function initPayment() {
 
   // Initialises the SDK
   const checkout = await new Payoneer.CheckoutWeb(configs);
-
+  
+  // Makes instance available in window
   window.checkout = checkout;
 
   document.getElementById("loading-message").style.display = "none";
@@ -301,8 +301,17 @@ async function initPayment() {
     const afterpayRadio = document.getElementById("afterpay-radio");
 
     // Check if cards is available as a drop-in component and render cards option in payment methods if so
-    if (availableComponents.find((component) => component.name === "cards")) {
+    const cardsComponentAvailable = availableComponents.find((component) => component.name === "cards");
+    
+    if (cardsComponentAvailable) {
       showCardsPaymentMethod(true);
+
+      cardsComponentAvailable.networkInformation?.map(info => info.logoUrl).slice(0,4).forEach(url => {
+        const img = document.createElement("img");
+        img.src = url;
+        document.getElementById("card-icons").appendChild(img);
+      });
+      
 
       // This is a container for the payoneer-cards component, hidden by default and shown when cards radio is clicked
       const container = document.getElementById("cards-component-container");
@@ -332,10 +341,20 @@ async function initPayment() {
     }
 
     // If Afterpay is available as a drop-in component, show it in the payment methods list
+
+    const afterpayComponentAvailable = availableComponents.find((component) => component.name === "afterpay");
     if (
-      availableComponents.find((component) => component.name === "afterpay")
+      afterpayComponentAvailable
     ) {
       showAfterpayPaymentMethod(true);
+;
+      console.log(afterpayComponentAvailable);
+
+      afterpayComponentAvailable.networkInformation?.map(info => info.logoUrl).slice(0,4).forEach(url => {
+        const img = document.createElement("img");
+        img.src = url;
+        document.getElementById("afterpay-icons").appendChild(img);
+      });
 
       // Placeholder for dropping in the Afterpay payment component
       const container = document.getElementById("afterpay-component-container");
@@ -376,7 +395,7 @@ async function getListResult() {
   // Sets language based on query parameter
   const language = getLanguage();
 
-  return generateList("EMBEDDED", amount, country, language, null);
+  return generateList("EMBEDDED", amount, country, language, null, null);
 }
 
 async function getLongId() {
@@ -418,10 +437,13 @@ function showCardsPaymentMethod(boolean) {
 }
 
 function showCardsPaymentComponent(boolean) {
+  const cardsPaymentMethod = document.getElementById("cards-payment-method");
   const cardsComponentContainer = document.getElementById("cards-container");
   if (boolean) {
+    cardsPaymentMethod.classList.add("selected");
     cardsComponentContainer.style = "display: block;";
   } else {
+    cardsPaymentMethod.classList.remove("selected");
     cardsComponentContainer.style = "display: none;";
   }
 }
@@ -440,19 +462,24 @@ function showAfterpayPaymentMethod(boolean) {
     "afterpay-payment-method"
   );
   if (boolean) {
-    afterpayPaymentMethod.style = "display: block;";
+    afterpayPaymentMethod.classList.remove("hidden");
   } else {
-    afterpayPaymentMethod.style = "display: none;";
+    afterpayPaymentMethod.classList.add("hidden");
   }
 }
 
 function showAfterpayPaymentComponent(boolean) {
   const afterpayComponentContainer =
     document.getElementById("afterpay-container");
+  const afterpayPaymentMethod = document.getElementById(
+    "afterpay-payment-method"
+  );
   if (boolean) {
     afterpayComponentContainer.style = "display: block;";
+    afterpayPaymentMethod.classList.add("selected");
   } else {
     afterpayComponentContainer.style = "display: none;";
+    afterpayPaymentMethod.classList.remove("selected");
   }
 }
 
