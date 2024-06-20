@@ -225,7 +225,7 @@ async function initPayment() {
           document.getElementById("payment-methods").style.display = "none";
           const message = document.getElementById("custom-override-message");
           message.innerHTML = `onBeforeError called in ${componentName}`;
-          message.style = "background-color: red; display: flex;";
+          message.style = "background-color: #FF4800; display: flex;";
           break;
       }
 
@@ -240,7 +240,7 @@ async function initPayment() {
       message.style = "display: flex;";
       return new Promise((resolve) => {
         setTimeout(() => {
-          message.style = "background-color: green; display: flex;";
+          message.style = "background-color: #20DC86; display: flex;";
           message.innerHTML = "onBeforeCharge success! &#10003;";
           setTimeout(() => {
             message.style = "background-color: orange; display: none;";
