@@ -215,11 +215,10 @@ async function initPayment() {
       );
       switch (componentName) {
         case "cards":
-          document.getElementById("cards-payment-method").style.display =
-            "none";
+          showCardsPaymentMethod(false);
           break;
-        case "afterpay":
-          document.getElementById("afterpay-payment-method").classList.add("hidden");
+        case "AFTERPAY":
+          showAfterpayPaymentMethod(false);
           break;
         default:
           document.getElementById("payment-methods").style.display = "none";
@@ -430,9 +429,9 @@ function getIE() {
 function showCardsPaymentMethod(boolean) {
   const cardsPaymentMethod = document.getElementById("cards-payment-method");
   if (boolean) {
-    cardsPaymentMethod.style = "display: block;";
+    cardsPaymentMethod.classList.remove("hidden");
   } else {
-    cardsPaymentMethod.style = "display: none;";
+    cardsPaymentMethod.classList.add("hidden");
   }
 }
 
