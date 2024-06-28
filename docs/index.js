@@ -217,7 +217,7 @@ async function initPayment() {
         case "cards":
           showCardsPaymentMethod(false);
           break;
-        case "AFTERPAY":
+        case "afterpay":
           showAfterpayPaymentMethod(false);
           break;
         default:
