@@ -53,6 +53,17 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
+window.addEventListener('beforeunload', function() {
+  const radios = document.querySelectorAll('input[type="radio"]');
+  radios.forEach(radio => {
+      if (radio.defaultChecked) {
+          radio.checked = true;
+      } else {
+          radio.checked = false;
+      }
+  });
+});
+
 function loadCheckoutWeb() {
   const searchParams = new URLSearchParams(window.location.search);
   const head = document.getElementsByTagName("head")[0];
@@ -216,10 +227,27 @@ async function initPayment() {
       switch (componentName) {
         case "cards":
           showCardsPaymentMethod(false);
+          return new Promise((resolve) => {
+            const message = document.getElementById("custom-override-message");
+            message.innerHTML = `onBeforeError called in Cards`;
+            message.style = "background-color: #FF4800; display: flex;";
+            setTimeout(() => {
+              message.style = "background-color: orange; display: none;";
+              resolve(true);
+            }, 1500);
+          });
           break;
         case "afterpay":
           showAfterpayPaymentMethod(false);
-          break;
+          return new Promise((resolve) => {
+              const message = document.getElementById("custom-override-message");
+              message.innerHTML = `onBeforeError called in Afterpay`;
+              message.style = "background-color: #FF4800; display: flex;";
+              setTimeout(() => {
+                message.style = "background-color: orange; display: none;";
+                resolve(true);
+              }, 1500);
+          });
         default:
           document.getElementById("payment-methods").style.display = "none";
           const message = document.getElementById("custom-override-message");
@@ -382,6 +410,10 @@ async function initPayment() {
     // Update the UI once the list response is received so that components become visible
     document.getElementById("payment-methods").style = "display: block;";
   }
+}
+
+function showError() {
+
 }
 
 async function getListResult() {
