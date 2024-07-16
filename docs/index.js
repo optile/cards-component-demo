@@ -300,7 +300,6 @@ async function initPayment() {
   // Initialises the SDK
   const checkout = await new Payoneer.CheckoutWeb(configs);
 
-  console.log({ checkout })
   // Makes instance available in window
   window.checkout = checkout;
 
@@ -435,12 +434,10 @@ async function initPayment() {
     // If Klarna is available as a drop-in component, show it in the payment methods list
 
   const klarnaComponentAvailable = availableComponents.find((component) => component.name === "klarna");
-  console.log({ klarnaComponentAvailable });
   if (
     klarnaComponentAvailable
   ) {
     showKlarnaPaymentMethod(true);
-    ;
     console.log(klarnaComponentAvailable);
 
     klarnaComponentAvailable.networkInformation?.map(info => info.logoUrl).slice(0, 4).forEach(url => {
