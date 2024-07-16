@@ -420,7 +420,7 @@ async function initPayment() {
           updateCustomPaymentButton(afterpay);
           showCardsPaymentComponent(false);
           showCardsOptions(false);
-          showKlarnaPaymentComponent(true);
+          showKlarnaPaymentComponent(false);
           showAfterpayPaymentComponent(true);
         }
       });
