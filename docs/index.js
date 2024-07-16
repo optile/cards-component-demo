@@ -864,7 +864,7 @@ function generateList(
       case "klarna":
         return ["KLARNA"];
       default:
-        return ["AMEX", "VISA", "MASTERCARD", "JCB", "AFTERPAY", "DISCOVER"];
+        return ["AMEX", "VISA", "MASTERCARD", "JCB", "AFTERPAY", "DISCOVER", "KLARNA"];
     }
   }
 
