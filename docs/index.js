@@ -88,7 +88,7 @@ function loadCheckoutWeb() {
     searchParams.get("listUrl").includes("sandbox")
   ) {
     js.src =
-      "https://resources.sandbox.oscato.com/web/libraries/checkout-web/umd/checkout-web.min.js";
+      "https://resources.pi-nightly.integration.oscato.com/web/libraries/checkout-web/umd/checkout-web.min.js";
   } else {
     js.src =
       "https://resources.pi-nightly.integration.oscato.com/web/libraries/checkout-web/umd/checkout-web.min.js";
@@ -224,7 +224,7 @@ async function initPayment() {
   const configs = {
     env: ie, // test | live | int-env-name | pi-nightly.integration
     longId: longId,
-    preload: ["cards", "afterpay"], // loads cards and afterpay script as soon as page loads so that rendering using dropIn is fast
+    preload: ["cards", "afterpay", "klarna"], // loads cards and afterpay script as soon as page loads so that rendering using dropIn is fast
     onBeforeError: async (_checkout, componentName, errorData) => {
       console.error(
         "On before error called",
@@ -256,17 +256,17 @@ async function initPayment() {
               resolve(true);
             }, 1500);
           });
-        case "afterpay":
-            showKlarnaPaymentMethod(false);
-            return new Promise((resolve) => {
-              const message = document.getElementById("custom-override-message");
-              message.innerHTML = `onBeforeError called in Klarna`;
-              message.style = "background-color: #FF4800; display: flex;";
-              setTimeout(() => {
-                message.style = "background-color: orange; display: none;";
-                resolve(true);
-              }, 1500);
-            });
+        case "klarna":
+          showKlarnaPaymentMethod(false);
+          return new Promise((resolve) => {
+            const message = document.getElementById("custom-override-message");
+            message.innerHTML = `onBeforeError called in Klarna`;
+            message.style = "background-color: #FF4800; display: flex;";
+            setTimeout(() => {
+              message.style = "background-color: orange; display: none;";
+              resolve(true);
+            }, 1500);
+          });
         default:
           document.getElementById("payment-methods").style.display = "none";
           const message = document.getElementById("custom-override-message");
@@ -300,6 +300,7 @@ async function initPayment() {
   // Initialises the SDK
   const checkout = await new Payoneer.CheckoutWeb(configs);
 
+  console.log({ checkout })
   // Makes instance available in window
   window.checkout = checkout;
 
@@ -392,14 +393,14 @@ async function initPayment() {
     // If Afterpay is available as a drop-in component, show it in the payment methods list
 
     const afterpayComponentAvailable = availableComponents.find((component) => component.name === "afterpay");
+
     if (
       afterpayComponentAvailable
     ) {
       showAfterpayPaymentMethod(true);
-;
       console.log(afterpayComponentAvailable);
 
-      afterpayComponentAvailable.networkInformation?.map(info => info.logoUrl).slice(0,4).forEach(url => {
+      afterpayComponentAvailable.networkInformation?.map(info => info.logoUrl).slice(0, 4).forEach(url => {
         const img = document.createElement("img");
         img.src = url;
         document.getElementById("afterpay-icons").appendChild(img);
@@ -430,13 +431,11 @@ async function initPayment() {
         afterpayRadio.click();
       }
     }
-    // Update the UI once the list response is received so that components become visible
-    document.getElementById("payment-methods").style = "display: block;";
-  }
 
-  // If Klarna is available as a drop-in component, show it in the payment methods list
+    // If Klarna is available as a drop-in component, show it in the payment methods list
 
   const klarnaComponentAvailable = availableComponents.find((component) => component.name === "klarna");
+  console.log({ klarnaComponentAvailable });
   if (
     klarnaComponentAvailable
   ) {
@@ -475,8 +474,10 @@ async function initPayment() {
       klarnaRadio.click();
     }
   }
-  // Update the UI once the list response is received so that components become visible
-  document.getElementById("payment-methods").style = "display: block;";
+
+    // Update the UI once the list response is received so that components become visible
+    document.getElementById("payment-methods").style = "display: block;";
+  }
 }
 
 function showError() {
