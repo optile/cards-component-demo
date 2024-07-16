@@ -43,6 +43,14 @@ window.addEventListener("DOMContentLoaded", async () => {
       handleStandaloneRedirectClick("afterpay");
     });
 
+  // Generates a HOSTED list session and redirects when pay button is clicked in HOSTED scenario for cards
+  document
+    .getElementById("klarna-hosted-redirect-button")
+    .addEventListener("click", (event) => {
+      event.preventDefault();
+      handleStandaloneRedirectClick("klarna");
+    });
+
   // Sets up chooser between hosted and embedded
   setUpIntegrationSelector();
 
@@ -53,14 +61,14 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-window.addEventListener('beforeunload', function() {
+window.addEventListener('beforeunload', function () {
   const radios = document.querySelectorAll('input[type="radio"]');
   radios.forEach(radio => {
-      if (radio.defaultChecked) {
-          radio.checked = true;
-      } else {
-          radio.checked = false;
-      }
+    if (radio.defaultChecked) {
+      radio.checked = true;
+    } else {
+      radio.checked = false;
+    }
   });
 });
 
@@ -240,14 +248,25 @@ async function initPayment() {
         case "afterpay":
           showAfterpayPaymentMethod(false);
           return new Promise((resolve) => {
+            const message = document.getElementById("custom-override-message");
+            message.innerHTML = `onBeforeError called in Afterpay`;
+            message.style = "background-color: #FF4800; display: flex;";
+            setTimeout(() => {
+              message.style = "background-color: orange; display: none;";
+              resolve(true);
+            }, 1500);
+          });
+        case "afterpay":
+            showKlarnaPaymentMethod(false);
+            return new Promise((resolve) => {
               const message = document.getElementById("custom-override-message");
-              message.innerHTML = `onBeforeError called in Afterpay`;
+              message.innerHTML = `onBeforeError called in Klarna`;
               message.style = "background-color: #FF4800; display: flex;";
               setTimeout(() => {
                 message.style = "background-color: orange; display: none;";
                 resolve(true);
               }, 1500);
-          });
+            });
         default:
           document.getElementById("payment-methods").style.display = "none";
           const message = document.getElementById("custom-override-message");
@@ -280,7 +299,7 @@ async function initPayment() {
 
   // Initialises the SDK
   const checkout = await new Payoneer.CheckoutWeb(configs);
-  
+
   // Makes instance available in window
   window.checkout = checkout;
 
@@ -326,19 +345,21 @@ async function initPayment() {
     // Radio button inputs for the Payoneer-provided payment methods
     const cardsRadio = document.getElementById("card-radio");
     const afterpayRadio = document.getElementById("afterpay-radio");
+    const klarnaRadio = document.getElementById("klarna-radio");
+
 
     // Check if cards is available as a drop-in component and render cards option in payment methods if so
     const cardsComponentAvailable = availableComponents.find((component) => component.name === "cards");
-    
+
     if (cardsComponentAvailable) {
       showCardsPaymentMethod(true);
 
-      cardsComponentAvailable.networkInformation?.map(info => info.logoUrl).slice(0,4).forEach(url => {
+      cardsComponentAvailable.networkInformation?.map(info => info.logoUrl).slice(0, 4).forEach(url => {
         const img = document.createElement("img");
         img.src = url;
         document.getElementById("card-icons").appendChild(img);
       });
-      
+
 
       // This is a container for the payoneer-cards component, hidden by default and shown when cards radio is clicked
       const container = document.getElementById("cards-component-container");
@@ -358,6 +379,7 @@ async function initPayment() {
           showCardsOptions(true);
           // Adds a click event handler to the custom pay button that triggers payment in cards component
           showAfterpayPaymentComponent(false);
+          showKlarnaPaymentComponent(false);
         }
       });
 
@@ -398,6 +420,7 @@ async function initPayment() {
           updateCustomPaymentButton(afterpay);
           showCardsPaymentComponent(false);
           showCardsOptions(false);
+          showKlarnaPaymentComponent(true);
           showAfterpayPaymentComponent(true);
         }
       });
@@ -410,6 +433,50 @@ async function initPayment() {
     // Update the UI once the list response is received so that components become visible
     document.getElementById("payment-methods").style = "display: block;";
   }
+
+  // If Afterpay is available as a drop-in component, show it in the payment methods list
+
+  const klarnaComponentAvailable = availableComponents.find((component) => component.name === "klarna");
+  if (
+    klarnaComponentAvailable
+  ) {
+    showKlarnaPaymentMethod(true);
+    ;
+    console.log(klarnaComponentAvailable);
+
+    klarnaComponentAvailable.networkInformation?.map(info => info.logoUrl).slice(0, 4).forEach(url => {
+      const img = document.createElement("img");
+      img.src = url;
+      document.getElementById("klarna-icons").appendChild(img);
+    });
+
+    // Placeholder for dropping in the klarna payment component
+    const container = document.getElementById("klarna-component-container");
+
+    // Already drop in cards component so that it renders immediately
+    const klarna = checkout
+      .dropIn("klarna", {
+        hidePaymentButton: !(payButtonType === "default"),
+      })
+      .mount(container);
+
+    klarnaRadio.addEventListener("change", (event) => {
+      if (event.target.checked) {
+        updateCustomPaymentButton(klarna);
+        showCardsPaymentComponent(false);
+        showCardsOptions(false);
+        showAfterpayPaymentComponent(false);
+        showKlarnaPaymentComponent(true);
+      }
+    });
+
+    // Show this component by default if it is the only one in the available components
+    if (availableComponents.length === 1) {
+      klarnaRadio.click();
+    }
+  }
+  // Update the UI once the list response is received so that components become visible
+  document.getElementById("payment-methods").style = "display: block;";
 }
 
 function showError() {
@@ -511,6 +578,32 @@ function showAfterpayPaymentComponent(boolean) {
   } else {
     afterpayComponentContainer.style = "display: none;";
     afterpayPaymentMethod.classList.remove("selected");
+  }
+}
+
+function showKlarnaPaymentMethod(boolean) {
+  const klarnaPaymentMethod = document.getElementById(
+    "klarna-payment-method"
+  );
+  if (boolean) {
+    klarnaPaymentMethod.classList.remove("hidden");
+  } else {
+    klarnaPaymentMethod.classList.add("hidden");
+  }
+}
+
+function showKlarnaPaymentComponent(boolean) {
+  const klarnaComponentContainer =
+    document.getElementById("klarna-container");
+  const klarnaPaymentMethod = document.getElementById(
+    "klarna-payment-method"
+  );
+  if (boolean) {
+    klarnaComponentContainer.style = "display: block;";
+    klarnaPaymentMethod.classList.add("selected");
+  } else {
+    klarnaComponentContainer.style = "display: none;";
+    klarnaPaymentMethod.classList.remove("selected");
   }
 }
 
@@ -768,6 +861,8 @@ function generateList(
         return ["AMEX", "VISA", "MASTERCARD", "JCB", "DISCOVER"];
       case "afterpay":
         return ["AFTERPAY"];
+      case "klarna":
+        return ["KLARNA"];
       default:
         return ["AMEX", "VISA", "MASTERCARD", "JCB", "AFTERPAY", "DISCOVER"];
     }
