@@ -434,7 +434,7 @@ async function initPayment() {
     document.getElementById("payment-methods").style = "display: block;";
   }
 
-  // If Afterpay is available as a drop-in component, show it in the payment methods list
+  // If Klarna is available as a drop-in component, show it in the payment methods list
 
   const klarnaComponentAvailable = availableComponents.find((component) => component.name === "klarna");
   if (
