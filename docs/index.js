@@ -287,7 +287,7 @@ async function initPayment() {
       return new Promise((resolve) => {
         setTimeout(() => {
           message.style = "background-color: #61b2e8; display: flex;";
-          message.innerHTML = "onBeforeCharge complete - proceeding with payment";
+          message.innerHTML = "onBeforeCharge OK. Attempting payment...";
           setTimeout(() => {
             message.style = "background-color: orange; display: none;";
             resolve(true);
