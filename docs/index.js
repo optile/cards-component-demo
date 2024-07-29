@@ -286,8 +286,24 @@ async function initPayment() {
       message.style = "display: flex;";
       return new Promise((resolve) => {
         setTimeout(() => {
+          message.style = "background-color: #61b2e8; display: flex;";
+          message.innerHTML = "onBeforeCharge complete - proceeding with payment";
+          setTimeout(() => {
+            message.style = "background-color: orange; display: none;";
+            resolve(true);
+          }, 1000);
+        }, 1000);
+      });
+    },
+    onPaymentSuccess: async () => {
+      console.log("On payment success called");
+      const message = document.getElementById("custom-override-message");
+      message.innerHTML = "onPaymentSuccess was called...";
+      message.style = "display: flex;";
+      return new Promise((resolve) => {
+        setTimeout(() => {
           message.style = "background-color: #20DC86; display: flex;";
-          message.innerHTML = "onBeforeCharge success! &#10003;";
+          message.innerHTML = "Payment was successful! &#10003; Redirecting...";
           setTimeout(() => {
             message.style = "background-color: orange; display: none;";
             resolve(true);
