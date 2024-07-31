@@ -771,6 +771,26 @@ function getCountry() {
     : "US";
 }
 
+// Returns the payment outcome based on query parameter
+function getPaymentOutcome() {
+  const params = new URLSearchParams(window.location.search);
+  const paymentOutcome = params.get("paymentOutcome")
+    ? params.get("paymentOutcome")
+    : null;
+  return paymentOutcome;
+}
+
+// Returns the deferral based on payment outcome
+function getDeferral() {
+  const paymentOutcome = getPaymentOutcome();
+  if(paymentOutcome === "abort") {
+    return "DEFERRED"
+  } 
+  else {
+    return "NON_DEFERRED"
+  }
+}
+
 // Checks query params to see if error case was selected
 function getError() {
   const params = new URLSearchParams(window.location.search);
@@ -840,9 +860,7 @@ function getThemeSettings(theme, setting) {
 function getAmount() {
   const params = new URLSearchParams(window.location.search);
 
-  const paymentOutcome = params.get("paymentOutcome")
-    ? params.get("paymentOutcome")
-    : null;
+  const paymentOutcome = getPaymentOutcome();
 
   let amount;
 
@@ -854,7 +872,7 @@ function getAmount() {
       amount = 15.0;
       break;
     case "abort":
-      amount = 15.0;
+      amount = 4.02;
       break;
     case "retry":
       amount = 1.03;
@@ -953,6 +971,7 @@ function generateList(
     preselection: {
       direction: "CHARGE",
       networkCodes: getPreselection(method),
+      deferral: getDeferral()
     },
     presetFirst: false,
     style: {
