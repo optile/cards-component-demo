@@ -225,10 +225,10 @@ async function initPayment() {
     env: ie, // test | live | int-env-name | pi-nightly.integration
     longId: longId,
     preload: ["cards", "afterpay", "klarna"], // loads cards and afterpay script as soon as page loads so that rendering using dropIn is fast
-    onBeforeError: async (_checkout, componentName, errorData) => {
+    onBeforeError: async (checkout, componentName, errorData) => {
       console.error(
         "On before error called",
-        _checkout,
+        checkout,
         componentName,
         errorData
       );
@@ -279,8 +279,8 @@ async function initPayment() {
         resolve(false);
       });
     },
-    onBeforeCharge: async () => {
-      console.log("On before charge called");
+    onBeforeCharge: async (checkout, componentName, errorData) => {
+      console.log("On before charge called", checkout, componentName, errorData);
       const message = document.getElementById("custom-override-message");
       message.innerHTML = "Awaiting onBeforeCharge result...";
       message.style = "display: flex;";
@@ -295,8 +295,24 @@ async function initPayment() {
         }, 1000);
       });
     },
-    onPaymentSuccess: async () => {
-      console.log("On payment success called");
+    onBeforeProviderRedirect: async (checkout, componentName, errorData) => {
+      console.log("On before provider redirect called", checkout, componentName, errorData);
+      const message = document.getElementById("custom-override-message");
+      message.innerHTML = "Awaiting onBeforeProviderRedirect result...";
+      message.style = "display: flex;";
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          message.style = "background-color: #61b2e8; display: flex;";
+          message.innerHTML = "Redirecting to 3rd party provider...";
+          setTimeout(() => {
+            message.style = "background-color: orange; display: none;";
+            resolve(true);
+          }, 1000);
+        }, 1000);
+      });
+    },
+    onPaymentSuccess: async (checkout, componentName, errorData) => {
+      console.log("On payment success called", checkout, componentName, errorData);
       const message = document.getElementById("custom-override-message");
       message.innerHTML = "onPaymentSuccess was called...";
       message.style = "display: flex;";
