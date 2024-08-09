@@ -225,7 +225,7 @@ async function initPayment() {
     env: ie, // test | live | int-env-name | pi-nightly.integration
     longId: longId,
     preload: ["cards", "afterpay", "klarna"], // loads cards and afterpay script as soon as page loads so that rendering using dropIn is fast
-    onBeforeError: async (checkout, componentName, errorData) => {
+    onBeforeError: (checkout, componentName, errorData) => {
       console.error(
         "On before error called",
         checkout,
@@ -234,6 +234,11 @@ async function initPayment() {
       );
       switch (componentName) {
         case "cards":
+          try {
+            checkout.dropInComponents["cards"]?.unmount();
+          } catch(e) {
+            console.log(e)
+          };
           showCardsPaymentMethod(false);
           return new Promise((resolve) => {
             const message = document.getElementById("custom-override-message");
@@ -244,8 +249,12 @@ async function initPayment() {
               resolve(true);
             }, 1500);
           });
-          break;
         case "afterpay":
+          try {
+            checkout.dropInComponents["afterpay"]?.unmount();
+          } catch(e) {
+            console.log(e)
+          };
           showAfterpayPaymentMethod(false);
           return new Promise((resolve) => {
             const message = document.getElementById("custom-override-message");
@@ -257,6 +266,11 @@ async function initPayment() {
             }, 1500);
           });
         case "klarna":
+          try {
+            checkout.dropInComponents["klarna"]?.unmount();
+          } catch(e) {
+            console.log(e)
+          };
           showKlarnaPaymentMethod(false);
           return new Promise((resolve) => {
             const message = document.getElementById("custom-override-message");
@@ -268,16 +282,17 @@ async function initPayment() {
             }, 1500);
           });
         default:
-          document.getElementById("payment-methods").style.display = "none";
-          const message = document.getElementById("custom-override-message");
-          message.innerHTML = `onBeforeError called in ${componentName}`;
-          message.style = "background-color: #FF4800; display: flex;";
-          break;
+          return new Promise((resolve) => {
+            document.getElementById("payment-methods").style.display = "none";
+            const message = document.getElementById("custom-override-message");
+            message.innerHTML = `onBeforeError called in ${componentName}`;
+            message.style = "background-color: #FF4800; display: flex;";
+            setTimeout(() => {
+              message.style = "background-color: orange; display: none;";
+              resolve(true);
+            }, 1500);
+          });
       }
-
-      return new Promise((resolve) => {
-        resolve(false);
-      });
     },
     onBeforeCharge: async (checkout, componentName, errorData) => {
       console.log("On before charge called", checkout, componentName, errorData);
@@ -295,8 +310,8 @@ async function initPayment() {
         }, 1000);
       });
     },
-    onBeforeProviderRedirect: async (checkout, componentName, errorData) => {
-      console.log("On before provider redirect called", checkout, componentName, errorData);
+    onBeforeProviderRedirect: async (checkout, componentName, redirectData) => {
+      console.log("On before provider redirect called", checkout, componentName, redirectData);
       const message = document.getElementById("custom-override-message");
       message.innerHTML = "Awaiting onBeforeProviderRedirect result...";
       message.style = "display: flex;";
@@ -311,8 +326,8 @@ async function initPayment() {
         }, 1000);
       });
     },
-    onPaymentSuccess: async (checkout, componentName, errorData) => {
-      console.log("On payment success called", checkout, componentName, errorData);
+    onPaymentSuccess: async (checkout, componentName, redirectData) => {
+      console.log("On payment success called", checkout, componentName, redirectData);
       const message = document.getElementById("custom-override-message");
       message.innerHTML = "onPaymentSuccess was called...";
       message.style = "display: flex;";
@@ -327,6 +342,26 @@ async function initPayment() {
         }, 1000);
       });
     },
+    onPaymentFailure: async (checkout, componentName, redirectData) => {
+      console.log("On payment failure called", checkout, componentName, redirectData);
+      const message = document.getElementById("custom-override-message");
+      message.innerHTML = "onPaymentFailure was called...";
+      message.style = "display: flex;";
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          message.style = "background-color: #FF4800; display: flex;";
+          message.innerHTML = "Payment session aborted! Redirecting...";
+          setTimeout(() => {
+            message.style = "background-color: orange; display: none;";
+            resolve(true);
+          }, 1000);
+        }, 1000);
+      });
+    },
+    onListRefetch: async (checkout, componentName, listData) => { 
+      console.log("List data refetched", checkout, componentName, listData);
+      return true;
+    }
   };
 
   // Initialises the SDK
