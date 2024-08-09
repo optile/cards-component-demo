@@ -61,6 +61,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
+// Resets all radio buttons so if user comes back via browser back button default selection is used
 window.addEventListener('beforeunload', function () {
   const radios = document.querySelectorAll('input[type="radio"]');
   radios.forEach(radio => {
@@ -72,6 +73,7 @@ window.addEventListener('beforeunload', function () {
   });
 });
 
+// Loads the checkout web script dynamically, using sandbox environment if listUrl from sandbox is passed
 function loadCheckoutWeb() {
   const searchParams = new URLSearchParams(window.location.search);
   const head = document.getElementsByTagName("head")[0];
@@ -88,7 +90,7 @@ function loadCheckoutWeb() {
     searchParams.get("listUrl").includes("sandbox")
   ) {
     js.src =
-      "https://resources.pi-nightly.integration.oscato.com/web/libraries/checkout-web/umd/checkout-web.min.js";
+      "https://resources.sandbox.oscato.com/web/libraries/checkout-web/umd/checkout-web.min.js";
   } else {
     js.src =
       "https://resources.pi-nightly.integration.oscato.com/web/libraries/checkout-web/umd/checkout-web.min.js";
@@ -225,15 +227,20 @@ async function initPayment() {
     env: ie, // test | live | int-env-name | pi-nightly.integration
     longId: longId,
     preload: ["cards", "afterpay", "klarna"], // loads cards and afterpay script as soon as page loads so that rendering using dropIn is fast
-    onBeforeError: async (_checkout, componentName, errorData) => {
+    onBeforeError: (checkout, componentName, errorData) => {
       console.error(
         "On before error called",
-        _checkout,
+        checkout,
         componentName,
         errorData
       );
       switch (componentName) {
         case "cards":
+          try {
+            checkout.dropInComponents["cards"]?.unmount();
+          } catch(e) {
+            console.log(e)
+          };
           showCardsPaymentMethod(false);
           return new Promise((resolve) => {
             const message = document.getElementById("custom-override-message");
@@ -244,8 +251,12 @@ async function initPayment() {
               resolve(true);
             }, 1500);
           });
-          break;
         case "afterpay":
+          try {
+            checkout.dropInComponents["afterpay"]?.unmount();
+          } catch(e) {
+            console.log(e)
+          };
           showAfterpayPaymentMethod(false);
           return new Promise((resolve) => {
             const message = document.getElementById("custom-override-message");
@@ -257,6 +268,11 @@ async function initPayment() {
             }, 1500);
           });
         case "klarna":
+          try {
+            checkout.dropInComponents["klarna"]?.unmount();
+          } catch(e) {
+            console.log(e)
+          };
           showKlarnaPaymentMethod(false);
           return new Promise((resolve) => {
             const message = document.getElementById("custom-override-message");
@@ -268,26 +284,27 @@ async function initPayment() {
             }, 1500);
           });
         default:
-          document.getElementById("payment-methods").style.display = "none";
-          const message = document.getElementById("custom-override-message");
-          message.innerHTML = `onBeforeError called in ${componentName}`;
-          message.style = "background-color: #FF4800; display: flex;";
-          break;
+          return new Promise((resolve) => {
+            document.getElementById("payment-methods").style.display = "none";
+            const message = document.getElementById("custom-override-message");
+            message.innerHTML = `onBeforeError called in ${componentName}`;
+            message.style = "background-color: #FF4800; display: flex;";
+            setTimeout(() => {
+              message.style = "background-color: orange; display: none;";
+              resolve(true);
+            }, 1500);
+          });
       }
-
-      return new Promise((resolve) => {
-        resolve(false);
-      });
     },
-    onBeforeCharge: async () => {
-      console.log("On before charge called");
+    onBeforeCharge: async (checkout, componentName, errorData) => {
+      console.log("On before charge called", checkout, componentName, errorData);
       const message = document.getElementById("custom-override-message");
       message.innerHTML = "Awaiting onBeforeCharge result...";
       message.style = "display: flex;";
       return new Promise((resolve) => {
         setTimeout(() => {
-          message.style = "background-color: #20DC86; display: flex;";
-          message.innerHTML = "onBeforeCharge success! &#10003;";
+          message.style = "background-color: #61b2e8; display: flex;";
+          message.innerHTML = "onBeforeCharge OK. Attempting payment...";
           setTimeout(() => {
             message.style = "background-color: orange; display: none;";
             resolve(true);
@@ -295,6 +312,60 @@ async function initPayment() {
         }, 1000);
       });
     },
+    onBeforeProviderRedirect: async (checkout, componentName, redirectData) => {
+      console.log("On before provider redirect called", checkout, componentName, redirectData);
+      const message = document.getElementById("custom-override-message");
+      message.innerHTML = "Awaiting onBeforeProviderRedirect result...";
+      message.style = "display: flex;";
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          message.style = "background-color: #61b2e8; display: flex;";
+          message.innerHTML = "Redirecting to 3rd party provider...";
+          setTimeout(() => {
+            message.style = "background-color: orange; display: none;";
+            resolve(true);
+          }, 1000);
+        }, 1000);
+      });
+    },
+    onPaymentSuccess: async (checkout, componentName, redirectData) => {
+      console.log("On payment success called", checkout, componentName, redirectData);
+      const message = document.getElementById("custom-override-message");
+      message.innerHTML = "onPaymentSuccess was called...";
+      message.style = "display: flex;";
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          message.style = "background-color: #20DC86; display: flex;";
+          message.innerHTML = "Payment was successful! &#10003; Redirecting...";
+          setTimeout(() => {
+            message.style = "background-color: orange; display: none;";
+            resolve(true);
+          }, 1000);
+        }, 1000);
+      });
+    },
+    onPaymentFailure: async (checkout, componentName, redirectData) => {
+      console.log("On payment failure called", checkout, componentName, redirectData);
+      const message = document.getElementById("custom-override-message");
+      message.innerHTML = "onPaymentFailure was called...";
+      message.style = "display: flex;";
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          message.style = "background-color: #FF4800; display: flex;";
+          message.innerHTML = "Payment session aborted! Redirecting...";
+          setTimeout(() => {
+            message.style = "background-color: orange; display: none;";
+            resolve(true);
+          }, 1000);
+        }, 1000);
+      });
+    },
+    onListRefetch: async (checkout, componentName, listData) => { 
+      console.log("List data refetched", checkout, componentName, listData);
+      const availableComponents = checkout.availableDropInComponents();
+      setAvailableComponents(availableComponents);
+      return true;
+    }
   };
 
   // Initialises the SDK
@@ -336,11 +407,7 @@ async function initPayment() {
     // Checks which dropin components are available based on the list response
     const availableComponents = checkout.availableDropInComponents();
     console.log(availableComponents);
-    document.getElementById("available-components").textContent = [
-      "Available components: ",
-    ]
-      .concat(availableComponents.map((comp) => comp.name))
-      .join(" ");
+    setAvailableComponents(availableComponents);
 
     // Radio button inputs for the Payoneer-provided payment methods
     const cardsRadio = document.getElementById("card-radio");
@@ -477,8 +544,12 @@ async function initPayment() {
   }
 }
 
-function showError() {
-
+function setAvailableComponents(availableComponents) {
+  document.getElementById("available-components").textContent = [
+    "Available components: ",
+  ]
+    .concat(availableComponents.map((comp) => comp.name))
+    .join(" ");
 }
 
 async function getListResult() {
@@ -739,6 +810,26 @@ function getCountry() {
     : "US";
 }
 
+// Returns the payment outcome based on query parameter
+function getPaymentOutcome() {
+  const params = new URLSearchParams(window.location.search);
+  const paymentOutcome = params.get("paymentOutcome")
+    ? params.get("paymentOutcome")
+    : null;
+  return paymentOutcome;
+}
+
+// Returns the deferral based on payment outcome
+function getDeferral() {
+  const paymentOutcome = getPaymentOutcome();
+  if(paymentOutcome === "abort") {
+    return "DEFERRED"
+  } 
+  else {
+    return "NON_DEFERRED"
+  }
+}
+
 // Checks query params to see if error case was selected
 function getError() {
   const params = new URLSearchParams(window.location.search);
@@ -808,9 +899,7 @@ function getThemeSettings(theme, setting) {
 function getAmount() {
   const params = new URLSearchParams(window.location.search);
 
-  const paymentOutcome = params.get("paymentOutcome")
-    ? params.get("paymentOutcome")
-    : null;
+  const paymentOutcome = getPaymentOutcome();
 
   let amount;
 
@@ -822,7 +911,7 @@ function getAmount() {
       amount = 15.0;
       break;
     case "abort":
-      amount = 15.0;
+      amount = 4.02;
       break;
     case "retry":
       amount = 1.03;
@@ -921,6 +1010,7 @@ function generateList(
     preselection: {
       direction: "CHARGE",
       networkCodes: getPreselection(method),
+      deferral: getDeferral()
     },
     presetFirst: false,
     style: {
