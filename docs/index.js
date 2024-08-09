@@ -61,6 +61,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
+// Resets all radio buttons so if user comes back via browser back button default selection is used
 window.addEventListener('beforeunload', function () {
   const radios = document.querySelectorAll('input[type="radio"]');
   radios.forEach(radio => {
@@ -72,6 +73,7 @@ window.addEventListener('beforeunload', function () {
   });
 });
 
+// Loads the checkout web script dynamically, using sandbox environment if listUrl from sandbox is passed
 function loadCheckoutWeb() {
   const searchParams = new URLSearchParams(window.location.search);
   const head = document.getElementsByTagName("head")[0];
@@ -88,7 +90,7 @@ function loadCheckoutWeb() {
     searchParams.get("listUrl").includes("sandbox")
   ) {
     js.src =
-      "https://resources.pi-nightly.integration.oscato.com/web/libraries/checkout-web/umd/checkout-web.min.js";
+      "https://resources.sandbox.oscato.com/web/libraries/checkout-web/umd/checkout-web.min.js";
   } else {
     js.src =
       "https://resources.pi-nightly.integration.oscato.com/web/libraries/checkout-web/umd/checkout-web.min.js";
@@ -360,6 +362,8 @@ async function initPayment() {
     },
     onListRefetch: async (checkout, componentName, listData) => { 
       console.log("List data refetched", checkout, componentName, listData);
+      const availableComponents = checkout.availableDropInComponents();
+      setAvailableComponents(availableComponents);
       return true;
     }
   };
@@ -403,11 +407,7 @@ async function initPayment() {
     // Checks which dropin components are available based on the list response
     const availableComponents = checkout.availableDropInComponents();
     console.log(availableComponents);
-    document.getElementById("available-components").textContent = [
-      "Available components: ",
-    ]
-      .concat(availableComponents.map((comp) => comp.name))
-      .join(" ");
+    setAvailableComponents(availableComponents);
 
     // Radio button inputs for the Payoneer-provided payment methods
     const cardsRadio = document.getElementById("card-radio");
@@ -544,8 +544,12 @@ async function initPayment() {
   }
 }
 
-function showError() {
-
+function setAvailableComponents(availableComponents) {
+  document.getElementById("available-components").textContent = [
+    "Available components: ",
+  ]
+    .concat(availableComponents.map((comp) => comp.name))
+    .join(" ");
 }
 
 async function getListResult() {
