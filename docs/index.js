@@ -227,6 +227,8 @@ async function initPayment() {
     env: ie, // test | live | int-env-name | pi-nightly.integration
     longId: longId,
     preload: ["cards", "afterpay", "klarna"], // loads cards and afterpay script as soon as page loads so that rendering using dropIn is fast
+    // Called whenever there is an error (either server-side or client-side) which prevents payment. componentName indicates
+    // where the error occurred (checkout-web or one of the payment components)
     onBeforeError: (checkout, componentName, errorData) => {
       console.error(
         "On before error called",
@@ -235,67 +237,72 @@ async function initPayment() {
         errorData
       );
       switch (componentName) {
+        // Cards payment component error - we want to unmount the component and hide payment method
         case "cards":
           try {
             checkout.dropInComponents["cards"]?.unmount();
+            showCardsPaymentMethod(false);
           } catch(e) {
             console.log(e)
           };
-          showCardsPaymentMethod(false);
           return new Promise((resolve) => {
             const message = document.getElementById("custom-override-message");
             message.innerHTML = `onBeforeError called in Cards`;
             message.style = "background-color: #FF4800; display: flex;";
             setTimeout(() => {
               message.style = "background-color: orange; display: none;";
-              resolve(true);
+              resolve(false); // false hides default error message from the SDK
             }, 1500);
           });
+        // Afterpay payment component error - we want to unmount the component and hide payment method
         case "afterpay":
           try {
             checkout.dropInComponents["afterpay"]?.unmount();
+            showAfterpayPaymentMethod(false);
           } catch(e) {
             console.log(e)
           };
-          showAfterpayPaymentMethod(false);
           return new Promise((resolve) => {
             const message = document.getElementById("custom-override-message");
             message.innerHTML = `onBeforeError called in Afterpay`;
             message.style = "background-color: #FF4800; display: flex;";
             setTimeout(() => {
               message.style = "background-color: orange; display: none;";
-              resolve(true);
+              resolve(false); // false hides default error message from the SDK
             }, 1500);
           });
+        // Klarna payment component error - we want to unmount the component and hide payment method
         case "klarna":
           try {
             checkout.dropInComponents["klarna"]?.unmount();
+            showKlarnaPaymentMethod(false);
           } catch(e) {
             console.log(e)
           };
-          showKlarnaPaymentMethod(false);
           return new Promise((resolve) => {
             const message = document.getElementById("custom-override-message");
             message.innerHTML = `onBeforeError called in Klarna`;
             message.style = "background-color: #FF4800; display: flex;";
             setTimeout(() => {
               message.style = "background-color: orange; display: none;";
-              resolve(true);
+              resolve(false); // false hides default error message from the SDK
             }, 1500);
           });
+        // Global error
+        case "checkout-web":
         default:
           return new Promise((resolve) => {
-            document.getElementById("payment-methods").style.display = "none";
+            //document.getElementById("payment-methods").style.display = "none";
             const message = document.getElementById("custom-override-message");
             message.innerHTML = `onBeforeError called in ${componentName}`;
             message.style = "background-color: #FF4800; display: flex;";
             setTimeout(() => {
-              message.style = "background-color: orange; display: none;";
-              resolve(true);
+              resolve(false); // false hides default error message from the SDK
             }, 1500);
           });
       }
     },
+    // Called after pay button click, but before payment attempt
     onBeforeCharge: async (checkout, componentName, errorData) => {
       console.log("On before charge called", checkout, componentName, errorData);
       const message = document.getElementById("custom-override-message");
@@ -307,11 +314,12 @@ async function initPayment() {
           message.innerHTML = "onBeforeCharge OK. Attempting payment...";
           setTimeout(() => {
             message.style = "background-color: orange; display: none;";
-            resolve(true);
+            resolve(true); // true means payment attempt proceeds
           }, 1000);
         }, 1000);
       });
     },
+    // Called in PROCEED scenario with PROVIDER redirect just before redirecting to provider url
     onBeforeProviderRedirect: async (checkout, componentName, redirectData) => {
       console.log("On before provider redirect called", checkout, componentName, redirectData);
       const message = document.getElementById("custom-override-message");
@@ -323,11 +331,12 @@ async function initPayment() {
           message.innerHTML = "Redirecting to 3rd party provider...";
           setTimeout(() => {
             message.style = "background-color: orange; display: none;";
-            resolve(true);
+            resolve(true); // true means redirect to provider proceeds
           }, 1000);
         }, 1000);
       });
     },
+    // Called in PROCEED scenario with RETURN redirect just before redirecting to returnUrl
     onPaymentSuccess: async (checkout, componentName, redirectData) => {
       console.log("On payment success called", checkout, componentName, redirectData);
       const message = document.getElementById("custom-override-message");
@@ -339,11 +348,12 @@ async function initPayment() {
           message.innerHTML = "Payment was successful! &#10003; Redirecting...";
           setTimeout(() => {
             message.style = "background-color: orange; display: none;";
-            resolve(true);
+            resolve(true); // true means redirect to returnUrl proceeds
           }, 1000);
         }, 1000);
       });
     },
+    // Called in ABORT scenario just before redirecting to cancelUrl
     onPaymentFailure: async (checkout, componentName, redirectData) => {
       console.log("On payment failure called", checkout, componentName, redirectData);
       const message = document.getElementById("custom-override-message");
@@ -355,11 +365,12 @@ async function initPayment() {
           message.innerHTML = "Payment session aborted! Redirecting...";
           setTimeout(() => {
             message.style = "background-color: orange; display: none;";
-            resolve(true);
+            resolve(true); // true means redirect to cancelUrl proceeds
           }, 1000);
         }, 1000);
       });
     },
+    // Called when fresh payment session data is received from Payoneer gateway
     onListRefetch: async (checkout, componentName, listData) => { 
       console.log("List data refetched", checkout, componentName, listData);
       const availableComponents = checkout.availableDropInComponents();
