@@ -232,6 +232,31 @@ async function initPayment() {
 
   const ie = getIE();
 
+  function createPaymentListener(paymentComponent) {
+    return function (event) {
+      event.preventDefault();
+      paymentComponent.pay();
+    };
+  }
+
+  // Reference to the current listener to enable removal
+  let currentPaymentListener = null;
+
+  // Function to update the payment method listener
+  function updateCustomPaymentButton(component) {
+    const payButton = document.getElementById("custom-pay-button");
+
+    // If there's an existing listener, remove it
+    if (currentPaymentListener) {
+      payButton.removeEventListener("click", currentPaymentListener);
+    }
+
+    currentPaymentListener = createPaymentListener(component);
+
+    // Add the new listener
+    payButton.addEventListener("click", currentPaymentListener);
+  }
+
   // configurations for the Checkout Web SDK
   const configs = {
     env: ie, // test | live | int-env-name | pi-nightly.integration
@@ -540,31 +565,6 @@ async function initPayment() {
   window.checkout = checkout;
 
   document.getElementById("loading-message").style.display = "none";
-
-  function createPaymentListener(paymentComponent) {
-    return function (event) {
-      event.preventDefault();
-      paymentComponent.pay();
-    };
-  }
-
-  // Reference to the current listener to enable removal
-  let currentPaymentListener = null;
-
-  // Function to update the payment method listener
-  function updateCustomPaymentButton(component) {
-    const payButton = document.getElementById("custom-pay-button");
-
-    // If there's an existing listener, remove it
-    if (currentPaymentListener) {
-      payButton.removeEventListener("click", currentPaymentListener);
-    }
-
-    currentPaymentListener = createPaymentListener(component);
-
-    // Add the new listener
-    payButton.addEventListener("click", currentPaymentListener);
-  }
 
   if (checkout.state === "LOADED") {
     document.getElementById("loading-message").style = "display: none;";
