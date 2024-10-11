@@ -428,12 +428,12 @@ async function initPayment() {
           });
 
           // Show this component by default if it is the only one in the available components
-          if (availableComponents.length === 1) {
+          if (availableComponents.size === 1) {
             cardsRadio.click();
           }
         }
         else {
-          if (availableComponents.length === 1) {
+          if (availableComponents.size === 1) {
             cardsRadio.click();
           }
         }
@@ -474,12 +474,12 @@ async function initPayment() {
           });
 
           // Show this component by default if it is the only one in the available components
-          if (availableComponents.length === 1) {
+          if (availableComponents.size === 1) {
             afterpayRadio.click();
           }
         }
         else {
-          if (availableComponents.length === 1) {
+          if (availableComponents.size === 1) {
             afterpayRadio.click();
           }
         }
@@ -520,12 +520,12 @@ async function initPayment() {
           });
 
           // Show this component by default if it is the only one in the available components
-          if (availableComponents.length === 1) {
+          if (availableComponents.size === 1) {
             klarnaRadio.click();
           }
         }
         else {
-          if (availableComponents.length === 1) {
+          if (availableComponents.size === 1) {
             klarnaRadio.click();
           }
         }
