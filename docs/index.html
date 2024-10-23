@@ -5,6 +5,7 @@
     <title>Payoneer Cards Demo</title>
     <link rel="shortcut icon" type="image/png" href="public/favicon-32x32.png">
     <meta charset="utf-8">
+    <script src="https://resources.pi-nightly.integration.oscato.com/web/libraries/payment-methods-list/umd/payment-methods-list.js"></script>
     <meta name="viewport" content="width=device-width">
     <link rel="stylesheet" href="styles.css">
     <script src="index.js"></script>
@@ -104,6 +105,11 @@
                         <div class="loading-bar"></div>
                         <div class="loading-bar"></div>
                     </div>
+                    <div id="payment-methods-list" class="hidden">
+                        <payoneer-payment-methods-list
+                            order-components="afterpay,klarna,cards"
+                            id="payment-list-component" />
+                    </div>
                     <form id="payment-methods">
                         <div id="cards-payment-method" class="payment-method hidden">
                             <label for="card-radio" id="cards-select-container" class="payment-method-select-container">
@@ -126,27 +132,6 @@
                                 </div>
                             </div>
                         </div>
-                        <div id="afterpay-payment-method" class="payment-method hidden">
-                            <label for="afterpay-radio" id="afterpay-select-container"
-                                class="payment-method-select-container">
-                                <span>
-                                    <input id="afterpay-radio" type="radio" name="payment-option" value="afterpay">
-                                    Afterpay
-                                </span>
-                                <span id="afterpay-icons" class="payment-method-icon-container">
-                                    
-                                </span>
-                            </label>
-                            <div id="afterpay-container" class="payment-method-component-container">
-                                <div id="afterpay-component-container" class="payment-component-container">
-                                    <!-- Add payoneer-redirect element below here -->
-                                </div>
-                                <div class="redirect-button-container" style="display: none;">
-                                    <button id="afterpay-hosted-redirect-button" class="redirect-button">Proceed to
-                                        payment</button>
-                                </div>
-                            </div>
-                        </div>
                         <div id="klarna-payment-method" class="payment-method hidden">
                             <label for="klarna-radio" id="klarna-select-container"
                                 class="payment-method-select-container">
@@ -164,6 +149,27 @@
                                 </div>
                                 <div class="redirect-button-container" style="display: none;">
                                     <button id="klarna-hosted-redirect-button" class="redirect-button">Proceed to
+                                        payment</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="afterpay-payment-method" class="payment-method hidden">
+                            <label for="afterpay-radio" id="afterpay-select-container"
+                                class="payment-method-select-container">
+                                <span>
+                                    <input id="afterpay-radio" type="radio" name="payment-option" value="afterpay">
+                                    Afterpay
+                                </span>
+                                <span id="afterpay-icons" class="payment-method-icon-container">
+                                    
+                                </span>
+                            </label>
+                            <div id="afterpay-container" class="payment-method-component-container">
+                                <div id="afterpay-component-container" class="payment-component-container">
+                                    <!-- Add payoneer-redirect element below here -->
+                                </div>
+                                <div class="redirect-button-container" style="display: none;">
+                                    <button id="afterpay-hosted-redirect-button" class="redirect-button">Proceed to
                                         payment</button>
                                 </div>
                             </div>
