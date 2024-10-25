@@ -54,6 +54,10 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Sets up chooser between hosted and embedded
   setUpIntegrationSelector();
 
+  // Sets up chooser between payment list component or embedded components
+  // Sets up pay button according to which type is requested, default or custom
+  setUpPaymentListType();
+
   try {
     loadCheckoutWeb();
   } catch (e) {
@@ -147,32 +151,12 @@ function hideEmbeddedPaymentContainers() {
 // Sets up chooser between hosted and embedded
 function setUpIntegrationSelector() {
   const payButtonType = getPayButtonType();
+  const integrationType = getIntegrationType();
 
-  // User can see embedded cards component
-  document.getElementById("embedded").addEventListener("change", (event) => {
-    handleSelectEmbedded(event);
-  });
-
-  // User can see button which redirects to hosted payment page
-  document.getElementById("hosted").addEventListener("change", (event) => {
-    handleSelectHosted(event);
-  });
-
-  // Hide styling options and show only redirect to hosted button
-  function handleSelectHosted() {
-    showHostedButtonContainers();
-    hideEmbeddedPaymentContainers();
-    document.getElementById("styling-options").style = "display: none;";
-    document.getElementById("hosted-theme").style = "display: block;";
-    document.getElementById("custom-pay-button-container").style =
-      "display: none;";
-    document.getElementById("payment-button-choice").style = "display: none;";
-  }
-
-  // Show styling options and only cards component
-  function handleSelectEmbedded() {
+  if(integrationType === "embedded") { 
     hideHostedButtonContainers();
     showEmbeddedPaymentContainers();
+    document.getElementById("embedded-option").checked = true;
     document.getElementById("styling-options").style =
       payButtonType === "default" ? "display: block;" : "display: none;";
     document.getElementById("hosted-theme").style = "display: none;";
@@ -180,14 +164,93 @@ function setUpIntegrationSelector() {
       payButtonType === "custom" ? "display: block;" : "display: none;";
     document.getElementById("payment-button-choice").style = "display: block;";
   }
+
+  else if (integrationType === "hosted") {
+    showHostedButtonContainers();
+    hideEmbeddedPaymentContainers();
+    document.getElementById("hosted-option").checked = true;
+    document.getElementById("styling-options").style = "display: none;";
+    document.getElementById("hosted-theme").style = "display: block;";
+    document.getElementById("custom-pay-button-container").style =
+      "display: none;";
+    document.getElementById("payment-list-form").style="display: none";
+    document.getElementById("payment-list-form-title").style="display: none";
+    document.getElementById("payment-button-choice").style = "display: none;";
+  }
+
+  // User can see embedded cards component
+  document.getElementById("embedded-option").addEventListener("change", (event) => {
+    handleSelectEmbedded(event);
+  });
+
+  // User can see button which redirects to hosted payment page
+  document.getElementById("hosted-option").addEventListener("change", (event) => {
+    handleSelectHosted(event);
+  });
+
+  // Hide styling options and show only redirect to hosted button
+  function handleSelectHosted(event) {
+    const params = new URLSearchParams(window.location.search);
+    params.set("integrationType", event.target.value);
+    window.location.search = params.toString();
+  }
+
+  // Show styling options and only cards component
+  function handleSelectEmbedded(event) {
+    const params = new URLSearchParams(window.location.search);
+    params.set("integrationType", event.target.value);
+    window.location.search = params.toString();
+  }
+}
+
+function setUpPaymentListType() {
+
+  const paymentListType = getPaymentListType();
+  const payButtonType = getPayButtonType();
+  const integrationType = getIntegrationType();
+
+  if(paymentListType === "payment-list") {
+    document.getElementById("styling-options").style = "display: none;";
+    document.getElementById("payment-button-choice").style = "display: none;";
+    document.getElementById("payment-list-option").checked = true;
+    document.getElementById("custom-pay-button-container").style = "display: none;";
+  }
+  else if (paymentListType === "payment-components" && !integrationType === "hosted") {
+    document.getElementById("styling-options").style = "display: block;";
+    document.getElementById("payment-button-choice").style = "display: block;";
+    document.getElementById("payment-components-option").checked = true;
+    document.getElementById("custom-pay-button-container").style =
+      payButtonType === "custom" ? "display: block;" : "display: none;";
+  }
+
+  // User can see embedded cards component
+  document.getElementById("payment-components-option").addEventListener("change", (event) => {
+    handleSelectPaymentComponents(event);
+  });
+
+  // User can see button which redirects to hosted payment page
+  document.getElementById("payment-list-option").addEventListener("change", (event) => {
+    handleSelectPaymentList(event);
+  });
+
+  // Hide styling options and show only redirect to hosted button
+  function handleSelectPaymentComponents(event) {
+    const params = new URLSearchParams(window.location.search);
+    params.set("paymentListType", event.target.value);
+    window.location.search = params.toString();
+  }
+
+  // Show styling options and only cards component
+  function handleSelectPaymentList(event) {
+    const params = new URLSearchParams(window.location.search);
+    params.set("paymentListType", event.target.value);
+    window.location.search = params.toString();
+  }
 }
 
 function setUpPayButton() {
   // Sets pay button type
   const payButtonType = getPayButtonType();
-
-  // Set the chosen integration to embedded by default
-  document.getElementById("embedded").checked = true;
 
   if (payButtonType === "default") {
     document.getElementById("default-option").checked = true;
@@ -226,9 +289,15 @@ function showMessage(messageText, messageStyle, time) {
 }
 
 // Checks URL params to see if default or custom pay button was chosen
+function getIntegrationType() {
+  const params = new URLSearchParams(window.location.search);
+  return params.has("integrationType") ? params.get("integrationType") : "embedded";
+}
+
+// Checks URL params to see if default or custom pay button was chosen
 function getPaymentListType() {
   const params = new URLSearchParams(window.location.search);
-  return params.has("paymentListType") ? params.get("paymentListType") : "shop-list";
+  return params.has("paymentListType") ? params.get("paymentListType") : "payment-components";
 }
 
 async function initPayment() {
@@ -238,7 +307,9 @@ async function initPayment() {
 
   const paymentListType = getPaymentListType();
 
-  if(paymentListType === "shop-list") {
+  const integrationType = getIntegrationType();
+
+  if(paymentListType === "payment-components" || integrationType === "hosted") {
     const ie = getIE();
 
     function createPaymentListener(paymentComponent) {
@@ -247,6 +318,8 @@ async function initPayment() {
         paymentComponent.pay();
       };
     }
+
+
 
     // Reference to the current listener to enable removal
     let currentPaymentListener = null;

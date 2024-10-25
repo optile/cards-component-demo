@@ -6,6 +6,7 @@
     <link rel="shortcut icon" type="image/png" href="public/favicon-32x32.png">
     <meta charset="utf-8">
     <script src="https://resources.pi-nightly.integration.oscato.com/web/libraries/payment-methods-list/umd/payment-methods-list.js"></script>
+    <script src="https://resources.live.oscato.com/web/libraries/checkout-web-sdk/payoneer-cards/payoneer-cards.js"></script>
     <meta name="viewport" content="width=device-width">
     <link rel="stylesheet" href="styles.css">
     <script src="index.js"></script>
@@ -15,7 +16,7 @@
     <header>
         <img alt="Payoneer logo" src="public/payoneer-white-logo.svg">
         <!-- <button id="toggle-dark" onclick="handleToggleDarkModeClick()">Dark mode</button>-->
-        <h2>Cards Demo</h2>
+        <h2>Web SDK Demo</h2>
     </header>
     <main id="main-content">
         <div class="demo-cards-container">
@@ -191,12 +192,25 @@
                         <form id="integration-form">
                             <div class="option-controls">
                                 <div class="option-control-container">
-                                    <input type="radio" id="embedded" name="integration" value="embedded" checked>
+                                    <input type="radio" id="embedded-option" name="integration" value="embedded" checked>
                                     <label for="embedded">Embedded</label>
                                 </div>
                                 <div class="option-control-container">
-                                    <input type="radio" id="hosted" name="integration" value="hosted">
+                                    <input type="radio" id="hosted-option" name="integration" value="hosted">
                                     <label for="hosted">Hosted</label>
+                                </div>
+                            </div>
+                        </form>
+                        <h4 id="payment-list-form-title">Payment list type</h4>
+                        <form id="payment-list-form">
+                            <div class="option-controls">
+                                <div class="option-control-container">
+                                    <input type="radio" id="payment-components-option" name="payment-list-type" value="payment-components" checked>
+                                    <label for="payment-components-option">Payment components</label>
+                                </div>
+                                <div class="option-control-container">
+                                    <input type="radio" id="payment-list-option" name="payment-list-type" value="payment-list">
+                                    <label for="payment-list-option">Payment list</label>
                                 </div>
                             </div>
                         </form>
