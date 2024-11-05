@@ -925,15 +925,6 @@ function setLanguageSelect() {
   }
 }
 
-// Returns country value based on query parameter
-function getCountry() {
-  const params = new URLSearchParams(window.location.search);
-  return params.has("paymentOutcome") &&
-    params.get("paymentOutcome") === "abort"
-    ? "SE"
-    : "US";
-}
-
 // Returns the payment outcome based on query parameter
 function getPaymentOutcome() {
   const params = new URLSearchParams(window.location.search);
@@ -1021,7 +1012,6 @@ function getThemeSettings(theme, setting) {
 
 // Returns amount value based on query parameter (used for triggering different payment scenarios in TESTPSP)
 function getAmount() {
-  const params = new URLSearchParams(window.location.search);
 
   const paymentOutcome = getPaymentOutcome();
 
@@ -1055,6 +1045,20 @@ function getAmount() {
   }
 
   return amount;
+}
+
+function getCountry() {
+  const paymentOutcome = getPaymentOutcome();
+  let country;
+  switch (paymentOutcome) {
+    case "successwithconversion":
+      country = "DE";
+      break;
+    default:
+      country = "US";
+      break;
+  }
+  return country;
 }
 
 // List generator function which uses our unauthenticated pi-nightly list creation service for demo list sesssions
