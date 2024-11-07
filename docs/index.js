@@ -1142,7 +1142,7 @@ function generateList(
     },
     presetFirst: false,
     style: {
-      hostedVersion: method === "cards" ? "v5" : "v4",
+      hostedVersion: "v5",
       language: language,
       displayName: getThemeSettings(theme, "displayName"),
       primaryColor: getThemeSettings(theme, "primaryColor"),
