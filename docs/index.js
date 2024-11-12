@@ -5,6 +5,9 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Update the select menu for outcome based on query param
   setOutcomeSelect();
 
+  // Update the preselection option for outcome based on query param
+  setPreselection();
+
   // Update the select menu for language based on query param
   setLanguageSelect();
 
@@ -160,17 +163,21 @@ function setUpIntegrationSelector() {
     document.getElementById("styling-options").style =
       payButtonType === "default" ? "display: block;" : "display: none;";
     document.getElementById("hosted-theme").style = "display: none;";
+    document.getElementById("hosted-preselection").style ="display: none;"
     document.getElementById("custom-pay-button-container").style =
       payButtonType === "custom" ? "display: block;" : "display: none;";
     document.getElementById("payment-button-choice").style = "display: block;";
+    document.getElementById("cards-options").style = "display: block;";
   }
 
   else if (integrationType === "hosted") {
     showHostedButtonContainers();
     hideEmbeddedPaymentContainers();
     document.getElementById("hosted-option").checked = true;
+    document.getElementById("cards-options").style = "display: block;";
     document.getElementById("styling-options").style = "display: none;";
     document.getElementById("hosted-theme").style = "display: block;";
+    document.getElementById("hosted-preselection").style ="display: block;"
     document.getElementById("custom-pay-button-container").style =
       "display: none;";
     document.getElementById("payment-list-form").style="display: none";
@@ -233,6 +240,10 @@ function setUpPaymentListType() {
     handleSelectPaymentList(event);
   });
 
+  document.getElementById("hosted-preselection-checkbox").addEventListener("change", (event) => {
+    handlePreselectionCheckboxChange(event)
+  })
+
   // Hide styling options and show only redirect to hosted button
   function handleSelectPaymentComponents(event) {
     const params = new URLSearchParams(window.location.search);
@@ -244,6 +255,12 @@ function setUpPaymentListType() {
   function handleSelectPaymentList(event) {
     const params = new URLSearchParams(window.location.search);
     params.set("paymentListType", event.target.value);
+    window.location.search = params.toString();
+  }
+
+  function handlePreselectionCheckboxChange (event) {
+    const params = new URLSearchParams(window.location.search);
+    params.set("usePreselection", event.target.checked);
     window.location.search = params.toString();
   }
 }
@@ -298,6 +315,12 @@ function getIntegrationType() {
 function getPaymentListType() {
   const params = new URLSearchParams(window.location.search);
   return params.has("paymentListType") ? params.get("paymentListType") : "payment-components";
+}
+
+// Checks URL params to see if default or custom pay button was chosen
+function getUsePreselection() {
+  const params = new URLSearchParams(window.location.search);
+  return params.has("usePreselection") ? params.get("usePreselection") : "true";
 }
 
 async function initPayment() {
@@ -914,6 +937,17 @@ function setOutcomeSelect() {
   }
 }
 
+function setPreselection() {
+  const params = new URLSearchParams(window.location.search);
+  const usePreselection = params.get("usePreselection");
+  if (usePreselection && usePreselection == "true") {
+    document.getElementById("hosted-preselection-checkbox").checked = true;
+  }
+  else {
+    document.getElementById("hosted-preselection-checkbox").checked = false;
+  }
+}
+
 // Sets initial value of language select menu based on query parameter
 function setLanguageSelect() {
   const params = new URLSearchParams(window.location.search);
@@ -1061,6 +1095,17 @@ function getCountry() {
   return country;
 }
 
+function getUsePreselection() {
+  const searchParams = new URLSearchParams(location.search);
+
+  if (searchParams.has("usePreselection")) {
+    return searchParams.get("usePreselection");
+  }
+  else {
+    return "true";
+  }
+}
+
 // List generator function which uses our unauthenticated pi-nightly list creation service for demo list sesssions
 function generateList(
   integrationType,
@@ -1071,15 +1116,25 @@ function generateList(
   method
 ) {
   function getPreselection(paymentMethod) {
-    switch (paymentMethod) {
-      case "cards":
-        return ["AMEX", "VISA", "MASTERCARD", "JCB", "DISCOVER"];
-      case "afterpay":
-        return ["AFTERPAY"];
-      case "klarna":
-        return ["KLARNA"];
-      default:
-        return ["AMEX", "VISA", "MASTERCARD", "JCB", "AFTERPAY", "DISCOVER", "KLARNA"];
+
+    const isPreselected = getUsePreselection();
+    const integrationType = getIntegrationType();
+    console.log("Is preselected", isPreselected);
+    console.log("Integration type", integrationType);
+    if(integrationType === "hosted" && isPreselected === "false") {
+      return ["AMEX", "VISA", "MASTERCARD", "JCB", "AFTERPAY", "DISCOVER", "KLARNA"];
+    }
+    else {
+      switch (paymentMethod) {
+        case "cards":
+          return ["AMEX", "VISA", "MASTERCARD", "JCB", "DISCOVER"];
+        case "afterpay":
+          return ["AFTERPAY"];
+        case "klarna":
+          return ["KLARNA"];
+        default:
+          return ["AMEX", "VISA", "MASTERCARD", "JCB", "AFTERPAY", "DISCOVER", "KLARNA"];
+      }
     }
   }
 
