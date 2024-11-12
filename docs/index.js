@@ -320,7 +320,17 @@ function getPaymentListType() {
 // Checks URL params to see if default or custom pay button was chosen
 function getUsePreselection() {
   const params = new URLSearchParams(window.location.search);
-  return params.has("usePreselection") ? params.get("usePreselection") : "true";
+  if(params.has("usePreselection")) {
+    if(params.get("usePreselection") === "false") {
+      return false;
+    }
+    else {
+      return true;
+    }
+  } 
+  else {
+    return true;
+  }
 }
 
 async function initPayment() {
@@ -713,8 +723,6 @@ async function getListResult() {
 }
 
 async function getLongId() {
-  // Sets whether there should be a list fetching error or not
-  const isError = getError();
 
   const searchParams = new URLSearchParams(location.search);
 
@@ -724,9 +732,18 @@ async function getLongId() {
 
   const listData = await getListResult();
 
-  return isError
-    ? "657af292bd2dx24c0a9cf07cl3jphnlp1iruhlio061evom047"
-    : listData.identification.longId;
+  const outcome = getPaymentOutcome();
+
+  switch(outcome) {
+    case "error":
+      return "657af292bd2dx24c0a9cf07cl3jphnlp1iruhlio061evom047";
+    case "alreadypaid":
+      return "6731d7569e99650001ea64b0l6iff867etchoafjmi0kjn7dj7";
+    case "expiredlist":
+      return "6731c5509e99650001ea623elrdfkf8vqeo9eauobobjc71m78";
+    default:
+      return listData.identification.longId;
+  }
 }
 
 function getIE() {
@@ -940,11 +957,11 @@ function setOutcomeSelect() {
 function setPreselection() {
   const params = new URLSearchParams(window.location.search);
   const usePreselection = params.get("usePreselection");
-  if (usePreselection && usePreselection == "true") {
-    document.getElementById("hosted-preselection-checkbox").checked = true;
+  if (usePreselection && usePreselection == "false") {
+    document.getElementById("hosted-preselection-checkbox").checked = false;
   }
   else {
-    document.getElementById("hosted-preselection-checkbox").checked = false;
+    document.getElementById("hosted-preselection-checkbox").checked = true;
   }
 }
 
@@ -1095,17 +1112,6 @@ function getCountry() {
   return country;
 }
 
-function getUsePreselection() {
-  const searchParams = new URLSearchParams(location.search);
-
-  if (searchParams.has("usePreselection")) {
-    return searchParams.get("usePreselection");
-  }
-  else {
-    return "true";
-  }
-}
-
 // List generator function which uses our unauthenticated pi-nightly list creation service for demo list sesssions
 function generateList(
   integrationType,
@@ -1119,9 +1125,7 @@ function generateList(
 
     const isPreselected = getUsePreselection();
     const integrationType = getIntegrationType();
-    console.log("Is preselected", isPreselected);
-    console.log("Integration type", integrationType);
-    if(integrationType === "hosted" && isPreselected === "false") {
+    if(integrationType === "hosted" && !isPreselected) {
       return ["AMEX", "VISA", "MASTERCARD", "JCB", "AFTERPAY", "DISCOVER", "KLARNA"];
     }
     else {
