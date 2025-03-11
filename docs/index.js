@@ -1220,7 +1220,7 @@ function generateList(
   };
 
   return new Promise((resolve, reject) => {
-    fetch("https://api.pi-nightly.integration.oscato.com/demo/lists", options)
+    fetch("https://api.pi-nightly.integration.oscato.com/checkout/session", options)
       .then((res) => res.json())
       .then((listResponse) => {
         resolve(listResponse);
