@@ -71,7 +71,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 // Resets all radio buttons so if user comes back via browser back button default selection is used
 window.addEventListener('beforeunload', function () {
   const radios = document.querySelectorAll('input[type="radio"]');
-  radios.forEach(radio => {
+  radios.forEach((radio) => {
     if (radio.defaultChecked) {
       radio.checked = true;
     } else {
@@ -100,7 +100,7 @@ function loadCheckoutWeb() {
       "https://resources.sandbox.oscato.com/web/libraries/checkout-web/umd/checkout-web.min.js";
   } else {
     js.src =
-      "https://resources.pi-nightly.integration.oscato.com/web/libraries/checkout-web/umd/checkout-web.min.js";
+      "https://resources.sandbox.oscato.com/web/libraries/checkout-web/umd/checkout-web.min.js";
   }
 
   head.appendChild(js);
@@ -295,6 +295,8 @@ function setUpPayButton() {
     });
 }
 
+const defaultEnv = "checkout.integration";
+
 function showMessage(messageText, messageStyle, time) {
   const message = document.getElementById("custom-override-message");
   message.innerHTML = messageText;
@@ -374,7 +376,7 @@ async function initPayment() {
 
     // configurations for the Checkout Web SDK
     const configs = {
-      env: ie, // test | live | int-env-name | pi-nightly.integration
+      env: ie, // test | live | int-env-name | checkout.integration
       longId: longId,
       preload: ["cards", "afterpay", "klarna"], // loads cards and afterpay script as soon as page loads so that rendering using dropIn is fast
       // Called whenever there is an error (either server-side or client-side) which prevents payment. componentName indicates
@@ -696,7 +698,7 @@ async function initPayment() {
   else {
     document.getElementById("payment-methods-list").classList.remove("hidden");
     document.getElementById("loading-message").classList.add("hidden");
-    document.getElementById("payment-list-component").setAttribute("env", "pi-nightly.integration")
+    document.getElementById("payment-list-component").setAttribute("env", getIE())
     document.getElementById("payment-list-component").setAttribute("long-id", longId)
   }
 }
@@ -719,15 +721,15 @@ async function getListResult() {
   // Sets language based on query parameter
   const language = getLanguage();
 
-  return generateList("EMBEDDED", amount, country, language, null, null);
+  return generateList(amount, country, language, "USD");
 }
 
 async function getLongId() {
 
   const searchParams = new URLSearchParams(location.search);
 
-  if (searchParams.has("listUrl")) {
-    return searchParams.get("listUrl").split("/").pop();
+  if (searchParams.has("listId")) {
+    return searchParams.get("listId");
   }
 
   const listData = await getListResult();
@@ -742,20 +744,18 @@ async function getLongId() {
     case "expiredlist":
       return "6731c5509e99650001ea623elrdfkf8vqeo9eauobobjc71m78";
     default:
-      return listData.identification.longId;
+      return listData.id;
   }
 }
 
 function getIE() {
   const searchParams = new URLSearchParams(location.search);
 
-  if (searchParams.has("listUrl")) {
-    if (searchParams.get("listUrl").includes("sandbox")) {
-      return "test";
-    }
+  if (searchParams.has("env")) {
+    return searchParams.get("env");
   }
 
-  return "pi-nightly.integration";
+  return defaultEnv;
 }
 
 function showCardsPaymentMethod(boolean) {
@@ -815,9 +815,7 @@ function showAfterpayPaymentComponent(boolean) {
 }
 
 function showKlarnaPaymentMethod(boolean) {
-  const klarnaPaymentMethod = document.getElementById(
-    "klarna-payment-method"
-  );
+  const klarnaPaymentMethod = document.getElementById("klarna-payment-method");
   if (boolean) {
     klarnaPaymentMethod.classList.remove("hidden");
   } else {
@@ -826,11 +824,8 @@ function showKlarnaPaymentMethod(boolean) {
 }
 
 function showKlarnaPaymentComponent(boolean) {
-  const klarnaComponentContainer =
-    document.getElementById("klarna-container");
-  const klarnaPaymentMethod = document.getElementById(
-    "klarna-payment-method"
-  );
+  const klarnaComponentContainer = document.getElementById("klarna-container");
+  const klarnaPaymentMethod = document.getElementById("klarna-payment-method");
   if (boolean) {
     klarnaComponentContainer.style = "display: block;";
     klarnaPaymentMethod.classList.add("selected");
@@ -924,9 +919,9 @@ function handleStandaloneRedirectClick(method) {
   const language = getLanguage();
   const theme = getTheme();
 
-  generateList("HOSTED", amount, country, language, theme, method).then(
+  generateList(amount, country, language, "USD").then(
     (result) => {
-      window.location.href = result.redirect.url;
+      window.location.href = result.url;
     }
   );
 }
@@ -988,11 +983,10 @@ function getPaymentOutcome() {
 // Returns the deferral based on payment outcome
 function getDeferral() {
   const paymentOutcome = getPaymentOutcome();
-  if(paymentOutcome === "abort") {
-    return "DEFERRED"
-  } 
-  else {
-    return "NON_DEFERRED"
+  if (paymentOutcome === "abort") {
+    return "DEFERRED";
+  } else {
+    return "NON_DEFERRED";
   }
 }
 
@@ -1010,6 +1004,7 @@ function getLanguage() {
   const params = new URLSearchParams(window.location.search);
   return params.has("language") ? params.get("language") : "en";
 }
+
 
 // Checks URL params to see if default or custom pay button was chosen
 function getPayButtonType() {
@@ -1099,129 +1094,70 @@ function getAmount() {
 }
 
 function getCountry() {
-  const paymentOutcome = getPaymentOutcome();
-  let country;
-  switch (paymentOutcome) {
-    case "successwithconversion":
-      country = "DE";
-      break;
-    default:
-      country = "US";
-      break;
+  const languageMap = {
+    fr: "FR",
+    de: "DE",
+    ro: "RO",
+    ru: "RU",
+    es: "ES",
+    th: "TH",
+    zh: "CN",
+    en: "US",
+    el: "GR",
+    ja: "JP",
+    sv: "SE",
+  };
+
+  const params = new URLSearchParams(window.location.search);
+  const language = params.get("language");
+
+  if (!language) {
+    return languageMap.en;
   }
-  return country;
+
+  return languageMap[language] || languageMap.en;
 }
 
-// List generator function which uses our unauthenticated pi-nightly list creation service for demo list sesssions
+// List generator function which uses demo backend on given IE, by default it uses checkout integration
 function generateList(
-  integrationType,
   amount,
   country,
   language,
-  theme,
-  method
+  currency = "USD"
 ) {
-  function getPreselection(paymentMethod) {
-
-    const isPreselected = getUsePreselection();
-    const integrationType = getIntegrationType();
-    if(integrationType === "hosted" && !isPreselected) {
-      return ["AMEX", "VISA", "MASTERCARD", "JCB", "AFTERPAY", "DISCOVER", "KLARNA"];
-    }
-    else {
-      switch (paymentMethod) {
-        case "cards":
-          return ["AMEX", "VISA", "MASTERCARD", "JCB", "DISCOVER"];
-        case "afterpay":
-          return ["AFTERPAY"];
-        case "klarna":
-          return ["KLARNA"];
-        default:
-          return ["AMEX", "VISA", "MASTERCARD", "JCB", "AFTERPAY", "DISCOVER", "KLARNA"];
-      }
-    }
-  }
-
   const listRequest = {
-    allowDelete: false,
-    callback: {
-      cancelUrl: "https://optile.github.io/cards-component-demo/failed.html",
-      notificationUrl: "https://dev.oscato.com/shop/notify.html",
-      returnUrl: "https://optile.github.io/cards-component-demo/success.html",
-      summaryUrl: "https://dev.oscato.com/shop/summary.html",
-    },
-    country: country,
+    currency,
+    amount,
+    country,
+    division: "27632",
     customer: {
       number: "777",
-      name: {
-        firstName: "John",
-        lastName: "Doe",
-      },
+      firstName: "John",
+      lastName: "Doe",
       birthday: "1977-09-13",
       email: "afterpay_visa_successful@payoneer.com",
-      addresses: {
-        billing: {
-          street: "Fake Street.",
-          houseNumber: "123",
-          zip: "80339",
-          state: "California",
-          city: "Los Angeles",
-          country: "US",
-          name: {
-            firstName: "First",
-            lastName: "Last",
-          },
-        },
-        shipping: {
-          street: "Fake Street.",
-          houseNumber: "123",
-          zip: "80339",
-          state: "California",
-          city: "Los Angeles",
-          country: "US",
-          name: {
-            firstName: "First",
-            lastName: "Last",
-          },
-        },
-      },
     },
-    integration: integrationType,
-    payment: {
-      amount: amount,
-      netAmount: amount - 0.01,
-      taxAmount: 0.01,
-      currency: "USD",
-      reference: "Shop 101/20-03-2016",
-    },
-    preselection: {
-      direction: "CHARGE",
-      networkCodes: getPreselection(method),
-      deferral: getDeferral()
-    },
-    presetFirst: false,
-    style: {
-      hostedVersion: "v5",
-      language: language,
-      displayName: getThemeSettings(theme, "displayName"),
-      primaryColor: getThemeSettings(theme, "primaryColor"),
-      logoUrl: getThemeSettings(theme, "logoUrl"),
-      backgroundType: getThemeSettings(theme, "backgroundType"),
-      backgroundColor: getThemeSettings(theme, "backgroundColor"),
-      backgroundImageUrl: getThemeSettings(theme, "backgroundImageUrl"),
-    },
-    transactionId: "tr101",
-    updateOnly: false,
   };
 
   const options = {
     method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify(listRequest),
   };
 
   return new Promise((resolve, reject) => {
-    fetch("https://api.pi-nightly.integration.oscato.com/checkout/session", options)
-      .then((res) => res.json())
+    const url = `https://api.${getIE()}.oscato.com/checkout/session`;
+    console.log({ url})
+    fetch(
+      url,
+      options
+    )
+      .then((res) => {
+        console.log({ jsonnn: res.body });
+        return res.json();
+      })
       .then((listResponse) => {
         resolve(listResponse);
       })
