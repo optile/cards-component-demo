@@ -61,9 +61,9 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-window.addEventListener('beforeunload', function () {
+window.addEventListener("beforeunload", function () {
   const radios = document.querySelectorAll('input[type="radio"]');
-  radios.forEach(radio => {
+  radios.forEach((radio) => {
     if (radio.defaultChecked) {
       radio.checked = true;
     } else {
@@ -88,10 +88,10 @@ function loadCheckoutWeb() {
     searchParams.get("listUrl").includes("sandbox")
   ) {
     js.src =
-      "https://resources.pi-nightly.integration.oscato.com/web/libraries/checkout-web/umd/checkout-web.min.js";
+      "https://resources.sandbox.oscato.com/web/libraries/checkout-web/umd/checkout-web.min.js";
   } else {
     js.src =
-      "https://resources.pi-nightly.integration.oscato.com/web/libraries/checkout-web/umd/checkout-web.min.js";
+      "https://resources.sandbox.oscato.com/web/libraries/checkout-web/umd/checkout-web.min.js";
   }
 
   head.appendChild(js);
@@ -213,6 +213,8 @@ function setUpPayButton() {
     });
 }
 
+const defaultEnv = "checkout.integration";
+
 async function initPayment() {
   const payButtonType = getPayButtonType();
 
@@ -280,7 +282,12 @@ async function initPayment() {
       });
     },
     onBeforeCharge: async (checkout, componentName, errorData) => {
-      console.log("On before charge called", checkout, componentName, errorData);
+      console.log(
+        "On before charge called",
+        checkout,
+        componentName,
+        errorData
+      );
       const message = document.getElementById("custom-override-message");
       message.innerHTML = "Awaiting onBeforeCharge result...";
       message.style = "display: flex;";
@@ -296,7 +303,12 @@ async function initPayment() {
       });
     },
     onBeforeProviderRedirect: async (checkout, componentName, errorData) => {
-      console.log("On before provider redirect called", checkout, componentName, errorData);
+      console.log(
+        "On before provider redirect called",
+        checkout,
+        componentName,
+        errorData
+      );
       const message = document.getElementById("custom-override-message");
       message.innerHTML = "Awaiting onBeforeProviderRedirect result...";
       message.style = "display: flex;";
@@ -312,7 +324,12 @@ async function initPayment() {
       });
     },
     onPaymentSuccess: async (checkout, componentName, errorData) => {
-      console.log("On payment success called", checkout, componentName, errorData);
+      console.log(
+        "On payment success called",
+        checkout,
+        componentName,
+        errorData
+      );
       const message = document.getElementById("custom-override-message");
       message.innerHTML = "onPaymentSuccess was called...";
       message.style = "display: flex;";
@@ -379,19 +396,22 @@ async function initPayment() {
     const afterpayRadio = document.getElementById("afterpay-radio");
     const klarnaRadio = document.getElementById("klarna-radio");
 
-
     // Check if cards is available as a drop-in component and render cards option in payment methods if so
-    const cardsComponentAvailable = availableComponents.find((component) => component.name === "cards");
+    const cardsComponentAvailable = availableComponents.find(
+      (component) => component.name === "cards"
+    );
 
     if (cardsComponentAvailable) {
       showCardsPaymentMethod(true);
 
-      cardsComponentAvailable.networkInformation?.map(info => info.logoUrl).slice(0, 4).forEach(url => {
-        const img = document.createElement("img");
-        img.src = url;
-        document.getElementById("card-icons").appendChild(img);
-      });
-
+      cardsComponentAvailable.networkInformation
+        ?.map((info) => info.logoUrl)
+        .slice(0, 4)
+        .forEach((url) => {
+          const img = document.createElement("img");
+          img.src = url;
+          document.getElementById("card-icons").appendChild(img);
+        });
 
       // This is a container for the payoneer-cards component, hidden by default and shown when cards radio is clicked
       const container = document.getElementById("cards-component-container");
@@ -423,19 +443,22 @@ async function initPayment() {
 
     // If Afterpay is available as a drop-in component, show it in the payment methods list
 
-    const afterpayComponentAvailable = availableComponents.find((component) => component.name === "afterpay");
+    const afterpayComponentAvailable = availableComponents.find(
+      (component) => component.name === "afterpay"
+    );
 
-    if (
-      afterpayComponentAvailable
-    ) {
+    if (afterpayComponentAvailable) {
       showAfterpayPaymentMethod(true);
       console.log(afterpayComponentAvailable);
 
-      afterpayComponentAvailable.networkInformation?.map(info => info.logoUrl).slice(0, 4).forEach(url => {
-        const img = document.createElement("img");
-        img.src = url;
-        document.getElementById("afterpay-icons").appendChild(img);
-      });
+      afterpayComponentAvailable.networkInformation
+        ?.map((info) => info.logoUrl)
+        .slice(0, 4)
+        .forEach((url) => {
+          const img = document.createElement("img");
+          img.src = url;
+          document.getElementById("afterpay-icons").appendChild(img);
+        });
 
       // Placeholder for dropping in the Afterpay payment component
       const container = document.getElementById("afterpay-component-container");
@@ -465,52 +488,51 @@ async function initPayment() {
 
     // If Klarna is available as a drop-in component, show it in the payment methods list
 
-  const klarnaComponentAvailable = availableComponents.find((component) => component.name === "klarna");
-  if (
-    klarnaComponentAvailable
-  ) {
-    showKlarnaPaymentMethod(true);
-    console.log(klarnaComponentAvailable);
+    const klarnaComponentAvailable = availableComponents.find(
+      (component) => component.name === "klarna"
+    );
+    if (klarnaComponentAvailable) {
+      showKlarnaPaymentMethod(true);
+      console.log(klarnaComponentAvailable);
 
-    klarnaComponentAvailable.networkInformation?.map(info => info.logoUrl).slice(0, 4).forEach(url => {
-      const img = document.createElement("img");
-      img.src = url;
-      document.getElementById("klarna-icons").appendChild(img);
-    });
+      klarnaComponentAvailable.networkInformation
+        ?.map((info) => info.logoUrl)
+        .slice(0, 4)
+        .forEach((url) => {
+          const img = document.createElement("img");
+          img.src = url;
+          document.getElementById("klarna-icons").appendChild(img);
+        });
 
-    // Placeholder for dropping in the klarna payment component
-    const container = document.getElementById("klarna-component-container");
+      // Placeholder for dropping in the klarna payment component
+      const container = document.getElementById("klarna-component-container");
 
-    // Already drop in cards component so that it renders immediately
-    const klarna = checkout
-      .dropIn("klarna", {
-        hidePaymentButton: !(payButtonType === "default"),
-      })
-      .mount(container);
+      // Already drop in cards component so that it renders immediately
+      const klarna = checkout
+        .dropIn("klarna", {
+          hidePaymentButton: !(payButtonType === "default"),
+        })
+        .mount(container);
 
-    klarnaRadio.addEventListener("change", (event) => {
-      if (event.target.checked) {
-        updateCustomPaymentButton(klarna);
-        showCardsPaymentComponent(false);
-        showCardsOptions(false);
-        showAfterpayPaymentComponent(false);
-        showKlarnaPaymentComponent(true);
+      klarnaRadio.addEventListener("change", (event) => {
+        if (event.target.checked) {
+          updateCustomPaymentButton(klarna);
+          showCardsPaymentComponent(false);
+          showCardsOptions(false);
+          showAfterpayPaymentComponent(false);
+          showKlarnaPaymentComponent(true);
+        }
+      });
+
+      // Show this component by default if it is the only one in the available components
+      if (availableComponents.length === 1) {
+        klarnaRadio.click();
       }
-    });
-
-    // Show this component by default if it is the only one in the available components
-    if (availableComponents.length === 1) {
-      klarnaRadio.click();
     }
-  }
 
     // Update the UI once the list response is received so that components become visible
     document.getElementById("payment-methods").style = "display: block;";
   }
-}
-
-function showError() {
-
 }
 
 async function getListResult() {
@@ -523,7 +545,7 @@ async function getListResult() {
   // Sets language based on query parameter
   const language = getLanguage();
 
-  return generateList("EMBEDDED", amount, country, language, null, null);
+  return generateList(amount, country, language, "USD");
 }
 
 async function getLongId() {
@@ -532,27 +554,25 @@ async function getLongId() {
 
   const searchParams = new URLSearchParams(location.search);
 
-  if (searchParams.has("listUrl")) {
-    return searchParams.get("listUrl").split("/").pop();
+  if (searchParams.has("listId")) {
+    return searchParams.get("listId");
   }
 
   const listData = await getListResult();
 
   return isError
     ? "657af292bd2dx24c0a9cf07cl3jphnlp1iruhlio061evom047"
-    : listData.identification.longId;
+    : listData.id;
 }
 
 function getIE() {
   const searchParams = new URLSearchParams(location.search);
 
-  if (searchParams.has("listUrl")) {
-    if (searchParams.get("listUrl").includes("sandbox")) {
-      return "test";
-    }
+  if (searchParams.has("env")) {
+    return searchParams.get(env);
   }
 
-  return "pi-nightly.integration";
+  return defaultEnv;
 }
 
 function showCardsPaymentMethod(boolean) {
@@ -612,9 +632,7 @@ function showAfterpayPaymentComponent(boolean) {
 }
 
 function showKlarnaPaymentMethod(boolean) {
-  const klarnaPaymentMethod = document.getElementById(
-    "klarna-payment-method"
-  );
+  const klarnaPaymentMethod = document.getElementById("klarna-payment-method");
   if (boolean) {
     klarnaPaymentMethod.classList.remove("hidden");
   } else {
@@ -623,11 +641,8 @@ function showKlarnaPaymentMethod(boolean) {
 }
 
 function showKlarnaPaymentComponent(boolean) {
-  const klarnaComponentContainer =
-    document.getElementById("klarna-container");
-  const klarnaPaymentMethod = document.getElementById(
-    "klarna-payment-method"
-  );
+  const klarnaComponentContainer = document.getElementById("klarna-container");
+  const klarnaPaymentMethod = document.getElementById("klarna-payment-method");
   if (boolean) {
     klarnaComponentContainer.style = "display: block;";
     klarnaPaymentMethod.classList.add("selected");
@@ -721,9 +736,9 @@ function handleStandaloneRedirectClick(method) {
   const language = getLanguage();
   const theme = getTheme();
 
-  generateList("HOSTED", amount, country, language, theme, method).then(
+  generateList(amount, country, language, "USD").then(
     (result) => {
-      window.location.href = result.redirect.url;
+      window.location.href = result.url;
     }
   );
 }
@@ -764,11 +779,28 @@ function setLanguageSelect() {
 
 // Returns country value based on query parameter
 function getCountry() {
+  const languageMap = {
+    fr: "FR",
+    de: "DE",
+    ro: "RO",
+    ru: "RU",
+    es: "ES",
+    th: "TH",
+    zh: "CN",
+    en: "US",
+    el: "GR",
+    ja: "JP",
+    sv: "SE",
+  };
+
   const params = new URLSearchParams(window.location.search);
-  return params.has("paymentOutcome") &&
-    params.get("paymentOutcome") === "abort"
-    ? "SE"
-    : "US";
+  const language = params.get("language");
+
+  if (!language) {
+    return languageMap.en;
+  }
+
+  return languageMap[language] || languageMap.en;
 }
 
 // Returns the payment outcome based on query parameter
@@ -783,11 +815,10 @@ function getPaymentOutcome() {
 // Returns the deferral based on payment outcome
 function getDeferral() {
   const paymentOutcome = getPaymentOutcome();
-  if(paymentOutcome === "abort") {
-    return "DEFERRED"
-  } 
-  else {
-    return "NON_DEFERRED"
+  if (paymentOutcome === "abort") {
+    return "DEFERRED";
+  } else {
+    return "NON_DEFERRED";
   }
 }
 
@@ -896,106 +927,45 @@ function getAmount() {
 
 // List generator function which uses our unauthenticated pi-nightly list creation service for demo list sesssions
 function generateList(
-  integrationType,
   amount,
   country,
   language,
-  theme,
-  method
+  currency = "USD"
 ) {
-  function getPreselection(paymentMethod) {
-    switch (paymentMethod) {
-      case "cards":
-        return ["AMEX", "VISA", "MASTERCARD", "JCB", "DISCOVER"];
-      case "afterpay":
-        return ["AFTERPAY"];
-      case "klarna":
-        return ["KLARNA"];
-      default:
-        return ["AMEX", "VISA", "MASTERCARD", "JCB", "AFTERPAY", "DISCOVER", "KLARNA"];
-    }
+  if (country && language) {
+    console.log({ country, language });
   }
-
   const listRequest = {
-    allowDelete: false,
-    callback: {
-      cancelUrl: "https://optile.github.io/cards-component-demo/failed.html",
-      notificationUrl: "https://dev.oscato.com/shop/notify.html",
-      returnUrl: "https://optile.github.io/cards-component-demo/success.html",
-      summaryUrl: "https://dev.oscato.com/shop/summary.html",
-    },
-    country: country,
+    currency,
+    amount,
+    country,
+    division: "27632",
     customer: {
       number: "777",
-      name: {
-        firstName: "John",
-        lastName: "Doe",
-      },
+      firstName: "John",
+      lastName: "Doe",
       birthday: "1977-09-13",
       email: "afterpay_visa_successful@payoneer.com",
-      addresses: {
-        billing: {
-          street: "Fake Street.",
-          houseNumber: "123",
-          zip: "80339",
-          state: "California",
-          city: "Los Angeles",
-          country: "US",
-          name: {
-            firstName: "First",
-            lastName: "Last",
-          },
-        },
-        shipping: {
-          street: "Fake Street.",
-          houseNumber: "123",
-          zip: "80339",
-          state: "California",
-          city: "Los Angeles",
-          country: "US",
-          name: {
-            firstName: "First",
-            lastName: "Last",
-          },
-        },
-      },
     },
-    integration: integrationType,
-    payment: {
-      amount: amount,
-      netAmount: amount - 0.01,
-      taxAmount: 0.01,
-      currency: "USD",
-      reference: "Shop 101/20-03-2016",
-    },
-    preselection: {
-      direction: "CHARGE",
-      networkCodes: getPreselection(method),
-      deferral: getDeferral()
-    },
-    presetFirst: false,
-    style: {
-      hostedVersion: method === "cards" ? "v5" : "v4",
-      language: language,
-      displayName: getThemeSettings(theme, "displayName"),
-      primaryColor: getThemeSettings(theme, "primaryColor"),
-      logoUrl: getThemeSettings(theme, "logoUrl"),
-      backgroundType: getThemeSettings(theme, "backgroundType"),
-      backgroundColor: getThemeSettings(theme, "backgroundColor"),
-      backgroundImageUrl: getThemeSettings(theme, "backgroundImageUrl"),
-    },
-    transactionId: "tr101",
-    updateOnly: false,
   };
 
   const options = {
     method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify(listRequest),
   };
 
   return new Promise((resolve, reject) => {
-    fetch("https://api.pi-nightly.integration.oscato.com/demo/lists", options)
-      .then((res) => res.json())
+    fetch(
+      `https://api.${defaultEnv}.oscato.com/checkout/session`,
+      options
+    )
+      .then((res) => {
+        console.log({ jsonnn: res.body });
+        return res.json();
+      })
       .then((listResponse) => {
         resolve(listResponse);
       })
