@@ -569,7 +569,7 @@ function getIE() {
   const searchParams = new URLSearchParams(location.search);
 
   if (searchParams.has("env")) {
-    return searchParams.get(env);
+    return searchParams.get("env");
   }
 
   return defaultEnv;
@@ -959,7 +959,7 @@ function generateList(
 
   return new Promise((resolve, reject) => {
     fetch(
-      `https://api.${defaultEnv}.oscato.com/checkout/session`,
+      `https://api.${getIE()}.oscato.com/checkout/session`,
       options
     )
       .then((res) => {
