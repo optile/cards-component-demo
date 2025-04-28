@@ -5,6 +5,7 @@
     <title>Payoneer Cards Demo</title>
     <link rel="shortcut icon" type="image/png" href="public/favicon-32x32.png">
     <meta charset="utf-8">
+    <script src="https://resources.pi-nightly.integration.oscato.com/web/libraries/payment-methods-list/umd/payment-methods-list.js"></script>
     <meta name="viewport" content="width=device-width">
     <link rel="stylesheet" href="styles.css">
     <script src="index.js"></script>
@@ -14,7 +15,7 @@
     <header>
         <img alt="Payoneer logo" src="public/payoneer-white-logo.svg">
         <!-- <button id="toggle-dark" onclick="handleToggleDarkModeClick()">Dark mode</button>-->
-        <h2>Cards Demo</h2>
+        <h2>Web SDK Demo</h2>
     </header>
     <main id="main-content">
         <div class="demo-cards-container">
@@ -104,6 +105,12 @@
                         <div class="loading-bar"></div>
                         <div class="loading-bar"></div>
                     </div>
+                    <div id="payment-methods-list" class="hidden">
+                        <payoneer-payment-methods-list
+                            env="pi-nightly.integration"
+                            order-components="klarna,afterpay,cards"
+                            id="payment-list-component" />
+                    </div>
                     <form id="payment-methods">
                         <div id="cards-payment-method" class="payment-method hidden">
                             <label for="card-radio" id="cards-select-container" class="payment-method-select-container">
@@ -122,27 +129,6 @@
                                 </div>
                                 <div class="redirect-button-container" style="display: none;">
                                     <button id="cards-hosted-redirect-button" class="redirect-button">Proceed to
-                                        payment</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div id="afterpay-payment-method" class="payment-method hidden">
-                            <label for="afterpay-radio" id="afterpay-select-container"
-                                class="payment-method-select-container">
-                                <span>
-                                    <input id="afterpay-radio" type="radio" name="payment-option" value="afterpay">
-                                    Afterpay
-                                </span>
-                                <span id="afterpay-icons" class="payment-method-icon-container">
-                                    
-                                </span>
-                            </label>
-                            <div id="afterpay-container" class="payment-method-component-container">
-                                <div id="afterpay-component-container" class="payment-component-container">
-                                    <!-- Add payoneer-redirect element below here -->
-                                </div>
-                                <div class="redirect-button-container" style="display: none;">
-                                    <button id="afterpay-hosted-redirect-button" class="redirect-button">Proceed to
                                         payment</button>
                                 </div>
                             </div>
@@ -168,6 +154,27 @@
                                 </div>
                             </div>
                         </div>
+                        <div id="afterpay-payment-method" class="payment-method hidden">
+                            <label for="afterpay-radio" id="afterpay-select-container"
+                                class="payment-method-select-container">
+                                <span>
+                                    <input id="afterpay-radio" type="radio" name="payment-option" value="afterpay">
+                                    Afterpay
+                                </span>
+                                <span id="afterpay-icons" class="payment-method-icon-container">
+                                    
+                                </span>
+                            </label>
+                            <div id="afterpay-container" class="payment-method-component-container">
+                                <div id="afterpay-component-container" class="payment-component-container">
+                                    <!-- Add payoneer-redirect element below here -->
+                                </div>
+                                <div class="redirect-button-container" style="display: none;">
+                                    <button id="afterpay-hosted-redirect-button" class="redirect-button">Proceed to
+                                        payment</button>
+                                </div>
+                            </div>
+                        </div>
                         <div id="custom-pay-button-container" style="display: none;">
                             <button id="custom-pay-button" class="custom-pay-button">Pay</button>
                         </div>
@@ -185,24 +192,40 @@
                         <form id="integration-form">
                             <div class="option-controls">
                                 <div class="option-control-container">
-                                    <input type="radio" id="embedded" name="integration" value="embedded" checked>
-                                    <label for="embedded">Embedded</label>
+                                    <input type="radio" id="embedded-option" name="integration-type" value="embedded" checked>
+                                    <label for="embedded-option">Embedded</label>
                                 </div>
                                 <div class="option-control-container">
-                                    <input  disabled type="radio" id="hosted" name="integration" value="hosted">
-                                    <label for="hosted">Hosted</label>
+                                    <input disabled type="radio" id="hosted-option" name="integration-type" value="hosted">
+                                    <label for="hosted-option">Hosted</label>
+                                </div>
+                            </div>
+                        </form>
+                        <h4 id="payment-list-form-title">Payment list type</h4>
+                        <form id="payment-list-form">
+                            <div class="option-controls">
+                                <div class="option-control-container">
+                                    <input type="radio" id="payment-components-option" name="payment-list-type" value="payment-components" checked>
+                                    <label for="payment-components-option">Payment components</label>
+                                </div>
+                                <div class="option-control-container">
+                                    <input type="radio" id="payment-list-option" name="payment-list-type" value="payment-list">
+                                    <label for="payment-list-option">Payment list</label>
                                 </div>
                             </div>
                         </form>
                         <h4>Payment outcome</h4>
                         <select id="outcome">
                             <option value="success">Success</option>
+                            <option value="successwithconversion">FX conversion + success</option>
                             <option value="error">Error</option>
                             <option value="abort">Abort</option>
                             <option value="retry">Retry</option>
                             <option value="3ds2">3DS2</option>
                             <option value="tryotheraccount">Try other account</option>
                             <option value="tryothernetwork">Try other network</option>
+                            <option value="expiredlist">Expired list</option>
+                            <option value="alreadypaid">Already paid</option>
                         </select>
                         <h4>Language</h4>
                         <select id="language">
@@ -233,7 +256,7 @@
                                 </div>
                             </form>
                         </div>
-                        <div id="cards-options" style="display: none;">
+                        <div id="cards-options">
                             <div id="styling-options">
                                 <h4>Styling</h4>
                                 <div class="option-controls">
@@ -247,6 +270,17 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                        <div id="hosted-preselection" class="hosted-preselection-chooser" style="display:none;">
+                            <h4>Preselection</h4>
+                            <form id="hosted-preselection-form">
+                                <div class="option-controls">
+                                    <div class="option-control-container">
+                                        <input type="checkbox" id="hosted-preselection-checkbox" checked>
+                                        <label for="hosted-preselection-checkbox">Use preselection</label>
+                                    </div>
+                                </div>
+                            </form>
                         </div>
                         <div id="hosted-theme" class="hosted-theme-chooser">
                             <h4>Hosted page theme</h4>
