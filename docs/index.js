@@ -799,7 +799,9 @@ async function getListResult() {
   // Sets language based on query parameter
   const language = getLanguage();
 
-  return generateList(amount, country, language, "USD");
+  const division = getDivision();
+
+  return generateList(amount, country, language, "USD", division);
 }
 
 async function getLongId() {
@@ -996,7 +998,7 @@ function handleStandaloneRedirectClick(method) {
   const language = getLanguage();
   const theme = getTheme();
 
-  generateList(amount, country, language, "USD").then((result) => {
+  generateList(amount, country, language, "USD", getDivision()).then((result) => {
     window.location.href = result.url;
   });
 }
@@ -1077,6 +1079,11 @@ function getError() {
 function getLanguage() {
   const params = new URLSearchParams(window.location.search);
   return params.has("language") ? params.get("language") : "en";
+}
+
+function getDivision() {
+  const params = new URLSearchParams(window.location.search);
+  return params.has("division") ? params.get("division") : "1";
 }
 
 // Checks URL params to see if default or custom pay button was chosen
@@ -1191,12 +1198,18 @@ function getCountry() {
 }
 
 // List generator function which uses demo backend on given IE, by default it uses checkout integration
-function generateList(amount, country, language, currency = "USD") {
+function generateList(
+  amount,
+  country,
+  language,
+  currency = "USD",
+  division = "1"
+) {
   const listRequest = {
     currency,
     amount,
     country,
-    division: "27632",
+    division,
     customer: {
       number: "777",
       firstName: "John",
