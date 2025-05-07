@@ -553,6 +553,7 @@ async function initPayment() {
       onComponentListChange: (checkout, changeInfo) => {
         // Remove any payment methods that are no longer available
         const removedComponents = changeInfo.removedComponents;
+        const isStripeProvider = (checkout?.providers.indexOf("STRIPE") > -1);
 
         if (removedComponents.has("cards") && checkout.isDroppedIn("cards")) {
           checkout.remove("cards");
@@ -620,7 +621,7 @@ async function initPayment() {
 
             // Already drop in cards component so that it renders immediately
             const cards = checkout
-              .dropIn("cards", {
+              .dropIn(isStripeProvider ? "stripe:card" : "cards", {
                 hidePaymentButton: !(payButtonType === "default"),
               })
               .mount(container);
@@ -672,7 +673,7 @@ async function initPayment() {
 
             // Already drop in cards component so that it renders immediately
             const afterpay = checkout
-              .dropIn("afterpay", {
+              .dropIn(isStripeProvider ? "stripe:afterpay" : "afterpay", {
                 hidePaymentButton: !(payButtonType === "default"),
               })
               .mount(container);
@@ -722,7 +723,7 @@ async function initPayment() {
 
             // Already drop in cards component so that it renders immediately
             const klarna = checkout
-              .dropIn("klarna", {
+              .dropIn(isStripeProvider ? "stripe:klarna" : "klarna", {
                 hidePaymentButton: !(payButtonType === "default"),
               })
               .mount(container);
