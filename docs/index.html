@@ -5,7 +5,8 @@
     <title>Payoneer Cards Demo</title>
     <link rel="shortcut icon" type="image/png" href="public/favicon-32x32.png">
     <meta charset="utf-8">
-    <script src="https://resources.checkout.integration.oscato.com/web/libraries/payment-methods-list/umd/payment-methods-list.js"></script>
+    <script
+        src="https://resources.checkout.integration.oscato.com/web/libraries/payment-methods-list/umd/payment-methods-list.js"></script>
     <meta name="viewport" content="width=device-width">
     <link rel="stylesheet" href="styles.css">
     <script src="index.js"></script>
@@ -106,9 +107,7 @@
                         <div class="loading-bar"></div>
                     </div>
                     <div id="payment-methods-list" class="hidden">
-                        <payoneer-payment-methods-list
-                            env="pi-nightly.integration"
-                            order-components="klarna,afterpay,cards"
+                        <payoneer-payment-methods-list order-components="klarna,afterpay,cards"
                             id="payment-list-component" />
                     </div>
                     <form id="payment-methods">
@@ -119,7 +118,7 @@
                                     Credit / Debit card
                                 </span>
                                 <span id="card-icons" class="payment-method-icon-container">
-                                    
+
                                 </span>
                             </label>
                             <div id="cards-container" class="payment-method-component-container">
@@ -141,7 +140,7 @@
                                     Klarna
                                 </span>
                                 <span id="klarna-icons" class="payment-method-icon-container">
-                                    
+
                                 </span>
                             </label>
                             <div id="klarna-container" class="payment-method-component-container">
@@ -162,7 +161,7 @@
                                     Afterpay
                                 </span>
                                 <span id="afterpay-icons" class="payment-method-icon-container">
-                                    
+
                                 </span>
                             </label>
                             <div id="afterpay-container" class="payment-method-component-container">
@@ -192,11 +191,13 @@
                         <form id="integration-form">
                             <div class="option-controls">
                                 <div class="option-control-container">
-                                    <input type="radio" id="embedded-option" name="integration-type" value="embedded" checked>
+                                    <input type="radio" id="embedded-option" name="integration-type" value="embedded"
+                                        checked>
                                     <label for="embedded-option">Embedded</label>
                                 </div>
                                 <div class="option-control-container">
-                                    <input disabled type="radio" id="hosted-option" name="integration-type" value="hosted">
+                                    <input disabled type="radio" id="hosted-option" name="integration-type"
+                                        value="hosted">
                                     <label for="hosted-option">Hosted</label>
                                 </div>
                             </div>
@@ -205,11 +206,13 @@
                         <form id="payment-list-form">
                             <div class="option-controls">
                                 <div class="option-control-container">
-                                    <input type="radio" id="payment-components-option" name="payment-list-type" value="payment-components" checked>
+                                    <input type="radio" id="payment-components-option" name="payment-list-type"
+                                        value="payment-components" checked>
                                     <label for="payment-components-option">Payment components</label>
                                 </div>
                                 <div class="option-control-container">
-                                    <input type="radio" id="payment-list-option" name="payment-list-type" value="payment-list">
+                                    <input type="radio" id="payment-list-option" name="payment-list-type"
+                                        value="payment-list">
                                     <label for="payment-list-option">Payment list</label>
                                 </div>
                             </div>
