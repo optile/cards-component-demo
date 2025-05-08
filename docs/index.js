@@ -80,7 +80,7 @@ window.addEventListener("beforeunload", function () {
   });
 });
 
-// Loads the checkout web script dynamically, using sandbox environment if listUrl from sandbox is passed
+// Loads the checkout web script dynamically, using checkout.integration environment if listUrl from checkout.integration is passed
 function loadCheckoutWeb() {
   const searchParams = new URLSearchParams(window.location.search);
   const head = document.getElementsByTagName("head")[0];
@@ -92,16 +92,8 @@ function loadCheckoutWeb() {
     initPayment();
   };
 
-  if (
-    searchParams.has("listUrl") &&
-    searchParams.get("listUrl").includes("sandbox")
-  ) {
-    js.src =
-      "https://resources.sandbox.oscato.com/web/libraries/checkout-web/umd/checkout-web.min.js";
-  } else {
-    js.src =
-      "https://resources.sandbox.oscato.com/web/libraries/checkout-web/umd/checkout-web.min.js";
-  }
+   js.src =
+      "https://resources.checkout.integration.oscato.com/web/libraries/checkout-web/umd/checkout-web.min.js";
 
   head.appendChild(js);
 }
