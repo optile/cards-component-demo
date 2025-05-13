@@ -385,7 +385,7 @@ async function initPayment() {
     const configs = {
       env: ie, // test | live | int-env-name | checkout.integration
       longId: longId,
-      preload: ["cards", "afterpay", "klarna"], // loads cards and afterpay script as soon as page loads so that rendering using dropIn is fast
+      preload: ["stripe:card"], // loads cards and afterpay script as soon as page loads so that rendering using dropIn is fast
       // Called whenever there is an error (either server-side or client-side) which prevents payment. componentName indicates
       // where the error occurred (checkout-web or one of the payment components)
       onBeforeError: (checkout, componentName, errorData) => {
