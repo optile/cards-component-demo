@@ -257,6 +257,15 @@ marquee {
     color: gray;
 }
 
+.demo-cards-button {
+    background: linear-gradient(335deg, #ff4800, #0092f4);
+    color: white;
+}
+
+.demo-cards-button:hover {
+    cursor: pointer;
+}
+
 .demo-cards {
     padding: 1rem;
     background-color: white;
