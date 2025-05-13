@@ -339,6 +339,8 @@ function getUsePreselection() {
   }
 }
 
+const defaultDivision = "45667";
+
 async function initPayment() {
   const payButtonType = getPayButtonType();
 
@@ -1076,7 +1078,7 @@ function getLanguage() {
 
 function getDivision() {
   const params = new URLSearchParams(window.location.search);
-  return params.has("division") ? params.get("division") : "1";
+  return params.has("division") ? params.get("division") : defaultDivision;
 }
 
 // Checks URL params to see if default or custom pay button was chosen
@@ -1196,7 +1198,7 @@ function generateList(
   country,
   language,
   currency = "USD",
-  division = "1"
+  division = defaultDivision
 ) {
   const listRequest = {
     currency,
