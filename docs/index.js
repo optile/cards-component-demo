@@ -1284,7 +1284,7 @@ function generateList(
 ) {
   const listRequest = {
     currency,
-    amount: 50,
+    amount,
     country,
     division,
     customer: {
