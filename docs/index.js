@@ -93,7 +93,7 @@ function loadCheckoutWeb() {
   };
 
    js.src =
-      "https://resources.checkout.integration.oscato.com/web/libraries/checkout-web/umd/checkout-web.min.js";
+      "http://localhost:8000/checkout-web.min.js";
 
   head.appendChild(js);
 }
@@ -385,7 +385,7 @@ async function initPayment() {
     const configs = {
       env: ie, // test | live | int-env-name | checkout.integration
       longId: longId,
-      preload: ["cards", "afterpay", "klarna"], // loads cards and afterpay script as soon as page loads so that rendering using dropIn is fast
+      preload: ["cards", "afterpay", "klarna", "affirm"], // loads cards and afterpay script as soon as page loads so that rendering using dropIn is fast
       // Called whenever there is an error (either server-side or client-side) which prevents payment. componentName indicates
       // where the error occurred (checkout-web or one of the payment components)
       onBeforeError: (checkout, componentName, errorData) => {
@@ -590,6 +590,7 @@ async function initPayment() {
         const cardsRadio = document.getElementById("card-radio");
         const afterpayRadio = document.getElementById("afterpay-radio");
         const klarnaRadio = document.getElementById("klarna-radio");
+        const affirmRadio = document.getElementById("affirm-radio");
 
         if (availableComponents.has("cards")) {
           // Ensure card icons in payment list are updated
@@ -629,6 +630,7 @@ async function initPayment() {
                 // Adds a click event handler to the custom pay button that triggers payment in cards component
                 showAfterpayPaymentComponent(false);
                 showKlarnaPaymentComponent(false);
+                showAffirmPaymentComponent(false);
               }
             });
 
@@ -679,6 +681,7 @@ async function initPayment() {
                 showCardsOptions(false);
                 showKlarnaPaymentComponent(false);
                 showAfterpayPaymentComponent(true);
+                showAffirmPaymentComponent(false);
               }
             });
 
@@ -689,6 +692,57 @@ async function initPayment() {
           } else {
             if (availableComponents.size === 1) {
               afterpayRadio.click();
+            }
+          }
+        }
+
+        if (availableComponents.has("affirm")) {
+          // Ensure Afterpay icon in payment list is updated
+          const affirmIcons = document.getElementById("affirm-icons");
+          affirmIcons.innerHTML = "";
+          checkout
+            .getComponentInfo("affirm")
+            ?.networkInformation?.map((info) => info.logoUrl)
+            .slice(0, 4)
+            .forEach((url) => {
+              const img = document.createElement("img");
+              img.src = url;
+              affirmIcons.appendChild(img);
+            });
+
+          if (!checkout.isDroppedIn("affirm")) {
+            showAffirmPaymentMethod(true);
+
+            // Placeholder for dropping in the Affirm payment component
+            const container = document.getElementById(
+              "affirm-component-container"
+            );
+
+            // Already drop in cards component so that it renders immediately
+            const affirm = checkout
+              .dropIn(isStripeProvider ? "stripe:affirm" : "affirm", {
+                hidePaymentButton: !(payButtonType === "default"),
+              })
+              .mount(container);
+
+              affirmRadio.addEventListener("change", (event) => {
+              if (event.target.checked) {
+                updateCustomPaymentButton(affirm);
+                showCardsPaymentComponent(false);
+                showCardsOptions(false);
+                showKlarnaPaymentComponent(false);
+                showAfterpayPaymentComponent(false);
+                showAffirmPaymentComponent(true);
+              }
+            });
+
+            // Show this component by default if it is the only one in the available components
+            if (availableComponents.size === 1) {
+              affirmRadio.click();
+            }
+          } else {
+            if (availableComponents.size === 1) {
+              affirmRadio.click();
             }
           }
         }
@@ -728,6 +782,7 @@ async function initPayment() {
                 showCardsPaymentComponent(false);
                 showCardsOptions(false);
                 showAfterpayPaymentComponent(false);
+                showAffirmPaymentComponent(false);
                 showKlarnaPaymentComponent(true);
               }
             });
@@ -870,6 +925,33 @@ function showAfterpayPaymentMethod(boolean) {
     afterpayPaymentMethod.classList.remove("hidden");
   } else {
     afterpayPaymentMethod.classList.add("hidden");
+  }
+}
+
+function showAffirmPaymentMethod(boolean) {
+  const affirmPaymentMethod = document.getElementById(
+    "affirm-payment-method"
+  );
+  if (boolean) {
+    affirmPaymentMethod.classList.remove("hidden");
+  } else {
+    affirmPaymentMethod.classList.add("hidden");
+  }
+}
+
+function showAffirmPaymentComponent(boolean) {
+  const affirmComponentContainer =
+  document.getElementById("affirm-container");
+
+  const affirmPaymentMethod = document.getElementById(
+    "affirm-payment-method"
+  );
+  if (boolean) {
+    affirmComponentContainer.style = "display: block;";
+    affirmPaymentMethod.classList.add("selected");
+  } else {
+    affirmComponentContainer.style = "display: none;";
+    affirmPaymentMethod.classList.remove("selected");
   }
 }
 
@@ -1202,7 +1284,7 @@ function generateList(
 ) {
   const listRequest = {
     currency,
-    amount,
+    amount: 50,
     country,
     division,
     customer: {

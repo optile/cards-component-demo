@@ -5,8 +5,7 @@
     <title>Payoneer Cards Demo</title>
     <link rel="shortcut icon" type="image/png" href="public/favicon-32x32.png">
     <meta charset="utf-8">
-    <script
-        src="https://resources.checkout.integration.oscato.com/web/libraries/payment-methods-list/umd/payment-methods-list.js"></script>
+    <script src="http://localhost:8000/payment-methods-list.js"></script>
     <meta name="viewport" content="width=device-width">
     <link rel="stylesheet" href="styles.css">
     <script src="index.js"></script>
@@ -170,6 +169,27 @@
                                 </div>
                                 <div class="redirect-button-container" style="display: none;">
                                     <button id="afterpay-hosted-redirect-button" class="redirect-button">Proceed to
+                                        payment</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="affirm-payment-method" class="payment-method hidden">
+                            <label for="affirm-radio" id="affirm-select-container"
+                                class="payment-method-select-container">
+                                <span>
+                                    <input id="affirm-radio" type="radio" name="payment-option" value="affirm">
+                                    Affirm
+                                </span>
+                                <span id="affirm-icons" class="payment-method-icon-container">
+
+                                </span>
+                            </label>
+                            <div id="affirm-container" class="payment-method-component-container">
+                                <div id="affirm-component-container" class="payment-component-container">
+                                    <!-- Add payoneer-redirect element below here -->
+                                </div>
+                                <div class="redirect-button-container" style="display: none;">
+                                    <button id="affirm-hosted-redirect-button" class="redirect-button">Proceed to
                                         payment</button>
                                 </div>
                             </div>
