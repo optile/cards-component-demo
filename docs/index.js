@@ -93,7 +93,7 @@ function loadCheckoutWeb() {
   };
 
    js.src =
-      "http://localhost:8000/checkout-web.min.js";
+      "https://resources.checkout.integration.oscato.com/web/libraries/checkout-web/umd/checkout-web.min.js";
 
   head.appendChild(js);
 }
