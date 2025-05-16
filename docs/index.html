@@ -172,6 +172,27 @@
                                 </div>
                             </div>
                         </div>
+                        <div id="affirm-payment-method" class="payment-method hidden">
+                            <label for="affirm-radio" id="affirm-select-container"
+                                class="payment-method-select-container">
+                                <span>
+                                    <input id="affirm-radio" type="radio" name="payment-option" value="affirm">
+                                    Affirm
+                                </span>
+                                <span id="affirm-icons" class="payment-method-icon-container">
+
+                                </span>
+                            </label>
+                            <div id="affirm-container" class="payment-method-component-container">
+                                <div id="affirm-component-container" class="payment-component-container">
+                                    <!-- Add payoneer-redirect element below here -->
+                                </div>
+                                <div class="redirect-button-container" style="display: none;">
+                                    <button id="affirm-hosted-redirect-button" class="redirect-button">Proceed to
+                                        payment</button>
+                                </div>
+                            </div>
+                        </div>
                         <div id="custom-pay-button-container" style="display: none;">
                             <button id="custom-pay-button" class="custom-pay-button">Pay</button>
                         </div>

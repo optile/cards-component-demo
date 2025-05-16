@@ -11,19 +11,20 @@ body {
     0% {
         background-position: -468px 0;
     }
+
     100% {
         background-position: 468px 0;
     }
 }
 
-.payment-details > button {
+.payment-details>button {
     cursor: pointer;
     padding: 0.5rem;
     font-size: 1rem;
 }
 
 button.dark-mode {
-    background-color:  #727bff;
+    background-color: #727bff;
     color: #000000;
 }
 
@@ -107,7 +108,7 @@ hr {
 }
 
 .dark-mode h1 {
-    color:  #727bff;
+    color: #727bff;
 }
 
 .checkout-page-details {
@@ -187,6 +188,10 @@ hr {
     width: 64px;
 }
 
+.payment-method-icon-container.affirm {
+    width: 64px;
+}
+
 .payment-method-icon-container svg {
     height: 32px;
     width: 100%;
@@ -197,7 +202,7 @@ hr {
     position: relative;
 }
 
-.personal-details-section > svg {
+.personal-details-section>svg {
     position: absolute;
     top: 1rem;
     right: 1rem;
@@ -205,7 +210,7 @@ hr {
 }
 
 .cart-details-container {
-    flex:1;
+    flex: 1;
 }
 
 .cart-details {
@@ -223,7 +228,7 @@ hr {
 
 .dark-mode .cart-details {
     border: 1px solid #727bff;
-    color:  #727bff;
+    color: #727bff;
     background-color: rgb(39, 39, 39);
 }
 
@@ -310,7 +315,7 @@ table {
 }
 
 .dark-mode .redirect-button {
-    background-color:  #727bff;
+    background-color: #727bff;
     color: #000000;
 }
 
@@ -333,11 +338,11 @@ table {
     margin-bottom: 0.5rem;
 }
 
-.custom-pay-button  {
-    width: 100%; 
+.custom-pay-button {
+    width: 100%;
     background: linear-gradient(to bottom right, #20dc86, #107447);
-    color: white; 
-    border: none; 
+    color: white;
+    border: none;
     margin-top: 1rem;
     height: 55px;
     font-size: 1.2rem;
