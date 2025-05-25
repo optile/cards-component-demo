@@ -54,6 +54,13 @@ window.addEventListener("DOMContentLoaded", async () => {
       handleStandaloneRedirectClick("klarna");
     });
 
+      // Generates a HOSTED list session and redirects when pay button is clicked in HOSTED scenario for cards
+  document
+  .getElementById("affirm-hosted-redirect-button")
+  .addEventListener("click", (event) => {
+    event.preventDefault();
+    handleStandaloneRedirectClick("affirm");
+  });
   // Sets up chooser between hosted and embedded
   setUpIntegrationSelector();
 
@@ -93,7 +100,7 @@ function loadCheckoutWeb() {
   };
 
    js.src =
-      "https://resources.checkout.integration.oscato.com/web/libraries/checkout-web/umd/checkout-web.min.js";
+      "http://localhost:8000/checkout-web.min.js";
 
   head.appendChild(js);
 }
@@ -413,7 +420,7 @@ async function initPayment() {
           case "afterpay":
             try {
               checkout.remove("afterpay");
-              showAfterpayPaymentMethod(false);
+              showPaymentMethod(false, "afterpay");
             } catch (e) {
               console.log(e);
             }
@@ -426,12 +433,25 @@ async function initPayment() {
           case "klarna":
             try {
               checkout.remove("klarna");
-              showKlarnaPaymentMethod(false);
+              showPaymentMethod(false, "klarna");
             } catch (e) {
               console.log(e);
             }
             showMessage(
               `onBeforeError called in Klarna`,
+              "background-color: #FF4800; display: flex;",
+              1500
+            );
+          // Affirm payment component error - we want to unmount the component and hide payment method
+          case "affirm":
+            try {
+              checkout.remove("affirm");
+              showPaymentMethod(false, "affirm");
+            } catch (e) {
+              console.log(e);
+            }
+            showMessage(
+              `onBeforeError called in Affirm`,
               "background-color: #FF4800; display: flex;",
               1500
             );
@@ -564,7 +584,7 @@ async function initPayment() {
           checkout.isDroppedIn("afterpay")
         ) {
           checkout.remove("afterpay");
-          showAfterpayPaymentMethod(false);
+          showPaymentMethod(false, "afterpay")
           showMessage(
             `Payment with Afterpay not possible`,
             "background-color: #FF4800; display: flex;",
@@ -574,9 +594,19 @@ async function initPayment() {
 
         if (removedComponents.has("klarna") && checkout.isDroppedIn("klarna")) {
           checkout.remove("klarna");
-          showKlarnaPaymentMethod(false);
+          showPaymentMethod(false, "klarna")
           showMessage(
             `Payment with Klarna not possible`,
+            "background-color: #FF4800; display: flex;",
+            1500
+          );
+        }
+
+        if (removedComponents.has("affirm") && checkout.isDroppedIn("affirm")) {
+          checkout.remove("affirm");
+          showPaymentMethod(false, "affirm")
+          showMessage(
+            `Payment with Affirm not possible`,
             "background-color: #FF4800; display: flex;",
             1500
           );
@@ -625,12 +655,12 @@ async function initPayment() {
             cardsRadio.addEventListener("change", (event) => {
               if (event.target.checked) {
                 updateCustomPaymentButton(cards);
-                showCardsPaymentComponent(true);
+                showPaymentComponent(true, "cards")
                 showCardsOptions(true);
                 // Adds a click event handler to the custom pay button that triggers payment in cards component
-                showAfterpayPaymentComponent(false);
-                showKlarnaPaymentComponent(false);
-                showAffirmPaymentComponent(false);
+                showPaymentComponent(false, "afterpay")
+                showPaymentComponent(false, "klarna")
+                showPaymentComponent(false, "affirm")
               }
             });
 
@@ -660,7 +690,7 @@ async function initPayment() {
             });
 
           if (!checkout.isDroppedIn("afterpay")) {
-            showAfterpayPaymentMethod(true);
+            showPaymentMethod(true, "afterpay")
 
             // Placeholder for dropping in the Afterpay payment component
             const container = document.getElementById(
@@ -677,11 +707,11 @@ async function initPayment() {
             afterpayRadio.addEventListener("change", (event) => {
               if (event.target.checked) {
                 updateCustomPaymentButton(afterpay);
-                showCardsPaymentComponent(false);
+                showPaymentComponent(false, "cards");
                 showCardsOptions(false);
-                showKlarnaPaymentComponent(false);
-                showAfterpayPaymentComponent(true);
-                showAffirmPaymentComponent(false);
+                showPaymentComponent(false, "klarna");
+                showPaymentComponent(true, "afterpay");
+                showPaymentComponent(false, "affirm");
               }
             });
 
@@ -697,7 +727,7 @@ async function initPayment() {
         }
 
         if (availableComponents.has("affirm")) {
-          // Ensure Afterpay icon in payment list is updated
+          // Ensure Affirm icon in payment list is updated
           const affirmIcons = document.getElementById("affirm-icons");
           affirmIcons.innerHTML = "";
           checkout
@@ -711,7 +741,7 @@ async function initPayment() {
             });
 
           if (!checkout.isDroppedIn("affirm")) {
-            showAffirmPaymentMethod(true);
+            showPaymentMethod(true, "affirm")
 
             // Placeholder for dropping in the Affirm payment component
             const container = document.getElementById(
@@ -728,11 +758,11 @@ async function initPayment() {
               affirmRadio.addEventListener("change", (event) => {
               if (event.target.checked) {
                 updateCustomPaymentButton(affirm);
-                showCardsPaymentComponent(false);
+                showPaymentComponent(false, "cards")
                 showCardsOptions(false);
-                showKlarnaPaymentComponent(false);
-                showAfterpayPaymentComponent(false);
-                showAffirmPaymentComponent(true);
+                showPaymentComponent(false, "klarna")
+                showPaymentComponent(false, "afterpay")
+                showPaymentComponent(true, "affirm")
               }
             });
 
@@ -762,7 +792,7 @@ async function initPayment() {
             });
 
           if (!checkout.isDroppedIn("klarna")) {
-            showKlarnaPaymentMethod(true);
+            showPaymentMethod(true, "klarna")
 
             // Placeholder for dropping in the klarna payment component
             const container = document.getElementById(
@@ -779,11 +809,11 @@ async function initPayment() {
             klarnaRadio.addEventListener("change", (event) => {
               if (event.target.checked) {
                 updateCustomPaymentButton(klarna);
-                showCardsPaymentComponent(false);
+                showPaymentComponent(false, "cards")
                 showCardsOptions(false);
-                showAfterpayPaymentComponent(false);
-                showAffirmPaymentComponent(false);
-                showKlarnaPaymentComponent(true);
+                showPaymentComponent(false, "afterpay")
+                showPaymentComponent(false, "affirm")
+                showPaymentComponent(true, "klarna")
               }
             });
 
@@ -896,15 +926,15 @@ function showCardsPaymentMethod(boolean) {
   }
 }
 
-function showCardsPaymentComponent(boolean) {
-  const cardsPaymentMethod = document.getElementById("cards-payment-method");
-  const cardsComponentContainer = document.getElementById("cards-container");
+function showPaymentComponent(boolean, elementName) {
+  const elementPaymentMethod = document.getElementById(elementName + "-payment-method");
+  const elementComponentContainer = document.getElementById(elementName + "-container");
   if (boolean) {
-    cardsPaymentMethod.classList.add("selected");
-    cardsComponentContainer.style = "display: block;";
+    elementPaymentMethod.classList.add("selected");
+    elementComponentContainer.style = "display: block;";
   } else {
-    cardsPaymentMethod.classList.remove("selected");
-    cardsComponentContainer.style = "display: none;";
+    elementPaymentMethod.classList.remove("selected");
+    elementComponentContainer.style = "display: none;";
   }
 }
 
@@ -917,77 +947,14 @@ function showCardsOptions(boolean) {
   }
 }
 
-function showAfterpayPaymentMethod(boolean) {
-  const afterpayPaymentMethod = document.getElementById(
-    "afterpay-payment-method"
+function showPaymentMethod(boolean, elementName) {
+  const paymentMethod = document.getElementById(
+    elementName + "-payment-method"
   );
   if (boolean) {
-    afterpayPaymentMethod.classList.remove("hidden");
+    paymentMethod.classList.remove("hidden");
   } else {
-    afterpayPaymentMethod.classList.add("hidden");
-  }
-}
-
-function showAffirmPaymentMethod(boolean) {
-  const affirmPaymentMethod = document.getElementById(
-    "affirm-payment-method"
-  );
-  if (boolean) {
-    affirmPaymentMethod.classList.remove("hidden");
-  } else {
-    affirmPaymentMethod.classList.add("hidden");
-  }
-}
-
-function showAffirmPaymentComponent(boolean) {
-  const affirmComponentContainer =
-  document.getElementById("affirm-container");
-
-  const affirmPaymentMethod = document.getElementById(
-    "affirm-payment-method"
-  );
-  if (boolean) {
-    affirmComponentContainer.style = "display: block;";
-    affirmPaymentMethod.classList.add("selected");
-  } else {
-    affirmComponentContainer.style = "display: none;";
-    affirmPaymentMethod.classList.remove("selected");
-  }
-}
-
-function showAfterpayPaymentComponent(boolean) {
-  const afterpayComponentContainer =
-    document.getElementById("afterpay-container");
-  const afterpayPaymentMethod = document.getElementById(
-    "afterpay-payment-method"
-  );
-  if (boolean) {
-    afterpayComponentContainer.style = "display: block;";
-    afterpayPaymentMethod.classList.add("selected");
-  } else {
-    afterpayComponentContainer.style = "display: none;";
-    afterpayPaymentMethod.classList.remove("selected");
-  }
-}
-
-function showKlarnaPaymentMethod(boolean) {
-  const klarnaPaymentMethod = document.getElementById("klarna-payment-method");
-  if (boolean) {
-    klarnaPaymentMethod.classList.remove("hidden");
-  } else {
-    klarnaPaymentMethod.classList.add("hidden");
-  }
-}
-
-function showKlarnaPaymentComponent(boolean) {
-  const klarnaComponentContainer = document.getElementById("klarna-container");
-  const klarnaPaymentMethod = document.getElementById("klarna-payment-method");
-  if (boolean) {
-    klarnaComponentContainer.style = "display: block;";
-    klarnaPaymentMethod.classList.add("selected");
-  } else {
-    klarnaComponentContainer.style = "display: none;";
-    klarnaPaymentMethod.classList.remove("selected");
+    paymentMethod.classList.add("hidden");
   }
 }
 
@@ -1242,7 +1209,7 @@ function getAmount() {
       amount = 1.21;
       break;
     default:
-      amount = 15.0;
+      amount = 50.0;
       break;
   }
 
