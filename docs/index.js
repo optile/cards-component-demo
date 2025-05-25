@@ -100,7 +100,7 @@ function loadCheckoutWeb() {
   };
 
    js.src =
-   "https://resources.checkout.integration.oscato.com/web/libraries/checkout-web/umd/checkout-web.min.js";
+      "http://localhost:8000/checkout-web.min.js";
 
   head.appendChild(js);
 }
@@ -455,6 +455,71 @@ async function initPayment() {
               "background-color: #FF4800; display: flex;",
               1500
             );
+          // P24 payment component error - we want to unmount the component and hide payment method
+          case "p24":
+            try {
+              checkout.remove("p24");
+              showPaymentMethod(false, "p24");
+            } catch (e) {
+              console.log(e);
+            }
+            showMessage(
+              `onBeforeError called in P24`,
+              "background-color: #FF4800; display: flex;",
+              1500
+            );
+          // Eps payment component error - we want to unmount the component and hide payment method
+          case "eps":
+            try {
+              checkout.remove("eps");
+              showPaymentMethod(false, "eps");
+            } catch (e) {
+              console.log(e);
+            }
+            showMessage(
+              `onBeforeError called in Eps`,
+              "background-color: #FF4800; display: flex;",
+              1500
+            );
+          // iDEAL payment component error - we want to unmount the component and hide payment method
+          case "ideal":
+            try {
+              checkout.remove("ideal");
+              showPaymentMethod(false, "ideal");
+            } catch (e) {
+              console.log(e);
+            }
+            showMessage(
+              `onBeforeError called in iDEAL`,
+              "background-color: #FF4800; display: flex;",
+              1500
+            );
+          // Bancontact payment component error - we want to unmount the component and hide payment method
+          case "bancontact":
+            try {
+              checkout.remove("bancontact");
+              showPaymentMethod(false, "bancontact");
+            } catch (e) {
+              console.log(e);
+            }
+            showMessage(
+              `onBeforeError called in Bancontact`,
+              "background-color: #FF4800; display: flex;",
+              1500
+            );
+          // Multibanco payment component error - we want to unmount the component and hide payment method
+          case "multibanco":
+            try {
+              checkout.remove("multibanco");
+              showPaymentMethod(false, "multibanco");
+            } catch (e) {
+              console.log(e);
+            }
+            showMessage(
+              `onBeforeError called in Multibanco`,
+              "background-color: #FF4800; display: flex;",
+              1500
+            );
           // Global error
           case "checkout-web":
           default:
@@ -612,6 +677,56 @@ async function initPayment() {
           );
         }
 
+        if (removedComponents.has("p24") && checkout.isDroppedIn("p24")) {
+          checkout.remove("p24");
+          showPaymentMethod(false, "p24")
+          showMessage(
+            `Payment with P24 not possible`,
+            "background-color: #FF4800; display: flex;",
+            1500
+          );
+        }
+
+        if (removedComponents.has("eps") && checkout.isDroppedIn("eps")) {
+          checkout.remove("eps");
+          showPaymentMethod(false, "eps")
+          showMessage(
+            `Payment with Eps not possible`,
+            "background-color: #FF4800; display: flex;",
+            1500
+          );
+        }
+
+        if (removedComponents.has("ideal") && checkout.isDroppedIn("ideal")) {
+          checkout.remove("ideal");
+          showPaymentMethod(false, "ideal")
+          showMessage(
+            `Payment with iDEAL not possible`,
+            "background-color: #FF4800; display: flex;",
+            1500
+          );
+        }
+
+        if (removedComponents.has("bancontact") && checkout.isDroppedIn("bancontact")) {
+          checkout.remove("bancontact");
+          showPaymentMethod(false, "bancontact")
+          showMessage(
+            `Payment with Bancontact not possible`,
+            "background-color: #FF4800; display: flex;",
+            1500
+          );
+        }
+
+        if (removedComponents.has("multibanco") && checkout.isDroppedIn("multibanco")) {
+          checkout.remove("multibanco");
+          showPaymentMethod(false, "multibanco")
+          showMessage(
+            `Payment with Multibanco not possible`,
+            "background-color: #FF4800; display: flex;",
+            1500
+          );
+        }
+
         const handleAvailableMethods = (methodName, dropInComponentName, methodRadio) => {
           const methodIcons = document.getElementById(methodName + "-icons");
           methodIcons.innerHTML = "";
@@ -643,7 +758,7 @@ async function initPayment() {
               methodRadio.addEventListener("change", (event) => {
               if (event.target.checked) {
                 updateCustomPaymentButton(method);
-                ["cards", "klarna", "afterpay", "affirm"].map(item =>
+                ["cards", "klarna", "afterpay", "affirm", "p24", "eps", "ideal", "bancontact", "multibanco"].map(item =>
                   showPaymentComponent(item === methodName, item)
                 );
                 showCardsOptions(methodName === "cards");
@@ -670,6 +785,11 @@ async function initPayment() {
         const afterpayRadio = document.getElementById("afterpay-radio");
         const klarnaRadio = document.getElementById("klarna-radio");
         const affirmRadio = document.getElementById("affirm-radio");
+        const p24Radio = document.getElementById("p24-radio");
+        const epsRadio = document.getElementById("eps-radio");
+        const idealRadio = document.getElementById("ideal-radio");
+        const bancontactRadio = document.getElementById("bancontact-radio");
+        const multibancoRadio = document.getElementById("multibanco-radio");
 
         if (availableComponents.has("cards")) {
           // Ensure card icons in payment list are updated
@@ -689,6 +809,31 @@ async function initPayment() {
         if (availableComponents.has("klarna")) {
           // Ensure Klarna icon in payment list is updated
           handleAvailableMethods("klarna", isStripeProvider ? "stripe:klarna" : "klarna", klarnaRadio);
+        }
+
+        if (availableComponents.has("p24")) {
+          // Ensure p24 icon in payment list is updated
+          handleAvailableMethods("p24",  "stripe:p24", p24Radio);
+        }
+
+        if (availableComponents.has("eps")) {
+          // Ensure #ps icon in payment list is updated
+          handleAvailableMethods("eps",  "stripe:eps", epsRadio);
+        }
+
+        if (availableComponents.has("ideal")) {
+          // Ensure iDEAL icon in payment list is updated
+          handleAvailableMethods("ideal",  "stripe:ideal", idealRadio);
+        }
+
+        if (availableComponents.has("bancontact")) {
+          // Ensure Bancontact icon in payment list is updated
+          handleAvailableMethods("bancontact",  "stripe:bancontact", bancontactRadio);
+        }
+
+        if (availableComponents.has("multibanco")) {
+          // Ensure Bancontact icon in payment list is updated
+          handleAvailableMethods("multibanco",  "stripe:multibanco", multibancoRadio);
         }
       },
     };
