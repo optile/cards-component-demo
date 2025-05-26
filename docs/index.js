@@ -38,7 +38,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       handleStandaloneRedirectClick("cards");
     });
 
-  // Generates a HOSTED list session and redirects when pay button is clicked in HOSTED scenario for cards
+  // Generates a HOSTED list session and redirects when pay button is clicked in HOSTED scenario for afterpay
   document
     .getElementById("afterpay-hosted-redirect-button")
     .addEventListener("click", (event) => {
@@ -46,7 +46,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       handleStandaloneRedirectClick("afterpay");
     });
 
-  // Generates a HOSTED list session and redirects when pay button is clicked in HOSTED scenario for cards
+  // Generates a HOSTED list session and redirects when pay button is clicked in HOSTED scenario for klarna
   document
     .getElementById("klarna-hosted-redirect-button")
     .addEventListener("click", (event) => {
@@ -54,7 +54,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       handleStandaloneRedirectClick("klarna");
     });
 
-  // Generates a HOSTED list session and redirects when pay button is clicked in HOSTED scenario for cards
+  // Generates a HOSTED list session and redirects when pay button is clicked in HOSTED scenario for affirm
   document
   .getElementById("affirm-hosted-redirect-button")
   .addEventListener("click", (event) => {
@@ -633,7 +633,7 @@ async function initPayment() {
               methodName + "-component-container"
             );
 
-            // Already drop in cards component so that it renders immediately
+            // Already drop in payment method component so that it renders immediately
             const method = checkout
               .dropIn(dropInComponentName, {
                 hidePaymentButton: !(payButtonType === "default"),
@@ -665,31 +665,25 @@ async function initPayment() {
         const availableComponents = changeInfo.availableComponents;
         console.log("New available components are...", availableComponents);
 
-        // Radio button inputs for the Payoneer-provided payment methods
-        const cardsRadio = document.getElementById("card-radio");
-        const afterpayRadio = document.getElementById("afterpay-radio");
-        const klarnaRadio = document.getElementById("klarna-radio");
-        const affirmRadio = document.getElementById("affirm-radio");
-
-        if (availableComponents.has("cards")) {
-          // Ensure card icons in payment list are updated
-          handleAvailableMethods("cards", isStripeProvider ? "stripe:card" : "cards" , cardsRadio);
+        const stripeMethodMapper = {
+          "cards": "stripe:card",
+          "afterpay": "stripe:afterpay",
+          "klarna": "stripe:klarna",
+          "affirm": "stripe:affirm"
         }
 
-        if (availableComponents.has("afterpay")) {
-          // Ensure Afterpay icon in payment list is updated
-          handleAvailableMethods("afterpay", isStripeProvider ? "stripe:afterpay" : "afterpay", afterpayRadio);
-        }
+        const list =  ["cards", "afterpay", "affirm", "klarna"];
 
-        if (availableComponents.has("affirm")) {
-          // Ensure Affirm icon in payment list is updated
-          handleAvailableMethods("affirm", isStripeProvider ? "stripe:affirm" : "affirm", affirmRadio);
-        }
-
-        if (availableComponents.has("klarna")) {
-          // Ensure Klarna icon in payment list is updated
-          handleAvailableMethods("klarna", isStripeProvider ? "stripe:klarna" : "klarna", klarnaRadio);
-        }
+        list.forEach(methodName => {
+          console.log(methodName, stripeMethodMapper[methodName]);
+          if (availableComponents.has(methodName)) {
+            handleAvailableMethods(
+              methodName,
+              isStripeProvider ? stripeMethodMapper[methodName] : methodName ,
+              document.getElementById(`${methodName}-radio`)
+            );
+          }
+        });
       },
     };
 
