@@ -54,7 +54,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       handleStandaloneRedirectClick("klarna");
     });
 
-      // Generates a HOSTED list session and redirects when pay button is clicked in HOSTED scenario for cards
+  // Generates a HOSTED list session and redirects when pay button is clicked in HOSTED scenario for cards
   document
   .getElementById("affirm-hosted-redirect-button")
   .addEventListener("click", (event) => {
