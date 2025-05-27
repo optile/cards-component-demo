@@ -38,7 +38,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       handleStandaloneRedirectClick("cards");
     });
 
-  // Generates a HOSTED list session and redirects when pay button is clicked in HOSTED scenario for cards
+  // Generates a HOSTED list session and redirects when pay button is clicked in HOSTED scenario for afterpay
   document
     .getElementById("afterpay-hosted-redirect-button")
     .addEventListener("click", (event) => {
@@ -46,7 +46,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       handleStandaloneRedirectClick("afterpay");
     });
 
-  // Generates a HOSTED list session and redirects when pay button is clicked in HOSTED scenario for cards
+  // Generates a HOSTED list session and redirects when pay button is clicked in HOSTED scenario for klarna
   document
     .getElementById("klarna-hosted-redirect-button")
     .addEventListener("click", (event) => {
@@ -54,6 +54,13 @@ window.addEventListener("DOMContentLoaded", async () => {
       handleStandaloneRedirectClick("klarna");
     });
 
+  // Generates a HOSTED list session and redirects when pay button is clicked in HOSTED scenario for affirm
+  document
+  .getElementById("affirm-hosted-redirect-button")
+  .addEventListener("click", (event) => {
+    event.preventDefault();
+    handleStandaloneRedirectClick("affirm");
+  });
   // Sets up chooser between hosted and embedded
   setUpIntegrationSelector();
 
@@ -93,7 +100,7 @@ function loadCheckoutWeb() {
   };
 
    js.src =
-      "https://resources.checkout.integration.oscato.com/web/libraries/checkout-web/umd/checkout-web.min.js";
+   "https://resources.checkout.integration.oscato.com/web/libraries/checkout-web/umd/checkout-web.min.js";
 
   head.appendChild(js);
 }
@@ -381,6 +388,20 @@ async function initPayment() {
       payButton.addEventListener("click", currentPaymentListener);
     }
 
+    const handleOnBeforeError = (methodName) => {
+      try {
+        checkout.remove();
+        showPaymentComponent(false, methodName);
+      } catch (e) {
+        console.log(e);
+      }
+      showMessage(
+        `onBeforeError called in ` + methodName,
+        "background-color: #FF4800; display: flex;",
+        1500
+      );
+    }
+
     // configurations for the Checkout Web SDK
     const configs = {
       env: ie, // test | live | int-env-name | checkout.integration
@@ -398,43 +419,16 @@ async function initPayment() {
         switch (componentName) {
           // Cards payment component error - we want to unmount the component and hide payment method
           case "cards":
-            try {
-              checkout.remove("cards");
-              showCardsPaymentMethod(false);
-            } catch (e) {
-              console.log(e);
-            }
-            showMessage(
-              `onBeforeError called in Cards`,
-              "background-color: #FF4800; display: flex;",
-              1500
-            );
+            handleOnBeforeError("cards");
           // Afterpay payment component error - we want to unmount the component and hide payment method
           case "afterpay":
-            try {
-              checkout.remove("afterpay");
-              showAfterpayPaymentMethod(false);
-            } catch (e) {
-              console.log(e);
-            }
-            showMessage(
-              `onBeforeError called in Afterpay`,
-              "background-color: #FF4800; display: flex;",
-              1500
-            );
+            handleOnBeforeError("afterpay");
           // Klarna payment component error - we want to unmount the component and hide payment method
           case "klarna":
-            try {
-              checkout.remove("klarna");
-              showKlarnaPaymentMethod(false);
-            } catch (e) {
-              console.log(e);
-            }
-            showMessage(
-              `onBeforeError called in Klarna`,
-              "background-color: #FF4800; display: flex;",
-              1500
-            );
+            handleOnBeforeError("klarna");
+          // Affirm payment component error - we want to unmount the component and hide payment method
+          case "affirm":
+            handleOnBeforeError("affirm");
           // Global error
           case "checkout-web":
           default:
@@ -551,7 +545,7 @@ async function initPayment() {
 
         if (removedComponents.has("cards") && checkout.isDroppedIn("cards")) {
           checkout.remove("cards");
-          showCardsPaymentMethod(false);
+          showPaymentComponent(false, "cards");
           showMessage(
             `Payment with cards not possible`,
             "background-color: #FF4800; display: flex;",
@@ -564,7 +558,7 @@ async function initPayment() {
           checkout.isDroppedIn("afterpay")
         ) {
           checkout.remove("afterpay");
-          showAfterpayPaymentMethod(false);
+          showPaymentMethod(false, "afterpay");
           showMessage(
             `Payment with Afterpay not possible`,
             "background-color: #FF4800; display: flex;",
@@ -574,7 +568,7 @@ async function initPayment() {
 
         if (removedComponents.has("klarna") && checkout.isDroppedIn("klarna")) {
           checkout.remove("klarna");
-          showKlarnaPaymentMethod(false);
+          showPaymentMethod(false, "klarna")
           showMessage(
             `Payment with Klarna not possible`,
             "background-color: #FF4800; display: flex;",
@@ -582,166 +576,87 @@ async function initPayment() {
           );
         }
 
+        if (removedComponents.has("affirm") && checkout.isDroppedIn("affirm")) {
+          checkout.remove("affirm");
+          showPaymentMethod(false, "affirm");
+          showMessage(
+            `Payment with Affirm not possible`,
+            "background-color: #FF4800; display: flex;",
+            1500
+          );
+        }
+
+        const handleAvailableMethods = (methodName, dropInComponentName, methodRadio) => {
+          const methodIcons = document.getElementById(methodName + "-icons");
+          methodIcons.innerHTML = "";
+          checkout
+            .getComponentInfo(methodName)
+            ?.networkInformation?.map((info) => info.logoUrl)
+            .slice(0, 4)
+            .forEach((url) => {
+              const img = document.createElement("img");
+              img.src = url;
+              methodIcons.appendChild(img);
+            });
+
+          if (!checkout.isDroppedIn(methodName)) {
+            showPaymentMethod(true, methodName);
+
+            // Placeholder for dropping in the payment component
+            const container = document.getElementById(
+              methodName + "-component-container"
+            );
+
+            // Already drop in payment method component so that it renders immediately
+            const method = checkout
+              .dropIn(dropInComponentName, {
+                hidePaymentButton: !(payButtonType === "default"),
+              })
+              .mount(container);
+
+              methodRadio.addEventListener("change", (event) => {
+              if (event.target.checked) {
+                updateCustomPaymentButton(method);
+                ["cards", "klarna", "afterpay", "affirm"].map(item =>
+                  showPaymentComponent(item === methodName, item)
+                );
+                showCardsOptions(methodName === "cards");
+              }
+            });
+
+            // Show this component by default if it is the only one in the available components
+            if (availableComponents.size === 1) {
+              methodRadio.click();
+            }
+          } else {
+            if (availableComponents.size === 1) {
+              methodRadio.click();
+            }
+          }
+        }
+
         // Handle the available components
         const availableComponents = changeInfo.availableComponents;
         console.log("New available components are...", availableComponents);
 
-        // Radio button inputs for the Payoneer-provided payment methods
-        const cardsRadio = document.getElementById("card-radio");
-        const afterpayRadio = document.getElementById("afterpay-radio");
-        const klarnaRadio = document.getElementById("klarna-radio");
-
-        if (availableComponents.has("cards")) {
-          // Ensure card icons in payment list are updated
-          const cardIcons = document.getElementById("card-icons");
-          cardIcons.innerHTML = "";
-          checkout
-            .getComponentInfo("cards")
-            ?.networkInformation?.map((info) => info.logoUrl)
-            .slice(0, 4)
-            .forEach((url) => {
-              const img = document.createElement("img");
-              img.src = url;
-              cardIcons.appendChild(img);
-            });
-
-          if (!checkout.isDroppedIn("cards")) {
-            showCardsPaymentMethod(true);
-
-            // This is a container for the payoneer-cards component, hidden by default and shown when cards radio is clicked
-            const container = document.getElementById(
-              "cards-component-container"
-            );
-
-            // Already drop in cards component so that it renders immediately
-            const cards = checkout
-              .dropIn(isStripeProvider ? "stripe:card" : "cards", {
-                hidePaymentButton: !(payButtonType === "default"),
-              })
-              .mount(container);
-
-            // When cards is selected, display the payoneer-cards component (and some extra configuration settings related to cards)
-            cardsRadio.addEventListener("change", (event) => {
-              if (event.target.checked) {
-                updateCustomPaymentButton(cards);
-                showCardsPaymentComponent(true);
-                showCardsOptions(true);
-                // Adds a click event handler to the custom pay button that triggers payment in cards component
-                showAfterpayPaymentComponent(false);
-                showKlarnaPaymentComponent(false);
-              }
-            });
-
-            // Show this component by default if it is the only one in the available components
-            if (availableComponents.size === 1) {
-              cardsRadio.click();
-            }
-          } else {
-            if (availableComponents.size === 1) {
-              cardsRadio.click();
-            }
-          }
+        const stripeMethodMapper = {
+          "cards": "stripe:card",
+          "afterpay": "stripe:afterpay",
+          "klarna": "stripe:klarna",
+          "affirm": "stripe:affirm"
         }
 
-        if (availableComponents.has("afterpay")) {
-          // Ensure Afterpay icon in payment list is updated
-          const afterpayIcons = document.getElementById("afterpay-icons");
-          afterpayIcons.innerHTML = "";
-          checkout
-            .getComponentInfo("afterpay")
-            ?.networkInformation?.map((info) => info.logoUrl)
-            .slice(0, 4)
-            .forEach((url) => {
-              const img = document.createElement("img");
-              img.src = url;
-              afterpayIcons.appendChild(img);
-            });
+        const list =  ["cards", "afterpay", "affirm", "klarna"];
 
-          if (!checkout.isDroppedIn("afterpay")) {
-            showAfterpayPaymentMethod(true);
-
-            // Placeholder for dropping in the Afterpay payment component
-            const container = document.getElementById(
-              "afterpay-component-container"
+        list.forEach(methodName => {
+          if (availableComponents.has(methodName)) {
+            handleAvailableMethods(
+              methodName,
+              isStripeProvider ? stripeMethodMapper[methodName] : methodName ,
+              document.getElementById(`${methodName}-radio`)
             );
-
-            // Already drop in cards component so that it renders immediately
-            const afterpay = checkout
-              .dropIn(isStripeProvider ? "stripe:afterpay" : "afterpay", {
-                hidePaymentButton: !(payButtonType === "default"),
-              })
-              .mount(container);
-
-            afterpayRadio.addEventListener("change", (event) => {
-              if (event.target.checked) {
-                updateCustomPaymentButton(afterpay);
-                showCardsPaymentComponent(false);
-                showCardsOptions(false);
-                showKlarnaPaymentComponent(false);
-                showAfterpayPaymentComponent(true);
-              }
-            });
-
-            // Show this component by default if it is the only one in the available components
-            if (availableComponents.size === 1) {
-              afterpayRadio.click();
-            }
-          } else {
-            if (availableComponents.size === 1) {
-              afterpayRadio.click();
-            }
           }
-        }
-
-        if (availableComponents.has("klarna")) {
-          // Ensure Klarna icon in payment list is updated
-          const klarnaIcons = document.getElementById("klarna-icons");
-          klarnaIcons.innerHTML = "";
-          checkout
-            .getComponentInfo("klarna")
-            ?.networkInformation?.map((info) => info.logoUrl)
-            .slice(0, 4)
-            .forEach((url) => {
-              const img = document.createElement("img");
-              img.src = url;
-              klarnaIcons.appendChild(img);
-            });
-
-          if (!checkout.isDroppedIn("klarna")) {
-            showKlarnaPaymentMethod(true);
-
-            // Placeholder for dropping in the klarna payment component
-            const container = document.getElementById(
-              "klarna-component-container"
-            );
-
-            // Already drop in cards component so that it renders immediately
-            const klarna = checkout
-              .dropIn(isStripeProvider ? "stripe:klarna" : "klarna", {
-                hidePaymentButton: !(payButtonType === "default"),
-              })
-              .mount(container);
-
-            klarnaRadio.addEventListener("change", (event) => {
-              if (event.target.checked) {
-                updateCustomPaymentButton(klarna);
-                showCardsPaymentComponent(false);
-                showCardsOptions(false);
-                showAfterpayPaymentComponent(false);
-                showKlarnaPaymentComponent(true);
-              }
-            });
-
-            // Show this component by default if it is the only one in the available components
-            if (availableComponents.size === 1) {
-              klarnaRadio.click();
-            }
-          } else {
-            if (availableComponents.size === 1) {
-              klarnaRadio.click();
-            }
-          }
-        }
+        });
       },
     };
 
@@ -832,24 +747,15 @@ function getIE() {
   return defaultEnv;
 }
 
-function showCardsPaymentMethod(boolean) {
-  const cardsPaymentMethod = document.getElementById("cards-payment-method");
+function showPaymentComponent(boolean, elementName) {
+  const elementPaymentMethod = document.getElementById(elementName + "-payment-method");
+  const elementComponentContainer = document.getElementById(elementName + "-container");
   if (boolean) {
-    cardsPaymentMethod.classList.remove("hidden");
+    elementPaymentMethod.classList.add("selected");
+    elementComponentContainer.style = "display: block;";
   } else {
-    cardsPaymentMethod.classList.add("hidden");
-  }
-}
-
-function showCardsPaymentComponent(boolean) {
-  const cardsPaymentMethod = document.getElementById("cards-payment-method");
-  const cardsComponentContainer = document.getElementById("cards-container");
-  if (boolean) {
-    cardsPaymentMethod.classList.add("selected");
-    cardsComponentContainer.style = "display: block;";
-  } else {
-    cardsPaymentMethod.classList.remove("selected");
-    cardsComponentContainer.style = "display: none;";
+    elementPaymentMethod.classList.remove("selected");
+    elementComponentContainer.style = "display: none;";
   }
 }
 
@@ -862,50 +768,14 @@ function showCardsOptions(boolean) {
   }
 }
 
-function showAfterpayPaymentMethod(boolean) {
-  const afterpayPaymentMethod = document.getElementById(
-    "afterpay-payment-method"
+function showPaymentMethod(boolean, elementName) {
+  const paymentMethod = document.getElementById(
+    elementName + "-payment-method"
   );
   if (boolean) {
-    afterpayPaymentMethod.classList.remove("hidden");
+    paymentMethod.classList.remove("hidden");
   } else {
-    afterpayPaymentMethod.classList.add("hidden");
-  }
-}
-
-function showAfterpayPaymentComponent(boolean) {
-  const afterpayComponentContainer =
-    document.getElementById("afterpay-container");
-  const afterpayPaymentMethod = document.getElementById(
-    "afterpay-payment-method"
-  );
-  if (boolean) {
-    afterpayComponentContainer.style = "display: block;";
-    afterpayPaymentMethod.classList.add("selected");
-  } else {
-    afterpayComponentContainer.style = "display: none;";
-    afterpayPaymentMethod.classList.remove("selected");
-  }
-}
-
-function showKlarnaPaymentMethod(boolean) {
-  const klarnaPaymentMethod = document.getElementById("klarna-payment-method");
-  if (boolean) {
-    klarnaPaymentMethod.classList.remove("hidden");
-  } else {
-    klarnaPaymentMethod.classList.add("hidden");
-  }
-}
-
-function showKlarnaPaymentComponent(boolean) {
-  const klarnaComponentContainer = document.getElementById("klarna-container");
-  const klarnaPaymentMethod = document.getElementById("klarna-payment-method");
-  if (boolean) {
-    klarnaComponentContainer.style = "display: block;";
-    klarnaPaymentMethod.classList.add("selected");
-  } else {
-    klarnaComponentContainer.style = "display: none;";
-    klarnaPaymentMethod.classList.remove("selected");
+    paymentMethod.classList.add("hidden");
   }
 }
 
@@ -1160,7 +1030,7 @@ function getAmount() {
       amount = 1.21;
       break;
     default:
-      amount = 15.0;
+      amount = 50.0;
       break;
   }
 
