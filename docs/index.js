@@ -649,7 +649,6 @@ async function initPayment() {
         const list =  ["cards", "afterpay", "affirm", "klarna"];
 
         list.forEach(methodName => {
-          console.log(methodName, stripeMethodMapper[methodName]);
           if (availableComponents.has(methodName)) {
             handleAvailableMethods(
               methodName,
