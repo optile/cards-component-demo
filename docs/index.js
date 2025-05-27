@@ -388,6 +388,20 @@ async function initPayment() {
       payButton.addEventListener("click", currentPaymentListener);
     }
 
+    const handleOnBeforeError = (methodName) => {
+      try {
+        checkout.remove();
+        showPaymentComponent(false, methodName);
+      } catch (e) {
+        console.log(e);
+      }
+      showMessage(
+        `onBeforeError called in ` + methodName,
+        "background-color: #FF4800; display: flex;",
+        1500
+      );
+    }
+
     // configurations for the Checkout Web SDK
     const configs = {
       env: ie, // test | live | int-env-name | checkout.integration
@@ -405,56 +419,16 @@ async function initPayment() {
         switch (componentName) {
           // Cards payment component error - we want to unmount the component and hide payment method
           case "cards":
-            try {
-              checkout.remove("cards");
-              showCardsPaymentMethod(false);
-            } catch (e) {
-              console.log(e);
-            }
-            showMessage(
-              `onBeforeError called in Cards`,
-              "background-color: #FF4800; display: flex;",
-              1500
-            );
+            handleOnBeforeError("cards");
           // Afterpay payment component error - we want to unmount the component and hide payment method
           case "afterpay":
-            try {
-              checkout.remove("afterpay");
-              showPaymentMethod(false, "afterpay");
-            } catch (e) {
-              console.log(e);
-            }
-            showMessage(
-              `onBeforeError called in Afterpay`,
-              "background-color: #FF4800; display: flex;",
-              1500
-            );
+            handleOnBeforeError("afterpay");
           // Klarna payment component error - we want to unmount the component and hide payment method
           case "klarna":
-            try {
-              checkout.remove("klarna");
-              showPaymentMethod(false, "klarna");
-            } catch (e) {
-              console.log(e);
-            }
-            showMessage(
-              `onBeforeError called in Klarna`,
-              "background-color: #FF4800; display: flex;",
-              1500
-            );
+            handleOnBeforeError("klarna");
           // Affirm payment component error - we want to unmount the component and hide payment method
           case "affirm":
-            try {
-              checkout.remove("affirm");
-              showPaymentMethod(false, "affirm");
-            } catch (e) {
-              console.log(e);
-            }
-            showMessage(
-              `onBeforeError called in Affirm`,
-              "background-color: #FF4800; display: flex;",
-              1500
-            );
+            handleOnBeforeError("affirm");
           // Global error
           case "checkout-web":
           default:
@@ -571,7 +545,7 @@ async function initPayment() {
 
         if (removedComponents.has("cards") && checkout.isDroppedIn("cards")) {
           checkout.remove("cards");
-          showCardsPaymentMethod(false);
+          showPaymentComponent(false, "cards");
           showMessage(
             `Payment with cards not possible`,
             "background-color: #FF4800; display: flex;",
@@ -584,7 +558,7 @@ async function initPayment() {
           checkout.isDroppedIn("afterpay")
         ) {
           checkout.remove("afterpay");
-          showPaymentMethod(false, "afterpay")
+          showPaymentMethod(false, "afterpay");
           showMessage(
             `Payment with Afterpay not possible`,
             "background-color: #FF4800; display: flex;",
@@ -604,7 +578,7 @@ async function initPayment() {
 
         if (removedComponents.has("affirm") && checkout.isDroppedIn("affirm")) {
           checkout.remove("affirm");
-          showPaymentMethod(false, "affirm")
+          showPaymentMethod(false, "affirm");
           showMessage(
             `Payment with Affirm not possible`,
             "background-color: #FF4800; display: flex;",
@@ -626,7 +600,7 @@ async function initPayment() {
             });
 
           if (!checkout.isDroppedIn(methodName)) {
-            showPaymentMethod(true, methodName)
+            showPaymentMethod(true, methodName);
 
             // Placeholder for dropping in the payment component
             const container = document.getElementById(
@@ -772,15 +746,6 @@ function getIE() {
   }
 
   return defaultEnv;
-}
-
-function showCardsPaymentMethod(boolean) {
-  const cardsPaymentMethod = document.getElementById("cards-payment-method");
-  if (boolean) {
-    cardsPaymentMethod.classList.remove("hidden");
-  } else {
-    cardsPaymentMethod.classList.add("hidden");
-  }
 }
 
 function showPaymentComponent(boolean, elementName) {
