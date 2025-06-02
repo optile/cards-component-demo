@@ -3,7 +3,7 @@ const defaultDivision = "45667";
 let isDifferentShippingAddress = false;
 const listRequest = {
   currency: "USD",
-  amount: 100,
+  amount: 10,
   country: "US",
   division: getDivision(),
   customer: {
@@ -24,6 +24,11 @@ const listRequest = {
         city: "NY",
         state: "NY",
         country: "US",
+        phones: {
+          mobile: {
+            unstructuredNumber: "123456789",
+          },
+        },
       },
       billing: {
         name: {
@@ -36,6 +41,11 @@ const listRequest = {
         city: "NY",
         state: "NY",
         country: "US",
+        phones: {
+          mobile: {
+            unstructuredNumber: "123456789",
+          },
+        },
       },
     },
   },
@@ -138,6 +148,45 @@ function toggleShippingFields() {
   }
 }
 
+function isPlainObject(obj) {
+  return Object.prototype.toString.call(obj) === "[object Object]";
+}
+
+function isEmptyValue(val) {
+  return val === "" || val === null || val === undefined;
+}
+
+function deepMerge() {
+  var result = {};
+
+  for (var i = 0; i < arguments.length; i++) {
+    var obj = arguments[i];
+    if (!obj || typeof obj !== "object") continue;
+
+    for (var key in obj) {
+      if (!obj.hasOwnProperty(key)) continue;
+
+      var newVal = obj[key];
+      var existingVal = result[key];
+
+      if (Array.isArray(existingVal) && Array.isArray(newVal)) {
+        result[key] = existingVal.concat(newVal);
+      } else if (isPlainObject(existingVal) && isPlainObject(newVal)) {
+        result[key] = deepMerge(existingVal, newVal);
+      } else if (isPlainObject(newVal) && isPlainObject(result[key])) {
+        result[key] = deepMerge(result[key], newVal);
+      } else {
+        if (isEmptyValue(newVal) && result.hasOwnProperty(key)) {
+          // skip assigning if newVal is empty
+          continue;
+        }
+        result[key] = newVal;
+      }
+    }
+  }
+
+  return result;
+}
 function readCustomerDetailsForm(customerDetailsForm) {
   if (!customerDetailsForm) return {};
   const formData = new FormData(customerDetailsForm);
@@ -156,22 +205,27 @@ function readCustomerDetailsForm(customerDetailsForm) {
       }
     });
   }
-  console.log("shipping error", { data });
 
-  data.customer.addresses.shipping = {
-    name: {
-      firstName: "john",
-      lastName: "doe",
-    },
-    street: "12",
-    houseNumber: "12",
-    zip: "83000",
-    city: "NY",
-    state: "NY",
-    country: "UsS",
-  };
-  data.customer.addresses.billing = data.customer.addresses.shipping;
-  return data;
+  // If shipping address is same as billing.
+  if (!isDifferentShippingAddress) {
+    data.customer.addresses.shipping = data.customer.addresses.billing;
+  }
+
+  if (
+    data.customer.addresses.billing.country !== "" &&
+    data.customer.addresses.billing.country !== listRequest.country
+  ) {
+    listRequest.country = data.customer.addresses.billing.country;
+  }
+
+  const mergedData = deepMerge(listRequest, data);
+
+  // Attach transactionId
+  if (window.transactionId) {
+    mergedData.transactionId = window.transactionId;
+  }
+
+  return mergedData;
 }
 
 /**
@@ -183,16 +237,6 @@ function onComponentListChange(checkout, diff) {
   const isStripeProvider = checkout?.providers.indexOf("STRIPE") > -1;
   window.isStripeProvider = isStripeProvider;
   const componentsInfo = checkout.availableDropInComponents();
-
-  /**
-   * Remove UI of unavailable components
-   */
-  diff.removedComponents.forEach((component) => {
-    if (checkout.isDroppedIn(component)) {
-      checkout.remove(component);
-    }
-  });
-
   /**
    * Container of payment methods list
    */
@@ -200,12 +244,31 @@ function onComponentListChange(checkout, diff) {
     "payment-methods-container"
   );
 
+  /**
+   * Remove UI of unavailable components
+   */
+  diff.removedComponents.forEach((component) => {
+    const methodName = isStripeProvider
+      ? `stripe:${component === "cards" ? "card" : component}`
+      : component;
+    console.log({ methodName, isDroppedIn: checkout.isDroppedIn(component) });
+    if (checkout.isDroppedIn(methodName)) {
+      const removed = checkout.remove(methodName);
+      const el = document.getElementById(`${component}-payment-method`);
+      console.log({ removed, el });
+      if (removed && el) {
+        el.parentNode.removeChild(el);
+      }
+    }
+  });
+
   diff.availableComponents.forEach((component) => {
     const buttonType = getPayButtonType();
-    if (
-      diff.availableComponents.has(component) &&
-      !checkout.isDroppedIn(component)
-    ) {
+    const methodName = isStripeProvider
+      ? `stripe:${component === "cards" ? "card" : component}`
+      : component;
+    if (!checkout.isDroppedIn(methodName)) {
+      console.log({ methodName, component });
       const parentElement = document.createElement("div");
       parentElement.classList = "payment-method-component-container";
       const componentInfo = componentsInfo.find(
@@ -247,9 +310,6 @@ function onComponentListChange(checkout, diff) {
       wrapper.appendChild(parentElement);
 
       paymentMethodsContainer.appendChild(wrapper);
-      const methodName = isStripeProvider
-        ? `stripe:${component === "cards" ? "card" : component}`
-        : component;
       checkout
         .dropIn(methodName, {
           hidePaymentButton: buttonType === "custom",
@@ -317,17 +377,13 @@ function generateOrUpdateListSession(method = "POST", listData, longId) {
         ? `https://api.${getIE()}.oscato.com/checkout/session`
         : `https://api.${getIE()}.oscato.com/checkout/session/${longId}`;
     fetch(url, options)
-      .then((res) => res.json())
+      .then((res) => {
+        return method === "POST" ? res.json() : { longId: window.longId };
+      })
       .then((listResponse) => {
         resolve(listResponse);
       })
-      .catch((err) => {
-        console.log("POST ERROR is:", { err, status: Object.keys(err) });
-        for (const key in err) {
-          console.error(`key is errorrr ${key}:`, err[key]);
-        }
-        // reject(err);
-      });
+      .catch((err) => reject(err));
   });
 }
 
@@ -367,19 +423,61 @@ window.addEventListener("DOMContentLoaded", async () => {
     window.checkoutInstance.updateLongId(response.id);
   });
 
+  var amountEdit = document.getElementById("amount-edit");
+  var amountSave = document.getElementById("amount-save");
+  var amountDetails = document.getElementById("amount-details");
+  var amountForm = document.getElementById("amount-form");
+
+  amountEdit.addEventListener("click", function () {
+    amountEdit.classList.add("hidden");
+    amountSave.classList.remove("hidden");
+    amountDetails.classList.add("hidden");
+    amountForm.classList.remove("hidden");
+  });
+
   const customerDetailsForm = document.getElementById("customer-details-form");
 
-  customerDetailsForm.addEventListener("change", (event) => {
-    const data = readCustomerDetailsForm(customerDetailsForm);
-    console.log("form data", { data, longId: window.longId });
+  function updateListData() {
+    const payload = readCustomerDetailsForm(customerDetailsForm);
 
-    generateOrUpdateListSession(
-      "PUT",
-      { ...listRequest, ...data, transactionId: window.transactionId || "" },
-      window.longId
-    ).then((response) => {
-      console.log("response", { response, checkoutInstance });
-      checkoutInstance.updateLongId(response.id);
+    const wrapper = document.getElementById("payment-methods-container");
+    wrapper.style = "display: none;";
+    document.getElementById("loading-message").style = "display: block;";
+
+    generateOrUpdateListSession("PUT", payload, window.longId).then(
+      (response) => {
+        console.log({ response });
+        checkoutInstance.updateLongId(window.longId);
+        setTimeout(function () {
+          document.getElementById("loading-message").style = "display: none;";
+          wrapper.style = "display: block;";
+        }, 1000);
+      }
+    );
+  }
+  customerDetailsForm.addEventListener("change", updateListData);
+
+  amountSave.addEventListener("click", function () {
+    amountEdit.classList.remove("hidden");
+    amountSave.classList.add("hidden");
+    amountDetails.classList.remove("hidden");
+    amountForm.classList.add("hidden");
+    const formData = new FormData(amountForm);
+    listRequest.amount = formData.get("amount");
+    listRequest.currency = formData.get("currency");
+    var symbols = {
+      USD: "$", // US Dollar
+      EUR: "€", // Euro
+      GBP: "£", // British Pound
+      CNY: "¥", // Chinese Yuan (Renminbi)
+      JPY: "¥", // Japanese Yen
+      RUB: "₽", // Russian Ruble
+    };
+    Array.from(
+      document.getElementsByClassName("amount-with-currency-sign")
+    ).forEach(function (el) {
+      el.innerHTML = `${symbols[listRequest.currency]}${listRequest.amount}`;
     });
+    updateListData();
   });
 });

@@ -411,6 +411,7 @@ label {
 
 input[type="text"],
 input[type="email"],
+input[type="number"],
 select {
   width: 100%;
   padding: 0.7rem;
@@ -476,4 +477,35 @@ div#global-error {
   border-radius: 8px;
   color: red;
   display: none;
+}
+
+.amount-edit,
+.amount-save {
+  font-size: 14px;
+  font-weight: normal;
+  border-radius: 5px;
+  padding: 7px 17px;
+  background: green;
+  max-width: 65px;
+  text-align: center;
+  color: #fff;
+  float: right;
+  border: 1px solid green;
+  cursor: pointer;
+  margin-top: 0;
+}
+
+.amount-edit {
+  background: transparent;
+  color: green;
+}
+
+.amount-save:hover,
+.amount-edit:hover {
+  background: green;
+  opacity: 0.9;
+}
+
+.amount-edit:hover {
+  color: #fff;
 }
