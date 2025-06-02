@@ -82,7 +82,6 @@ window.addEventListener("beforeunload", function () {
 
 // Loads the checkout web script dynamically, using checkout.integration environment if listUrl from checkout.integration is passed
 function loadCheckoutWeb() {
-  const searchParams = new URLSearchParams(window.location.search);
   const head = document.getElementsByTagName("head")[0];
   const js = document.createElement("script");
 
@@ -92,8 +91,7 @@ function loadCheckoutWeb() {
     initPayment();
   };
 
-   js.src =
-      "https://resources.checkout.integration.oscato.com/web/libraries/checkout-web/umd/checkout-web.min.js";
+   js.src = `https://resources.${getIE()}.oscato.com/web/libraries/checkout-web/umd/checkout-web.min.js`;
 
   head.appendChild(js);
 }
@@ -289,6 +287,7 @@ function setUpPayButton() {
       handleSelectDefaultPayButton(event);
     });
 
+  
   // Pay button is displayed underneath store options and hidden in cards component
   document
     .getElementById("custom-option")
@@ -297,7 +296,7 @@ function setUpPayButton() {
     });
 }
 
-const defaultEnv = "checkout.integration";
+const defaultEnv = "sandbox";
 
 function showMessage(messageText, messageStyle, time) {
   const message = document.getElementById("custom-override-message");
@@ -339,7 +338,7 @@ function getUsePreselection() {
   }
 }
 
-const defaultDivision = "45667";
+const defaultDivision = "17875";
 
 async function initPayment() {
   const payButtonType = getPayButtonType();
@@ -921,7 +920,7 @@ function setUpDemoCards() {
 // Update background color of default pay button
 function updatePayButtonBackgroundColor(event) {
   const newColor = event.target.value;
-  const cards = document.getElementById("payoneer-cards-component");
+  const cards = document.getElementById("payoneer-stripe-component");
   cards.setStyles({
     primaryColor: newColor,
   });
@@ -930,7 +929,7 @@ function updatePayButtonBackgroundColor(event) {
 // Update text color of default pay button
 function updatePayButtonTextColor(event) {
   const newColor = event.target.value;
-  const cards = document.getElementById("payoneer-cards-component");
+  const cards = document.getElementById("payoneer-stripe-component");
   cards.setStyles({
     primaryTextColor: newColor,
   });
