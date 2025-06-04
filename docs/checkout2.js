@@ -237,6 +237,7 @@ function onComponentListChange(checkout, diff) {
   const isStripeProvider = checkout?.providers.indexOf("STRIPE") > -1;
   window.isStripeProvider = isStripeProvider;
   const componentsInfo = checkout.availableDropInComponents();
+
   /**
    * Container of payment methods list
    */
@@ -248,12 +249,9 @@ function onComponentListChange(checkout, diff) {
    * Remove UI of unavailable components
    */
   diff.removedComponents.forEach((component) => {
-    const methodName = isStripeProvider
-      ? `stripe:${component === "cards" ? "card" : component}`
-      : component;
-    console.log({ methodName, isDroppedIn: checkout.isDroppedIn(component) });
-    if (checkout.isDroppedIn(methodName)) {
-      const removed = checkout.remove(methodName);
+    console.log({ component, isDroppedIn: checkout.isDroppedIn(component) });
+    if (checkout.isDroppedIn(component)) {
+      const removed = checkout.remove(component);
       const el = document.getElementById(`${component}-payment-method`);
       console.log({ removed, el });
       if (removed && el) {
@@ -264,11 +262,8 @@ function onComponentListChange(checkout, diff) {
 
   diff.availableComponents.forEach((component) => {
     const buttonType = getPayButtonType();
-    const methodName = isStripeProvider
-      ? `stripe:${component === "cards" ? "card" : component}`
-      : component;
-    if (!checkout.isDroppedIn(methodName)) {
-      console.log({ methodName, component });
+    if (!checkout.isDroppedIn(component)) {
+      console.log({ component });
       const parentElement = document.createElement("div");
       parentElement.classList = "payment-method-component-container";
       const componentInfo = componentsInfo.find(
@@ -311,7 +306,7 @@ function onComponentListChange(checkout, diff) {
 
       paymentMethodsContainer.appendChild(wrapper);
       checkout
-        .dropIn(methodName, {
+        .dropIn(component, {
           hidePaymentButton: buttonType === "custom",
         })
         .mount(parentElement);
@@ -320,11 +315,11 @@ function onComponentListChange(checkout, diff) {
 }
 
 async function initCheckout() {
-  function createDummyCallHandler(methodName, returnValue) {
+  function createDummyCallHandler(component, returnValue) {
     return function () {
-      console.log("\n\n " + methodName + " \n");
+      console.log("\n\n " + component + " \n");
       console.log([...arguments]);
-      console.log("\n " + methodName + " \n\n");
+      console.log("\n " + component + " \n\n");
 
       return returnValue;
     };
