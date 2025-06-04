@@ -288,7 +288,7 @@ function onComponentListChange(checkout, diff) {
                     ${
                       componentInfo?.networkInformation
                         ?.map(
-                          (info) =>
+                          (info) =>info.logoUrl &&
                             `<img src="${info.logoUrl}" alt="${componentInfo.label}" />`
                         )
                         .join("") || ""
