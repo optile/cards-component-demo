@@ -327,6 +327,7 @@ async function initCheckout() {
 
   const checkout = await Payoneer.CheckoutWeb({
     env,
+    preload: ["stripe:card"],
     // longId: "683d24e78f22ef000169dc9ald6u4oh30rilu40ghid78dqmpu",
     onComponentListChange,
     onBeforeCharge: createDummyCallHandler("onBeforeCharge", true),
