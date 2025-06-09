@@ -287,7 +287,6 @@ function setUpPayButton() {
       handleSelectDefaultPayButton(event);
     });
 
-  
   // Pay button is displayed underneath store options and hidden in cards component
   document
     .getElementById("custom-option")
@@ -546,7 +545,6 @@ async function initPayment() {
       onComponentListChange: (checkout, changeInfo) => {
         // Remove any payment methods that are no longer available
         const removedComponents = changeInfo.removedComponents;
-        const isStripeProvider = (checkout?.providers.indexOf("STRIPE") > -1);
 
         if (removedComponents.has("cards") && checkout.isDroppedIn("cards")) {
           checkout.remove("cards");
@@ -614,7 +612,7 @@ async function initPayment() {
 
             // Already drop in cards component so that it renders immediately
             const cards = checkout
-              .dropIn(isStripeProvider ? "stripe:card" : "cards", {
+              .dropIn("cards", {
                 hidePaymentButton: !(payButtonType === "default"),
               })
               .mount(container);
@@ -666,7 +664,7 @@ async function initPayment() {
 
             // Already drop in cards component so that it renders immediately
             const afterpay = checkout
-              .dropIn(isStripeProvider ? "stripe:afterpay" : "afterpay", {
+              .dropIn("afterpay", {
                 hidePaymentButton: !(payButtonType === "default"),
               })
               .mount(container);
@@ -716,7 +714,7 @@ async function initPayment() {
 
             // Already drop in cards component so that it renders immediately
             const klarna = checkout
-              .dropIn(isStripeProvider ? "stripe:klarna" : "klarna", {
+              .dropIn("klarna", {
                 hidePaymentButton: !(payButtonType === "default"),
               })
               .mount(container);
