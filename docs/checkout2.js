@@ -54,7 +54,6 @@ const listRequest = {
 function createPaymentListener(paymentComponent) {
   return function (event) {
     event.preventDefault();
-    console.log("kliknuo na pay", paymentComponent);
     paymentComponent.pay();
   };
 }
@@ -452,7 +451,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   document
     .getElementById("payment-button-choice-form")
     .addEventListener("change", (event) => {
-      console.log("change");
       handleSelectCustomPayButton(event);
     });
 
