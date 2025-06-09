@@ -51,6 +51,36 @@ const listRequest = {
   },
 };
 
+function createPaymentListener(paymentComponent) {
+  return function (event) {
+    event.preventDefault();
+    console.log("kliknuo na pay", paymentComponent);
+    paymentComponent.pay();
+  };
+}
+
+let currentPaymentListener = null;
+
+function updateCustomPaymentButton(component) {
+  const payButton = document.getElementById("custom-pay-button");
+
+  // If there's an existing listener, remove it
+  if (currentPaymentListener) {
+    payButton.removeEventListener("click", currentPaymentListener);
+  }
+
+  currentPaymentListener = createPaymentListener(component);
+
+  // Add the new listener
+  payButton.addEventListener("click", currentPaymentListener);
+}
+
+const getComponentName = (eventName) => {
+  if (eventName === "cards") return `payoneer-stripe[method="STRIPE:CARD"]`;
+
+  return `payoneer-stripe[method="STRIPE:${eventName.toUpperCase()}"]`;
+}
+
 /**
  * Show or hide payment components based on click on radio button
  */
@@ -62,6 +92,10 @@ function togglePaymentMethodSelection() {
         value: e.target.value,
         name: e.target.name,
       });
+
+     const selectorName = getComponentName(e.target.value);
+     const checkoutComponent = document.querySelector(selectorName);
+      updateCustomPaymentButton(checkoutComponent);
 
       const currentEl = form.querySelector(`#${e.target.value}-payment-method`);
       const otherElements = form.querySelectorAll(".payment-method");
@@ -89,7 +123,7 @@ function handleSelectCustomPayButton(event) {
 function updatePayButtonBackgroundColor(event) {
   const newColor = event.target.value;
   const cards = document.getElementById(
-    `payoneer-${window?.isStripeProvider ? "stripe" : "cards"}-component`
+    "payoneer-stripe-component"
   );
   cards.setStyles({
     primaryColor: newColor,
@@ -100,7 +134,7 @@ function updatePayButtonBackgroundColor(event) {
 function updatePayButtonTextColor(event) {
   const newColor = event.target.value;
   const cards = document.getElementById(
-    `payoneer-${window?.isStripeProvider ? "stripe" : "cards"}-component`
+    "payoneer-stripe-component"
   );
   cards.setStyles({
     primaryTextColor: newColor,
@@ -234,8 +268,6 @@ function readCustomerDetailsForm(customerDetailsForm) {
  * @param {*} diff
  */
 function onComponentListChange(checkout, diff) {
-  const isStripeProvider = checkout?.providers.indexOf("STRIPE") > -1;
-  window.isStripeProvider = isStripeProvider;
   const componentsInfo = checkout.availableDropInComponents();
 
   /**
@@ -331,12 +363,7 @@ async function initCheckout() {
     // longId: "683d24e78f22ef000169dc9ald6u4oh30rilu40ghid78dqmpu",
     onComponentListChange,
     onBeforeCharge: createDummyCallHandler("onBeforeCharge", true),
-    onBeforeError: (checkout, componentName, data) => {
-      const el = document.getElementById("global-error");
-      el.innerText = data?.resultInfo || "Unexpected Error";
-      el.style = "display: block";
-      return false;
-    },
+    onBeforeError: createDummyCallHandler("onBeforeError", true),
     onListRefetch: createDummyCallHandler("onListRefetch", true),
     onPaymentSuccess: createDummyCallHandler("onPaymentSuccess", true),
     onValidationInfo: createDummyCallHandler("onValidationInfo"),
@@ -385,21 +412,47 @@ function generateOrUpdateListSession(method = "POST", listData, longId) {
 
 initCheckout();
 
-window.addEventListener("DOMContentLoaded", async () => {
-  togglePaymentMethodSelection();
-  toggleShippingFields();
+function setUpPayButton() {
+  // Sets pay button type
+  const payButtonType = getPayButtonType();
 
-  const buttonType = getPayButtonType();
-  if (buttonType === "custom") {
+  if (payButtonType === "default") {
+    document.getElementById("default-option").checked = true;
+  } else if (payButtonType === "custom") {
+    document.getElementById("styling-options").style = "display: none";
+    document.getElementById("custom-pay-button-container").style =
+      "display: block";
     document.getElementById("custom-option").checked = true;
   } else {
     document.getElementById("default-option").checked = true;
   }
 
+  // Pay button is displayed inside cards component
+  document
+    .getElementById("default-option")
+    .addEventListener("change", (event) => {
+      handleSelectDefaultPayButton(event);
+    });
+
+
+  // Pay button is displayed underneath store options and hidden in cards component
+  document
+    .getElementById("custom-option")
+    .addEventListener("change", (event) => {
+      handleSelectCustomPayButton(event);
+    });
+}
+
+window.addEventListener("DOMContentLoaded", async () => {
+  togglePaymentMethodSelection();
+  toggleShippingFields();
+  setUpPayButton();
+
   // Pay button is displayed underneath store options and hidden in cards component
   document
     .getElementById("payment-button-choice-form")
     .addEventListener("change", (event) => {
+      console.log("change");
       handleSelectCustomPayButton(event);
     });
 
