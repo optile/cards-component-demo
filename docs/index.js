@@ -1207,7 +1207,7 @@ function generateList(
       firstName: "John",
       lastName: "Doe",
       birthday: "1977-09-13",
-      email: "afterpay_visa_successful@payoneer.com",
+      email: "john_doe@email-domain.com",
     },
   };
 
