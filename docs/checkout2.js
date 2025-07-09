@@ -331,6 +331,9 @@ function onComponentListChange(checkout, diff) {
       const wrapper = document.createElement("div");
       wrapper.classList = "payment-method";
       wrapper.id = `${component}-payment-method`;
+      if (!document.querySelector(".active")) {
+        wrapper.classList.add("active");
+      }
 
       wrapper.innerHTML = template;
       wrapper.appendChild(parentElement);

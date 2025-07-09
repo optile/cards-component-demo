@@ -739,6 +739,22 @@ async function initPayment() {
             }
           }
         }
+
+        const selectedMethod = document.querySelector("selected");
+        if (!selectedMethod && availableComponents.size > 1) {
+          const firstMethod = availableComponents.values().next().value;
+          switch(firstMethod) {
+            case "cards":
+              cardsRadio.click();
+              break;
+            case "afterpay":
+              afterpayRadio.click();
+              break;
+            case "klarna":
+              klarnaRadio.click();
+              break;
+          }
+        }
       },
     };
 
@@ -841,6 +857,7 @@ function showCardsPaymentMethod(boolean) {
 function showCardsPaymentComponent(boolean) {
   const cardsPaymentMethod = document.getElementById("cards-payment-method");
   const cardsComponentContainer = document.getElementById("cards-container");
+
   if (boolean) {
     cardsPaymentMethod.classList.add("selected");
     cardsComponentContainer.style = "display: block;";
