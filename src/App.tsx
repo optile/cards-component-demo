@@ -12,13 +12,9 @@ const configDefaults = {
 function App() {
   useEffect(() => {
     const sdk = new HoneycombWebSDK({
-      // @ts-expect-error - window.hk_endpoint is not typed
-      endpoint: window.hk_endpoint || "https://api.eu1.honeycomb.io/v1/traces", // Send to EU instance of Honeycomb. Defaults to sending to US instance.
+      endpoint: "otel-collector.dev.oscato.com",
       debug: true, // Set to false for production environment.
-      // @ts-expect-error - window.api_key is not typed
-      apiKey: window.hk_api_key || "[YOUR API KEY HERE]", // Replace with your Honeycomb Ingest API Key.
-      // @ts-expect-error - window.service_name is not typed
-      serviceName: window.hk_service_name || "[YOUR APPLICATION NAME HERE]", // Replace with your application name. Honeycomb uses this string to find your dataset when we receive your data. When no matching dataset exists, we create a new one with this name if your API Key has the appropriate permissions.
+      serviceName: "demo_page",
       instrumentations: [
         getWebAutoInstrumentations({
           "@opentelemetry/instrumentation-xml-http-request": configDefaults,
