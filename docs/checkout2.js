@@ -341,6 +341,10 @@ function onComponentListChange(checkout, diff) {
           hidePaymentButton: buttonType === "custom",
         })
         .mount(parentElement);
+
+      if (!document.querySelector(".active")) {
+        document.getElementById(`${component}-radio`).click();
+      }
     }
   });
 }
