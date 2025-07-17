@@ -63,6 +63,8 @@ let currentPaymentListener = null;
 function updateCustomPaymentButton(component) {
   const payButton = document.getElementById("custom-pay-button");
 
+  console.log("updateCustomPaymentButton", component, { payButton });
+
   // If there's an existing listener, remove it
   if (currentPaymentListener) {
     payButton.removeEventListener("click", currentPaymentListener);
@@ -75,10 +77,10 @@ function updateCustomPaymentButton(component) {
 }
 
 const getComponentName = (eventName) => {
-  if (eventName === "cards") return `payoneer-stripe[method="STRIPE:CARD"]`;
+  if (eventName === "cards") return `payoneer-stripe[method="STRIPE:CARDS"]`;
 
   return `payoneer-stripe[method="STRIPE:${eventName.toUpperCase()}"]`;
-}
+};
 
 /**
  * Show or hide payment components based on click on radio button
@@ -92,8 +94,11 @@ function togglePaymentMethodSelection() {
         name: e.target.name,
       });
 
-     const selectorName = getComponentName(e.target.value);
-     const checkoutComponent = document.querySelector(selectorName);
+      const selectorName = getComponentName(e.target.value);
+      const checkoutComponent = document.querySelector(selectorName);
+
+      console.log("checkoutComponent", checkoutComponent);
+      console.log("selectorName", selectorName);
       updateCustomPaymentButton(checkoutComponent);
 
       const currentEl = form.querySelector(`#${e.target.value}-payment-method`);
@@ -121,9 +126,7 @@ function handleSelectCustomPayButton(event) {
 
 function updatePayButtonBackgroundColor(event) {
   const newColor = event.target.value;
-  const cards = document.getElementById(
-    "payoneer-stripe-component"
-  );
+  const cards = document.getElementById("payoneer-stripe-component");
   cards.setStyles({
     primaryColor: newColor,
   });
@@ -132,9 +135,7 @@ function updatePayButtonBackgroundColor(event) {
 // Update text color of default pay button
 function updatePayButtonTextColor(event) {
   const newColor = event.target.value;
-  const cards = document.getElementById(
-    "payoneer-stripe-component"
-  );
+  const cards = document.getElementById("payoneer-stripe-component");
   cards.setStyles({
     primaryTextColor: newColor,
   });
@@ -319,7 +320,8 @@ function onComponentListChange(checkout, diff) {
                     ${
                       componentInfo?.networkInformation
                         ?.map(
-                          (info) =>info.logoUrl &&
+                          (info) =>
+                            info.logoUrl &&
                             `<img src="${info.logoUrl}" alt="${componentInfo.label}" />`
                         )
                         .join("") || ""
@@ -436,7 +438,6 @@ function setUpPayButton() {
     .addEventListener("change", (event) => {
       handleSelectDefaultPayButton(event);
     });
-
 
   // Pay button is displayed underneath store options and hidden in cards component
   document
