@@ -63,8 +63,6 @@ let currentPaymentListener = null;
 function updateCustomPaymentButton(component) {
   const payButton = document.getElementById("custom-pay-button");
 
-  console.log("updateCustomPaymentButton", component, { payButton });
-
   // If there's an existing listener, remove it
   if (currentPaymentListener) {
     payButton.removeEventListener("click", currentPaymentListener);
@@ -97,8 +95,6 @@ function togglePaymentMethodSelection() {
       const selectorName = getComponentName(e.target.value);
       const checkoutComponent = document.querySelector(selectorName);
 
-      console.log("checkoutComponent", checkoutComponent);
-      console.log("selectorName", selectorName);
       updateCustomPaymentButton(checkoutComponent);
 
       const currentEl = form.querySelector(`#${e.target.value}-payment-method`);
