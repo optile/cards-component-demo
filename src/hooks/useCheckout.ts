@@ -1,21 +1,23 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { CheckoutApiService } from "../services/checkoutApi";
+import { useConfigurationStore } from "../store/configuration";
 import type {
   CheckoutInstance,
   DropInComponent,
   PaymentMethod,
 } from "../types/checkout";
-import { CheckoutApiService } from "../services/checkoutApi";
 import { PayoneerSDKUtils } from "../utils/payoneerSdk";
-import { useConfigurationStore } from "../store/configuration";
 
 export const useCheckoutSession = () => {
-  const navigate = useNavigate();
   const [longId, setLongId] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const isSessionInitialized = useRef(false);
 
   useEffect(() => {
+    if (isSessionInitialized.current) return;
+
     const initSession = async () => {
       try {
         setLoading(true);
@@ -29,14 +31,14 @@ export const useCheckoutSession = () => {
             : "Failed to generate list session";
         setError(errorMessage);
         console.error("Failed to generate list session:", err);
-        navigate("/failed");
       } finally {
         setLoading(false);
       }
     };
 
+    isSessionInitialized.current = true;
     initSession();
-  }, [navigate]);
+  }, []);
 
   return { longId, loading, error };
 };
@@ -94,10 +96,20 @@ export const usePaymentMethods = (checkout: CheckoutInstance | null) => {
   }, [checkout, activeNetwork]);
 
   useEffect(() => {
+    const isPayButtonHidden = payButtonType === "custom";
+
+    // Update hidePaymentButton for all mounted components
+    dropInsRef.current.forEach((component) => {
+      // @ts-expect-error - The hidePaymentButton method exists on the instance but not in the current type
+      component.element.hidePaymentButton(isPayButtonHidden);
+    });
+  }, [payButtonType]);
+
+  useEffect(() => {
     if (
       !checkout ||
-      availableMethods.length === 0
-      // areComponentsMounted.current
+      availableMethods.length === 0 ||
+      areComponentsMounted.current
     ) {
       return;
     }
@@ -116,11 +128,9 @@ export const usePaymentMethods = (checkout: CheckoutInstance | null) => {
       availableMethods.forEach((method) => {
         const container = componentRefs.current[method.name];
         if (container) {
-          const isPayButtonHidden = payButtonType === "custom";
-
-          const component = checkout.dropIn(method.name).mount(container);
-          // @ts-expect-error - The hidePaymentButton method exists on the instance but not in the current type
-          component.element.hidePaymentButton(isPayButtonHidden);
+          const component = checkout
+            .dropIn(method.name, { hidePaymentButton: false })
+            .mount(container);
           dropInsRef.current.push(component);
         }
       });
@@ -131,7 +141,7 @@ export const usePaymentMethods = (checkout: CheckoutInstance | null) => {
 
     // This effect should run when availableMethods are populated and the refs are set.
     // The componentRefs object itself doesn't trigger re-renders, so we depend on availableMethods.
-  }, [checkout, availableMethods, payButtonType]);
+  }, [checkout, availableMethods]);
 
   const handlePayment = async () => {
     if (isSubmitting) return; // Prevent multiple submissions
