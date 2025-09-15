@@ -1,0 +1,60 @@
+export interface NetworkInformation {
+  network: string;
+  logoUrl: string;
+}
+
+export interface PaymentMethod {
+  name: string;
+  label: string;
+  networkInformation: NetworkInformation[];
+}
+
+export interface DropInComponent {
+  mount(element: HTMLElement | null): DropInComponent;
+  unmount(): void;
+  pay(): Promise<void>;
+  updateNode(options: { hidePaymentButton: boolean }): void;
+}
+
+export interface CheckoutInstance {
+  availableDropInComponents(): PaymentMethod[];
+  dropIn(
+    methodName: string,
+    options?: { hidePaymentButton: boolean }
+  ): DropInComponent;
+  charge(): void;
+}
+
+export interface ListSessionRequest {
+  currency: string;
+  amount: number;
+  country: string;
+  division: string;
+  customer: {
+    number: string;
+    firstName: string;
+    lastName: string;
+    birthday: string;
+    email: string;
+  };
+}
+
+export interface ListSessionResponse {
+  id: string;
+  [key: string]: unknown;
+}
+
+// Type for the Payoneer global object
+declare global {
+  interface Window {
+    Payoneer: {
+      CheckoutWeb: (options: {
+        longId: string;
+        env: string;
+        preload: string[];
+      }) => Promise<CheckoutInstance>;
+    };
+  }
+}
+
+export declare const Payoneer: typeof window.Payoneer;

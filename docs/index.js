@@ -91,7 +91,7 @@ function loadCheckoutWeb() {
     initPayment();
   };
 
-   js.src = `https://resources.${getIE()}.oscato.com/web/libraries/checkout-web/umd/checkout-web.min.js`;
+  js.src = `https://resources.${getIE()}.oscato.com/web/libraries/checkout-web/umd/checkout-web.min.js`;
 
   head.appendChild(js);
 }
@@ -743,7 +743,7 @@ async function initPayment() {
         const selectedMethod = document.querySelector("selected");
         if (!selectedMethod && availableComponents.size > 1) {
           const firstMethod = availableComponents.values().next().value;
-          switch(firstMethod) {
+          switch (firstMethod) {
             case "cards":
               cardsRadio.click();
               break;
@@ -837,7 +837,7 @@ async function getLongId() {
 
 function getIE() {
   const searchParams = new URLSearchParams(location.search);
-
+  console.log("search params", searchParams.toString());
   if (searchParams.has("env")) {
     return searchParams.get("env");
   }
@@ -1007,9 +1007,11 @@ function handleStandaloneRedirectClick(method) {
   const language = getLanguage();
   const theme = getTheme();
 
-  generateList(amount, country, language, "USD", getDivision()).then((result) => {
-    window.location.href = result.url;
-  });
+  generateList(amount, country, language, "USD", getDivision()).then(
+    (result) => {
+      window.location.href = result.url;
+    }
+  );
 }
 
 // Used for copying demo card numbers to clipboard
