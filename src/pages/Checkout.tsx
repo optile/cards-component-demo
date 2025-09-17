@@ -9,17 +9,9 @@ import type { PaymentMethod } from "../types/checkout";
 import { useConfigurationStore } from "../store/configuration";
 
 const Checkout = () => {
-  const {
-    longId,
-    loading: sessionLoading,
-    error: sessionError,
-  } = useCheckoutSession();
-  const {
-    checkout,
-    loading: checkoutLoading,
-    error: checkoutError,
-  } = usePayoneerCheckout(longId);
-  const { payButtonType, primaryColor, primaryTextColor } =
+  const { listSessionData } = useCheckoutSession();
+  const { checkout } = usePayoneerCheckout(listSessionData);
+  const { payButtonType, primaryColor, primaryTextColor, amount } =
     useConfigurationStore();
   const {
     activeNetwork,
@@ -29,21 +21,6 @@ const Checkout = () => {
     availableMethods,
     isSubmitting,
   } = usePaymentMethods(checkout);
-
-  const isLoading = sessionLoading || checkoutLoading;
-  const error = sessionError || checkoutError;
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        Loading...
-      </div>
-    );
-  }
-
-  if (error) {
-    return <div className="text-red-500 text-center mt-10">{error}</div>;
-  }
 
   return (
     <div className="bg-gray-50 min-h-screen font-sans">
@@ -129,11 +106,11 @@ const Checkout = () => {
               </h2>
               <div className="flex justify-between mb-2">
                 <span>Black Notebook #1</span>
-                <span>Qty: 1 | $15</span>
+                <span>Qty: 1 | ${amount}</span>
               </div>
               <div className="flex justify-between font-bold text-lg border-t pt-2">
                 <span>Total</span>
-                <span>$15</span>
+                <span>${amount}</span>
               </div>
             </div>
             <ConfigurationPanel />

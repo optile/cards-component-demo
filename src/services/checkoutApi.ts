@@ -24,4 +24,18 @@ export class CheckoutApiService {
     const data = (await response.json()) as ListSessionResponse;
     return data;
   }
+
+  static async updateListSession(
+    listId: string,
+    listRequest: ListSessionRequest = DEFAULT_LIST_REQUEST
+  ) {
+    return fetch(`${API_ENDPOINTS.LIST_SESSION}/${listId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({ ...listRequest }),
+    });
+  }
 }

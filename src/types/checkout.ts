@@ -26,6 +26,7 @@ export interface CheckoutInstance {
 }
 
 export interface ListSessionRequest {
+  transactionId?: string;
   currency: string;
   amount: number;
   country: string;
@@ -41,6 +42,7 @@ export interface ListSessionRequest {
 
 export interface ListSessionResponse {
   id: string;
+  transactionId: string;
   [key: string]: unknown;
 }
 

@@ -2,15 +2,19 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CheckoutApiService } from "../services/checkoutApi";
 import { useConfigurationStore } from "../store/configuration";
+import { DEFAULT_LIST_REQUEST } from "../constants/checkout";
+
 import type {
   CheckoutInstance,
   DropInComponent,
+  ListSessionResponse,
   PaymentMethod,
 } from "../types/checkout";
 import { PayoneerSDKUtils } from "../utils/payoneerSdk";
 
 export const useCheckoutSession = () => {
-  const [longId, setLongId] = useState<string>("");
+  const [listSessionData, setListSessionData] =
+    useState<ListSessionResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const isSessionInitialized = useRef(false);
@@ -22,7 +26,7 @@ export const useCheckoutSession = () => {
       try {
         setLoading(true);
         const response = await CheckoutApiService.generateListSession();
-        setLongId(response.id);
+        setListSessionData(response);
         setError(null);
       } catch (err) {
         const errorMessage =
@@ -40,24 +44,33 @@ export const useCheckoutSession = () => {
     initSession();
   }, []);
 
-  return { longId, loading, error };
+  return { listSessionData, loading, error };
 };
 
-export const usePayoneerCheckout = (longId: string) => {
+export const usePayoneerCheckout = (
+  listSessionData: ListSessionResponse | null
+) => {
   const navigate = useNavigate();
   const [checkout, setCheckout] = useState<CheckoutInstance | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const { amount } = useConfigurationStore();
+  const listSessionId = listSessionData?.id || "";
+  const transactionId = listSessionData?.transactionId || "";
+  const isCheckoutInitialized = useRef(false);
 
   useEffect(() => {
-    if (!longId) return;
+    if (!listSessionId || isCheckoutInitialized.current) return;
 
     const initCheckout = async () => {
       try {
         setLoading(true);
-        const checkoutInstance = await PayoneerSDKUtils.initCheckout(longId);
+        const checkoutInstance = await PayoneerSDKUtils.initCheckout(
+          listSessionId
+        );
         setCheckout(checkoutInstance);
         setError(null);
+        isCheckoutInitialized.current = true;
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : "Failed to initialize checkout";
@@ -70,7 +83,44 @@ export const usePayoneerCheckout = (longId: string) => {
     };
 
     initCheckout();
-  }, [longId, navigate]);
+  }, [listSessionId, navigate, transactionId]);
+
+  // TODO - this will be handler for changing all the merchant store data
+  // https://optile.atlassian.net/browse/PCPAY-4175
+  useEffect(() => {
+    if (
+      !checkout ||
+      !listSessionId ||
+      !transactionId ||
+      !isCheckoutInitialized.current
+    )
+      return;
+
+    const updateListSession = async () => {
+      const updatedListSessionObject = {
+        ...DEFAULT_LIST_REQUEST,
+        amount,
+        transactionId,
+      };
+
+      const response = await CheckoutApiService.updateListSession(
+        listSessionId,
+        {
+          ...updatedListSessionObject,
+        }
+      );
+
+      if (!response.ok) {
+        console.error("Failed to update list session:", response.statusText);
+        return;
+      }
+
+      // @ts-expect-error - This will be resolved trough https://optile.atlassian.net/browse/PCPAY-4175
+      checkout.update({});
+    };
+
+    updateListSession();
+  }, [amount, checkout, listSessionId, transactionId]);
 
   return { checkout, loading, error };
 };
