@@ -1,4 +1,4 @@
-import DemoCardNumbers from "../components/DemoCardNumbers";
+import DemoCardNumbers from "../components/checkout/DemoCardNumbers";
 import ConfigurationPanel from "../components/checkout/ConfigurationPanel";
 import PaymentMethodsSection from "../components/checkout/PaymentMethodsSection";
 import ShoppingCartSection from "../components/checkout/ShoppingCartSection";
@@ -43,7 +43,6 @@ const Checkout = () => {
         <h1 className="text-3xl font-bold text-center mb-8">Checkout page</h1>
         <ConfigurationPanel />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Left Column */}
           <div className="md:col-span-2">
             <PaymentMethodsSection
               availableMethods={availableMethods}
@@ -58,7 +57,6 @@ const Checkout = () => {
             />
           </div>
 
-          {/* Right Column */}
           <ShoppingCartSection
             itemName={itemName}
             quantity={quantity}
