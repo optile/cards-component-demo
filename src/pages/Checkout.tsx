@@ -2,11 +2,9 @@ import DemoCardNumbers from "../components/DemoCardNumbers";
 import ConfigurationPanel from "../components/checkout/ConfigurationPanel";
 import PaymentMethodsSection from "../components/checkout/PaymentMethodsSection";
 import ShoppingCartSection from "../components/checkout/ShoppingCartSection";
-import {
-  useCheckoutSession,
-  usePayoneerCheckout,
-  usePaymentMethods,
-} from "../hooks/useCheckout";
+import { useCheckoutSession } from "../hooks/useCheckoutSession";
+import { usePayoneerCheckout } from "../hooks/usePayoneerCheckout";
+import { usePaymentMethods } from "../hooks/usePaymentMethods";
 import { useConfigurationStore } from "../store/configuration";
 
 const Checkout = () => {

@@ -44,12 +44,7 @@ interface CheckoutState {
   ) => Promise<void>;
   setAvailableMethods: (methods: PaymentMethod[]) => void;
   setActiveNetwork: (network: string) => void;
-  mountComponents: (
-    checkout: CheckoutInstance | null,
-    componentRefs: { [key: string]: HTMLDivElement | null }
-  ) => void;
-  handlePayment: () => Promise<void>;
-  updatePayButton: (payButtonType: string) => void;
+  getActiveDropIn: () => DropInComponent | undefined; // New: Pure getter for active drop-in
 }
 
 export const useCheckoutStore = create<CheckoutState>((set, get) => ({
@@ -154,49 +149,10 @@ export const useCheckoutStore = create<CheckoutState>((set, get) => ({
 
   setActiveNetwork: (network) => set({ activeNetwork: network }),
 
-  mountComponents: (checkout, componentRefs) => {
-    const { availableMethods, areComponentsMounted } = get();
-    if (!checkout || availableMethods.length === 0 || areComponentsMounted)
-      return;
-    const allRefsAreSet = availableMethods.every(
-      (method) => componentRefs[method.name]
-    );
-    if (allRefsAreSet) {
-      // Unmount previous
-      get().dropIns.forEach((dropIn) => dropIn.unmount());
-      const newDropIns: DropInComponent[] = [];
-      availableMethods.forEach((method) => {
-        const container = componentRefs[method.name];
-        if (container) {
-          const component = checkout
-            .dropIn(method.name, { hidePaymentButton: false })
-            .mount(container);
-          newDropIns.push(component);
-        }
-      });
-      set({ dropIns: newDropIns, areComponentsMounted: true });
-    }
-  },
-
-  handlePayment: async () => {
-    const { isSubmitting, checkout, dropIns, availableMethods, activeNetwork } =
-      get();
-    if (isSubmitting || !checkout) return;
-    set({ isSubmitting: true });
-    const activeDropIn = dropIns.find(
+  getActiveDropIn: () => {
+    const { dropIns, availableMethods, activeNetwork } = get();
+    return dropIns.find(
       (_, index) => availableMethods[index].name === activeNetwork
     );
-    if (activeDropIn) {
-      await activeDropIn.pay();
-    }
-    set({ isSubmitting: false });
-  },
-
-  updatePayButton: (payButtonType) => {
-    const isPayButtonHidden = payButtonType === "custom";
-    get().dropIns.forEach((component) => {
-      // @ts-expect-error - The hidePaymentButton method exists on the instance but not in the current type
-      component.element.hidePaymentButton(isPayButtonHidden);
-    });
   },
 }));
