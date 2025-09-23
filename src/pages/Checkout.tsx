@@ -1,5 +1,5 @@
 import DemoCardNumbers from "../components/DemoCardNumbers";
-import ConfigurationPanel from "../components/ConfigurationPanel";
+import ConfigurationPanel from "../components/checkout/ConfigurationPanel";
 import {
   useCheckoutSession,
   usePayoneerCheckout,
@@ -11,8 +11,12 @@ import { useConfigurationStore } from "../store/configuration";
 const Checkout = () => {
   const { listSessionData } = useCheckoutSession();
   const { checkout } = usePayoneerCheckout(listSessionData);
-  const { payButtonType, primaryColor, primaryTextColor, amount } =
-    useConfigurationStore();
+  const {
+    payButtonType,
+    primaryColor,
+    primaryTextColor,
+    merchantCart: { amount, itemName, quantity, currency },
+  } = useConfigurationStore();
   const {
     activeNetwork,
     setActiveNetwork,
@@ -22,10 +26,23 @@ const Checkout = () => {
     isSubmitting,
   } = usePaymentMethods(checkout);
 
+  const getCurrencySymbol = (curr: string) => {
+    const symbols: { [key: string]: string } = {
+      USD: "$",
+      EUR: "€",
+      GBP: "£",
+      CNY: "¥",
+      JPY: "¥",
+      RUB: "₽",
+    };
+    return symbols[curr] || "$";
+  };
+
   return (
     <div className="bg-gray-50 min-h-screen font-sans">
       <div className="mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-center mb-8">Checkout page</h1>
+        <ConfigurationPanel />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Left Column */}
           <div className="md:col-span-2">
@@ -105,15 +122,20 @@ const Checkout = () => {
                 Shopping Cart
               </h2>
               <div className="flex justify-between mb-2">
-                <span>Black Notebook #1</span>
-                <span>Qty: 1 | ${amount}</span>
+                <span>{itemName}</span>
+                <span>
+                  Qty: {quantity} | {getCurrencySymbol(currency)}
+                  {amount}
+                </span>
               </div>
               <div className="flex justify-between font-bold text-lg border-t pt-2">
                 <span>Total</span>
-                <span>${amount}</span>
+                <span>
+                  {getCurrencySymbol(currency)}
+                  {amount * quantity}
+                </span>
               </div>
             </div>
-            <ConfigurationPanel />
           </div>
         </div>
       </div>

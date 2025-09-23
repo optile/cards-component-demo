@@ -1,12 +1,14 @@
 import { create } from "zustand";
 import { CheckoutApiService } from "../services/checkoutApi";
 import { PayoneerSDKUtils } from "../utils/payoneerSdk";
-import { DEFAULT_LIST_REQUEST } from "../constants/checkout";
+import { useConfigurationStore } from "../store/configuration";
+import { buildListSessionUpdates } from "../utils/checkoutUtils";
 import type {
   CheckoutInstance,
   DropInComponent,
   ListSessionResponse,
   PaymentMethod,
+  ListSessionRequest,
 } from "../types/checkout";
 
 interface CheckoutState {
@@ -36,7 +38,7 @@ interface CheckoutState {
     navigate: (path: string) => void
   ) => Promise<void>;
   updateListSession: (
-    amount: number,
+    updates: ListSessionRequest,
     listSessionId: string,
     transactionId: string
   ) => Promise<void>;
@@ -74,7 +76,16 @@ export const useCheckoutStore = create<CheckoutState>((set, get) => ({
     if (isSessionInitialized) return;
     set({ sessionLoading: true });
     try {
-      const response = await CheckoutApiService.generateListSession();
+      const configState = useConfigurationStore.getState();
+      const initialRequest = buildListSessionUpdates(
+        configState.merchantCart,
+        configState.billingAddress,
+        configState.shippingAddress,
+        configState.sameAddress
+      );
+      const response = await CheckoutApiService.generateListSession(
+        initialRequest
+      );
       set({
         listSessionData: response,
         sessionError: null,
@@ -114,12 +125,11 @@ export const useCheckoutStore = create<CheckoutState>((set, get) => ({
     }
   },
 
-  updateListSession: async (amount, listSessionId, transactionId) => {
+  updateListSession: async (updates, listSessionId, transactionId) => {
     const { checkout } = get();
     if (!checkout || !listSessionId || !transactionId) return;
     const updatedListSessionObject = {
-      ...DEFAULT_LIST_REQUEST,
-      amount,
+      ...updates,
       transactionId,
     };
     const response = await CheckoutApiService.updateListSession(

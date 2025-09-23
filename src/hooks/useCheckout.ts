@@ -2,15 +2,20 @@ import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCheckoutStore } from "../store/checkoutStore";
 import { useConfigurationStore } from "../store/configuration";
+import { buildListSessionUpdates } from "../utils/checkoutUtils";
 
 import type { CheckoutInstance, ListSessionResponse } from "../types/checkout";
 
 export const useCheckoutSession = () => {
   const { listSessionData, sessionLoading, sessionError, initSession } =
     useCheckoutStore();
+  const initializedRef = useRef(false);
 
   useEffect(() => {
-    initSession();
+    if (!initializedRef.current) {
+      initSession();
+      initializedRef.current = true;
+    }
   }, [initSession]);
 
   return { listSessionData, loading: sessionLoading, error: sessionError };
@@ -27,17 +32,34 @@ export const usePayoneerCheckout = (
     initCheckout,
     updateListSession,
   } = useCheckoutStore();
-  const { amount } = useConfigurationStore();
+  const { merchantCart, billingAddress, shippingAddress, sameAddress } =
+    useConfigurationStore();
   const listSessionId = listSessionData?.id || "";
   const transactionId = listSessionData?.transactionId || "";
 
   useEffect(() => {
-    initCheckout(listSessionId, navigate);
+    if (listSessionId) {
+      initCheckout(listSessionId, navigate);
+    }
   }, [listSessionId, navigate, initCheckout]);
 
   useEffect(() => {
-    updateListSession(amount, listSessionId, transactionId);
-  }, [amount, listSessionId, transactionId, updateListSession]);
+    const updates = buildListSessionUpdates(
+      merchantCart,
+      billingAddress,
+      shippingAddress,
+      sameAddress
+    );
+    updateListSession(updates, listSessionId, transactionId);
+  }, [
+    merchantCart,
+    billingAddress,
+    shippingAddress,
+    sameAddress,
+    listSessionId,
+    transactionId,
+    updateListSession,
+  ]);
 
   return { checkout, loading: checkoutLoading, error: checkoutError };
 };
