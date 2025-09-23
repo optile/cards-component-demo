@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useConfigurationStore } from "../../store/configuration";
+import Input from "../ui/Input";
+import Select from "../ui/Select";
+import Button from "../ui/Button";
 
 const MerchantStoreCartTab: React.FC = () => {
   const {
@@ -49,82 +52,55 @@ const MerchantStoreCartTab: React.FC = () => {
     setLocalCurrency(currency);
   };
 
+  const currencies = [
+    { value: "USD", label: "USD" },
+    { value: "EUR", label: "EUR" },
+    { value: "GBP", label: "GBP" },
+    { value: "CNY", label: "Chinese Yuan" },
+    { value: "JPY", label: "Japanese Yen" },
+    { value: "RUB", label: "Russian Ruble" },
+  ];
+
   return (
     <div>
       <div className="mb-4">
-        <label
-          htmlFor="itemName"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Item Name
-        </label>
-        <input
+        <Input
           type="text"
-          id="itemName"
           value={localItemName}
           onChange={(e) => setLocalItemName(e.target.value)}
-          className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          label="Item Name"
+          id="itemName"
         />
       </div>
       <div className="mb-4">
-        <label
-          htmlFor="amount"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Amount
-        </label>
-        <input
+        <Input
           type="number"
-          id="amount"
           value={localAmount}
           onChange={(e) => setLocalAmount(Number(e.target.value))}
-          className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+          label="Amount"
+          id="amount"
         />
       </div>
       <div className="mb-4">
-        <label
-          htmlFor="currency"
-          className="block text-sm font-medium text-gray-700"
-        >
-          Currency
-        </label>
-        <select
-          id="currency"
+        <Select
           value={localCurrency}
           onChange={(e) => setLocalCurrency(e.target.value)}
-          className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-        >
-          <option value="USD">USD</option>
-          <option value="EUR">EUR</option>
-          <option value="GBP">GBP</option>
-          <option value="CNY">Chinese Yuan</option>
-          <option value="JPY">Japanese Yen</option>
-          <option value="RUB">Russian Ruble</option>
-        </select>
+          options={currencies}
+          label="Currency"
+          id="currency"
+        />
       </div>
       <div className="flex gap-2">
-        <button
-          onClick={handleSave}
-          disabled={!hasChanges}
-          className={`px-4 py-2 rounded-md ${
-            hasChanges
-              ? "bg-blue-600 text-white hover:bg-blue-700"
-              : "bg-gray-300 text-gray-500 cursor-not-allowed"
-          }`}
-        >
+        <Button onClick={handleSave} disabled={!hasChanges} variant="primary">
           Save
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={handleCancel}
           disabled={!hasChanges}
-          className={`px-4 py-2 rounded-md ${
-            hasChanges
-              ? "bg-gray-600 text-white hover:bg-gray-700"
-              : "bg-gray-300 text-gray-500 cursor-not-allowed"
-          }`}
+          variant="secondary"
         >
           Cancel
-        </button>
+        </Button>
       </div>
     </div>
   );
