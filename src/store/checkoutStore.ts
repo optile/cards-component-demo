@@ -26,6 +26,7 @@ interface CheckoutState {
   env: string; // New: Current environment
   preload: string[]; // New: Preload array
   isEnvChanging: boolean; // New: Flag to prevent updates during env change
+  refetchListBeforeCharge: boolean; // New: Toggle for refetching list before charge
 
   // Payment methods state
   activeNetwork: string;
@@ -65,6 +66,7 @@ export const useCheckoutStore = create<CheckoutState>((set, get) => ({
   env: "sandbox",
   preload: ["stripe:cards"], // Initialize preload
   isEnvChanging: false, // Initialize flag
+  refetchListBeforeCharge: false, // Initialize refetch toggle
 
   activeNetwork: "",
   availableMethods: [],
