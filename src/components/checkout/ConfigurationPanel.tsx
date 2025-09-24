@@ -3,7 +3,7 @@ import Tabs from "../ui/Tabs";
 import UIStylingTab from "./UIStylingTab";
 import MerchantStoreCartTab from "./MerchantStoreCartTab";
 import MerchantStoreUserDataTab from "./MerchantStoreUserDataTab";
-import SDKBaseConfiguration from "../SDKBaseConfiguration";
+import SDKBaseConfiguration from "./SDKBaseConfiguration";
 
 const ConfigurationPanel: React.FC = () => {
   const tabs = [

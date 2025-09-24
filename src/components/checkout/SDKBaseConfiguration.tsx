@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { Divisions } from "../constants/checkout";
-import { useCheckoutStore } from "../store/checkoutStore";
-import Select from "./ui/Select";
-import Button from "./ui/Button";
-import Checkbox from "./ui/Checkbox";
+import React, { useEffect, useState } from "react";
+import { Divisions } from "../../constants/checkout";
+import { useCheckoutStore } from "../../store/checkoutStore";
+import Button from "../ui/Button";
+import Checkbox from "../ui/Checkbox";
+import Select from "../ui/Select";
+import InfoTooltip from "../ui/InfoTooltip";
 
 const SDKBaseConfiguration: React.FC = () => {
   const {
@@ -52,7 +53,11 @@ const SDKBaseConfiguration: React.FC = () => {
         id="env-select"
       />
       <div className="flex flex-col gap-2">
-        <label>Preloaded Components:</label>
+        <div className="flex items-center gap-1">
+          <span>Preloaded Components:</span>
+          <InfoTooltip content="The components that will be preloaded in the SDK. Stripe:cards is preloaded since it is the preselected option for payment." />
+        </div>
+
         <div className="flex gap-2">
           {preload.length > 0 &&
             preload.map((component) => (
@@ -63,11 +68,15 @@ const SDKBaseConfiguration: React.FC = () => {
           {preload.length === 0 && <span>None</span>}
         </div>
       </div>
-      <Checkbox
-        checked={selectedRefetch}
-        onChange={(e) => setSelectedRefetch(e.target.checked)}
-        label="Refetch List Before Charge"
-      />
+      <div className="flex items-center gap-1">
+        <Checkbox
+          checked={selectedRefetch}
+          onChange={(e) => setSelectedRefetch(e.target.checked)}
+          label="Refetch List Before Charge"
+        />
+        <InfoTooltip content="If enabled, the checkout will refetch the list session before processing a charge to ensure the latest data is used." />
+      </div>
+
       <Button onClick={handleSave} disabled={!hasChanges}>
         {checkoutLoading ? "Saving..." : "Save"}
       </Button>
