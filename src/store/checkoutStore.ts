@@ -23,6 +23,9 @@ interface CheckoutState {
   checkoutLoading: boolean;
   checkoutError: string | null;
   isCheckoutInitialized: boolean;
+  env: string; // New: Current environment
+  preload: string[]; // New: Preload array
+  isEnvChanging: boolean; // New: Flag to prevent updates during env change
 
   // Payment methods state
   activeNetwork: string;
@@ -44,7 +47,8 @@ interface CheckoutState {
   ) => Promise<void>;
   setAvailableMethods: (methods: PaymentMethod[]) => void;
   setActiveNetwork: (network: string) => void;
-  getActiveDropIn: () => DropInComponent | undefined; // New: Pure getter for active drop-in
+  getActiveDropIn: () => DropInComponent | undefined;
+  updateEnvironment: (newEnv: string) => Promise<void>; // New action
 }
 
 export const useCheckoutStore = create<CheckoutState>((set, get) => ({
@@ -58,6 +62,9 @@ export const useCheckoutStore = create<CheckoutState>((set, get) => ({
   checkoutLoading: false,
   checkoutError: null,
   isCheckoutInitialized: false,
+  env: "sandbox",
+  preload: ["stripe:cards"], // Initialize preload
+  isEnvChanging: false, // Initialize flag
 
   activeNetwork: "",
   availableMethods: [],
@@ -76,10 +83,12 @@ export const useCheckoutStore = create<CheckoutState>((set, get) => ({
         configState.merchantCart,
         configState.billingAddress,
         configState.shippingAddress,
-        configState.sameAddress
+        configState.sameAddress,
+        get().env
       );
       const response = await CheckoutApiService.generateListSession(
-        initialRequest
+        initialRequest,
+        get().env
       );
       set({
         listSessionData: response,
@@ -102,7 +111,9 @@ export const useCheckoutStore = create<CheckoutState>((set, get) => ({
     set({ checkoutLoading: true });
     try {
       const checkoutInstance = await PayoneerSDKUtils.initCheckout(
-        listSessionId
+        listSessionId,
+        get().env,
+        get().preload
       );
       set({
         checkout: checkoutInstance,
@@ -121,21 +132,21 @@ export const useCheckoutStore = create<CheckoutState>((set, get) => ({
   },
 
   updateListSession: async (updates, listSessionId, transactionId) => {
-    const { checkout } = get();
-    if (!checkout || !listSessionId || !transactionId) return;
+    const { checkout, isEnvChanging } = get();
+    if (!checkout || !listSessionId || !transactionId || isEnvChanging) return;
     const updatedListSessionObject = {
       ...updates,
       transactionId,
     };
     const response = await CheckoutApiService.updateListSession(
       listSessionId,
-      updatedListSessionObject
+      updatedListSessionObject,
+      get().env
     );
     if (!response.ok) {
       console.error("Failed to update list session:", response.statusText);
       return;
     }
-    // @ts-expect-error - This will be resolved through https://optile.atlassian.net/browse/PCPAY-4175
     checkout.update({});
   },
 
@@ -154,5 +165,56 @@ export const useCheckoutStore = create<CheckoutState>((set, get) => ({
     return dropIns.find(
       (_, index) => availableMethods[index].name === activeNetwork
     );
+  },
+
+  updateEnvironment: async (newEnv: string) => {
+    const { checkout } = get();
+    if (!checkout) {
+      set({ checkoutError: "Checkout not initialized" });
+      return;
+    }
+
+    set({
+      checkoutLoading: true,
+      checkoutError: null,
+      env: newEnv,
+      isEnvChanging: true,
+    }); // Set flag
+    try {
+      // Build new list session updates with new env
+      const configState = useConfigurationStore.getState();
+      const newUpdates = buildListSessionUpdates(
+        configState.merchantCart,
+        configState.billingAddress,
+        configState.shippingAddress,
+        configState.sameAddress,
+        newEnv
+      );
+
+      // Generate new list session
+      const newListSessionResponse =
+        await CheckoutApiService.generateListSession(newUpdates, newEnv);
+      set({ listSessionData: newListSessionResponse });
+
+      // Update SDK with new env and longId
+      await checkout.update({
+        env: newEnv,
+        longId: newListSessionResponse.id,
+      });
+
+      console.log(
+        "Environment updated to:",
+        newEnv,
+        "with new list session:",
+        newListSessionResponse.id
+      );
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to update environment";
+      set({ checkoutError: errorMessage });
+      console.error("Failed to update environment:", err);
+    } finally {
+      set({ checkoutLoading: false, isEnvChanging: false }); // Reset flag
+    }
   },
 }));

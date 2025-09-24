@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useConfigurationStore } from "../../store/configuration";
+import { useCheckoutStore } from "../../store/checkoutStore";
+import { buildListSessionUpdates } from "../../utils/checkoutUtils";
 import AddressForm, { type Address } from "./AddressForm";
 import Checkbox from "../ui/Checkbox";
 import Button from "../ui/Button";
@@ -13,7 +15,6 @@ const MerchantStoreUserDataTab: React.FC = () => {
     sameAddress,
     setSameAddress,
   } = useConfigurationStore();
-
   const [localBilling, setLocalBilling] = useState(billingAddress);
 
   const [localShipping, setLocalShipping] = useState(shippingAddress);
@@ -41,6 +42,22 @@ const MerchantStoreUserDataTab: React.FC = () => {
     setBillingAddress(localBilling);
     setShippingAddress(localShipping);
     setSameAddress(localSameAddress);
+    const { updateListSession, env, listSessionData } =
+      useCheckoutStore.getState();
+    if (!listSessionData) return;
+    const { merchantCart } = useConfigurationStore.getState();
+    const updates = buildListSessionUpdates(
+      merchantCart,
+      localBilling,
+      localShipping,
+      localSameAddress,
+      env
+    );
+    updateListSession(
+      updates,
+      listSessionData.id,
+      listSessionData.transactionId
+    );
   };
 
   const handleCancel = () => {
