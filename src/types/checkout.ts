@@ -23,6 +23,7 @@ export interface CheckoutInstance {
     options?: { hidePaymentButton: boolean }
   ): DropInComponent;
   charge(): void;
+  update(config: { env?: string; longId?: string }): Promise<CheckoutInstance>; // Add update method
 }
 
 export interface ListSessionRequest {

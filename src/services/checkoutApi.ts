@@ -2,12 +2,14 @@ import type {
   ListSessionRequest,
   ListSessionResponse,
 } from "../types/checkout";
-import { API_ENDPOINTS, DEFAULT_LIST_REQUEST } from "../constants/checkout";
+import { getApiEndpoints } from "../constants/checkout";
 
 export class CheckoutApiService {
   static async generateListSession(
-    listRequest: ListSessionRequest = DEFAULT_LIST_REQUEST
+    listRequest: ListSessionRequest,
+    env: string
   ): Promise<ListSessionResponse> {
+    const API_ENDPOINTS = getApiEndpoints(env);
     const response = await fetch(API_ENDPOINTS.LIST_SESSION, {
       method: "POST",
       headers: {
@@ -27,8 +29,10 @@ export class CheckoutApiService {
 
   static async updateListSession(
     listId: string,
-    listRequest: ListSessionRequest = DEFAULT_LIST_REQUEST
+    listRequest: ListSessionRequest,
+    env: string
   ) {
+    const API_ENDPOINTS = getApiEndpoints(env);
     return fetch(`${API_ENDPOINTS.LIST_SESSION}/${listId}`, {
       method: "PUT",
       headers: {

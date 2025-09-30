@@ -1,18 +1,21 @@
-import DemoCardNumbers from "../components/DemoCardNumbers";
-import ConfigurationPanel from "../components/ConfigurationPanel";
-import {
-  useCheckoutSession,
-  usePayoneerCheckout,
-  usePaymentMethods,
-} from "../hooks/useCheckout";
-import type { PaymentMethod } from "../types/checkout";
+import DemoCardNumbers from "../components/checkout/DemoCardNumbers";
+import ConfigurationPanel from "../components/checkout/ConfigurationPanel";
+import PaymentMethodsSection from "../components/checkout/PaymentMethodsSection";
+import ShoppingCartSection from "../components/checkout/ShoppingCartSection";
+import { useCheckoutSession } from "../hooks/useCheckoutSession";
+import { usePayoneerCheckout } from "../hooks/usePayoneerCheckout";
+import { usePaymentMethods } from "../hooks/usePaymentMethods";
 import { useConfigurationStore } from "../store/configuration";
 
 const Checkout = () => {
   const { listSessionData } = useCheckoutSession();
   const { checkout } = usePayoneerCheckout(listSessionData);
-  const { payButtonType, primaryColor, primaryTextColor, amount } =
-    useConfigurationStore();
+  const {
+    payButtonType,
+    primaryColor,
+    primaryTextColor,
+    merchantCart: { amount, itemName, quantity, currency },
+  } = useConfigurationStore();
   const {
     activeNetwork,
     setActiveNetwork,
@@ -22,99 +25,45 @@ const Checkout = () => {
     isSubmitting,
   } = usePaymentMethods(checkout);
 
+  const getCurrencySymbol = (curr: string) => {
+    const symbols: { [key: string]: string } = {
+      USD: "$",
+      EUR: "€",
+      GBP: "£",
+      CNY: "¥",
+      JPY: "¥",
+      RUB: "₽",
+    };
+    return symbols[curr] || "$";
+  };
+
   return (
     <div className="bg-gray-50 min-h-screen font-sans">
       <div className="mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-center mb-8">Checkout page</h1>
+        <ConfigurationPanel />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Left Column */}
           <div className="md:col-span-2">
-            <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-              <h2 className="text-xl font-semibold mb-4 border-b pb-2">
-                Personal Details
-              </h2>
-              <div className="flex justify-between items-center">
-                <p className="text-gray-600">
-                  Alex Smith, alexsmith@example.com, +49 188299489
-                </p>
-                <span className="text-green-500">✔️</span>
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-              <h2 className="text-xl font-semibold mb-4 border-b pb-2">
-                Shipping details
-              </h2>
-              <div className="flex justify-between items-center">
-                <p className="text-gray-600">
-                  Bayern Street 5, 80336 Munich, Germany
-                </p>
-                <span className="text-green-500">✔️</span>
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4 border-b pb-2">
-                Payment methods
-              </h2>
-              <div className="flex flex-col gap-4">
-                {availableMethods.map((method: PaymentMethod) => (
-                  <div className="max-w-[500px]" key={method.name}>
-                    <label className="flex items-center space-x-3 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        className="form-radio h-5 w-5 text-blue-600"
-                        checked={activeNetwork === method.name}
-                        onChange={() => setActiveNetwork(method.name)}
-                      />
-                      <span className="font-medium">{method.label}</span>
-                    </label>
-                    <div
-                      ref={(el: HTMLDivElement | null) => {
-                        if (el) {
-                          componentRefs.current[method.name] = el;
-                        }
-                      }}
-                      className={`w-full ${
-                        activeNetwork === method.name ? "block" : "hidden"
-                      }`}
-                    />
-                  </div>
-                ))}
-              </div>
-              {payButtonType === "custom" && (
-                <button
-                  style={{
-                    color: primaryTextColor,
-                    backgroundColor: primaryColor,
-                  }}
-                  onClick={handlePayment}
-                  className="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-md hover:bg-blue-700 transition-colors mt-6"
-                >
-                  {isSubmitting ? "Processing..." : "Pay"}
-                </button>
-              )}
-            </div>
+            <PaymentMethodsSection
+              availableMethods={availableMethods}
+              activeNetwork={activeNetwork}
+              setActiveNetwork={setActiveNetwork}
+              componentRefs={componentRefs}
+              payButtonType={payButtonType}
+              primaryColor={primaryColor}
+              primaryTextColor={primaryTextColor}
+              handlePayment={handlePayment}
+              isSubmitting={isSubmitting}
+            />
           </div>
 
-          {/* Right Column */}
-          <div className="md:col-span-1">
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-xl font-semibold mb-4 border-b pb-2">
-                Shopping Cart
-              </h2>
-              <div className="flex justify-between mb-2">
-                <span>Black Notebook #1</span>
-                <span>Qty: 1 | ${amount}</span>
-              </div>
-              <div className="flex justify-between font-bold text-lg border-t pt-2">
-                <span>Total</span>
-                <span>${amount}</span>
-              </div>
-            </div>
-            <ConfigurationPanel />
-          </div>
+          <ShoppingCartSection
+            itemName={itemName}
+            quantity={quantity}
+            currency={currency}
+            amount={amount}
+            getCurrencySymbol={getCurrencySymbol}
+          />
         </div>
       </div>
       <DemoCardNumbers />
