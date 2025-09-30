@@ -1,4 +1,4 @@
-import { CHECKOUT_CONFIG, Divisions } from "../constants/checkout";
+import { Divisions } from "../constants/checkout";
 import type {
   BillingAddress,
   ShippingAddress,
@@ -9,13 +9,14 @@ export const buildListSessionUpdates = (
   merchantCart: MerchantCart,
   billingAddress: BillingAddress,
   shippingAddress: ShippingAddress,
-  sameAddress: boolean
+  sameAddress: boolean,
+  env: string
 ) => {
   return {
     currency: merchantCart.currency,
     amount: merchantCart.amount,
     country: billingAddress.country,
-    division: Divisions[CHECKOUT_CONFIG.environment],
+    division: Divisions[env as keyof typeof Divisions],
     customer: {
       number: billingAddress.number,
       firstName: billingAddress.firstName,

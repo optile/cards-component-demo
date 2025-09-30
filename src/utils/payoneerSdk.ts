@@ -1,5 +1,5 @@
 import type { CheckoutInstance } from "../types/checkout";
-import { API_ENDPOINTS, CHECKOUT_CONFIG } from "../constants/checkout";
+import { getApiEndpoints } from "../constants/checkout";
 
 export class PayoneerSDKUtils {
   private static isSDKLoaded(): boolean {
@@ -10,7 +10,7 @@ export class PayoneerSDKUtils {
     );
   }
 
-  static async loadCheckoutWeb(): Promise<boolean> {
+  static async loadCheckoutWeb(env: string): Promise<boolean> {
     return new Promise((resolve) => {
       // Check if SDK is already loaded
       if (this.isSDKLoaded()) {
@@ -19,6 +19,7 @@ export class PayoneerSDKUtils {
       }
 
       // Load SDK script
+      const API_ENDPOINTS = getApiEndpoints(env);
       const script = document.createElement("script");
       script.src = API_ENDPOINTS.SDK_URL;
       script.async = true;
@@ -35,8 +36,12 @@ export class PayoneerSDKUtils {
     });
   }
 
-  static async initCheckout(longId: string): Promise<CheckoutInstance> {
-    const isLoaded = await this.loadCheckoutWeb();
+  static async initCheckout(
+    longId: string,
+    env: string,
+    preload: string[]
+  ): Promise<CheckoutInstance> {
+    const isLoaded = await this.loadCheckoutWeb(env);
 
     if (!isLoaded) {
       throw new Error("Failed to load Checkout Web SDK");
@@ -48,8 +53,8 @@ export class PayoneerSDKUtils {
 
     return await window.Payoneer.CheckoutWeb({
       longId,
-      env: CHECKOUT_CONFIG.environment,
-      preload: [...CHECKOUT_CONFIG.preload],
+      env,
+      preload: [...preload],
     });
   }
 }

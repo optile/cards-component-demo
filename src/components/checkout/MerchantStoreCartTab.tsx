@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useConfigurationStore } from "../../store/configuration";
+import { useCheckoutStore } from "../../store/checkoutStore";
+import { buildListSessionUpdates } from "../../utils/checkoutUtils";
 import Input from "../ui/Input";
 import Select from "../ui/Select";
 import Button from "../ui/Button";
@@ -9,6 +11,7 @@ const MerchantStoreCartTab: React.FC = () => {
     merchantCart: { amount, itemName, quantity, currency },
     setMerchantCart,
   } = useConfigurationStore();
+  const { updateListSession, env, listSessionData } = useCheckoutStore();
   const [localAmount, setLocalAmount] = useState(amount);
   const [localItemName, setLocalItemName] = useState(itemName);
   const [localQuantity, setLocalQuantity] = useState(quantity);
@@ -43,6 +46,26 @@ const MerchantStoreCartTab: React.FC = () => {
       quantity: localQuantity,
       currency: localCurrency,
     });
+    if (!listSessionData) return;
+    const { billingAddress, shippingAddress, sameAddress } =
+      useConfigurationStore.getState();
+    const updates = buildListSessionUpdates(
+      {
+        amount: localAmount,
+        itemName: localItemName,
+        quantity: localQuantity,
+        currency: localCurrency,
+      },
+      billingAddress,
+      shippingAddress,
+      sameAddress,
+      env
+    );
+    updateListSession(
+      updates,
+      listSessionData.id,
+      listSessionData.transactionId
+    );
   };
 
   const handleCancel = () => {

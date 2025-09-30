@@ -2,6 +2,7 @@ import React from "react";
 import { useConfigurationStore } from "../../store/configuration";
 import RadioGroup from "../ui/RadioGroup";
 import ColorPicker from "../ui/ColorPicker";
+import InfoTooltip from "../ui/InfoTooltip";
 
 const UIStylingTab: React.FC = () => {
   const {
@@ -14,9 +15,12 @@ const UIStylingTab: React.FC = () => {
   } = useConfigurationStore();
 
   return (
-    <div>
-      <div className="mb-4">
-        <h3 className="font-semibold mb-2">Payment button type</h3>
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-1">
+          <h3 className="font-semibold">Payment button type:</h3>
+          <InfoTooltip content="Choose between the default payment button provided by the SDK or a custom button that you can style and position as you like." />
+        </div>
         <RadioGroup
           name="payButtonType"
           options={[

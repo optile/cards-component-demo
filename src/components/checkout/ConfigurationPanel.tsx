@@ -3,9 +3,14 @@ import Tabs from "../ui/Tabs";
 import UIStylingTab from "./UIStylingTab";
 import MerchantStoreCartTab from "./MerchantStoreCartTab";
 import MerchantStoreUserDataTab from "./MerchantStoreUserDataTab";
+import SDKBaseConfiguration from "./SDKBaseConfiguration";
 
 const ConfigurationPanel: React.FC = () => {
   const tabs = [
+    {
+      label: "SDK base configuration",
+      content: <SDKBaseConfiguration />,
+    },
     {
       label: "Merchant Store Cart",
       content: <MerchantStoreCartTab />,
@@ -13,10 +18,6 @@ const ConfigurationPanel: React.FC = () => {
     {
       label: "Merchant Store User Data",
       content: <MerchantStoreUserDataTab />,
-    },
-    {
-      label: "SDK base configuration",
-      content: <div>SDK base configuration</div>,
     },
     {
       label: "SDK advanced configuration",
