@@ -39,7 +39,7 @@ const MerchantStoreCartTab: React.FC = () => {
     localQuantity !== quantity ||
     localCurrency !== currency;
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setMerchantCart({
       amount: localAmount,
       itemName: localItemName,
@@ -61,7 +61,7 @@ const MerchantStoreCartTab: React.FC = () => {
       sameAddress,
       env
     );
-    updateListSession(
+    await updateListSession(
       updates,
       listSessionData.id,
       listSessionData.transactionId

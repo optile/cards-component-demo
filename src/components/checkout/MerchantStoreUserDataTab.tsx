@@ -38,7 +38,7 @@ const MerchantStoreUserDataTab: React.FC = () => {
     JSON.stringify(localShipping) !== JSON.stringify(shippingAddress) ||
     localSameAddress !== sameAddress;
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setBillingAddress(localBilling);
     setShippingAddress(localShipping);
     setSameAddress(localSameAddress);
@@ -53,7 +53,7 @@ const MerchantStoreUserDataTab: React.FC = () => {
       localSameAddress,
       env
     );
-    updateListSession(
+    await updateListSession(
       updates,
       listSessionData.id,
       listSessionData.transactionId

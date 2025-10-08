@@ -18,12 +18,26 @@ export interface DropInComponent {
 
 export interface CheckoutInstance {
   availableDropInComponents(): PaymentMethod[];
+  dropInComponents: Record<string, DropInComponent>;
   dropIn(
     methodName: string,
     options?: { hidePaymentButton: boolean }
   ): DropInComponent;
   charge(): void;
   update(config: { env?: string; longId?: string }): Promise<CheckoutInstance>; // Add update method
+}
+
+export interface CheckoutInstanceConfig {
+  longId: string;
+  env: string;
+  refetchListBeforeCharge?: boolean;
+  preload: string[];
+  onBeforeCharge: unknown;
+  onBeforeError: unknown;
+  onPaymentSuccess: unknown;
+  onPaymentFailure: unknown;
+  onBeforeProviderRedirect: unknown;
+  onPaymentDeclined: unknown;
 }
 
 export interface ListSessionRequest {
@@ -51,11 +65,9 @@ export interface ListSessionResponse {
 declare global {
   interface Window {
     Payoneer: {
-      CheckoutWeb: (options: {
-        longId: string;
-        env: string;
-        preload: string[];
-      }) => Promise<CheckoutInstance>;
+      CheckoutWeb: (
+        options: CheckoutInstanceConfig
+      ) => Promise<CheckoutInstance>;
     };
   }
 }

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCheckoutStore } from "../store/checkoutStore";
 
@@ -8,13 +8,16 @@ export const usePayoneerCheckout = (
   listSessionData: ListSessionResponse | null
 ) => {
   const navigate = useNavigate();
+  const isCheckoutInitialized = useRef(false);
   const { checkout, checkoutLoading, checkoutError, initCheckout } =
     useCheckoutStore();
   const listSessionId = listSessionData?.id || "";
 
   useEffect(() => {
-    if (listSessionId) {
+    if (listSessionId && !isCheckoutInitialized.current) {
+      console.log("Initializing checkout with session ID:", listSessionId);
       initCheckout(listSessionId, navigate);
+      isCheckoutInitialized.current = true;
     }
   }, [listSessionId, navigate, initCheckout]);
 

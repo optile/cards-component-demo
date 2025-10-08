@@ -31,6 +31,15 @@ const countries = [
   { value: "GB", label: "United Kingdom" },
   { value: "CA", label: "Canada" },
   { value: "DE", label: "Germany" },
+  { value: "CH", label: "China" },
+  { value: "FR", label: "France" },
+  { value: "JP", label: "Japan" },
+  { value: "RU", label: "Russia" },
+  { value: "AT", label: "Austria" },
+  { value: "PL", label: "Poland" },
+  { value: "NL", label: "Netherlands" },
+  { value: "BE", label: "Belgium" },
+  { value: "PT", label: "Portugal" },
   // Add more as needed
 ];
 

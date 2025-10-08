@@ -1,5 +1,5 @@
-import type { CheckoutInstance } from "../types/checkout";
 import { getApiEndpoints } from "../constants/checkout";
+import type { CheckoutInstance } from "../types/checkout";
 
 export class PayoneerSDKUtils {
   private static isSDKLoaded(): boolean {
@@ -39,7 +39,9 @@ export class PayoneerSDKUtils {
   static async initCheckout(
     longId: string,
     env: string,
-    preload: string[]
+    preload: string[],
+    refetchListBeforeCharge: boolean,
+    callbacks?: Record<string, unknown> // Optional callbacks for advanced configuration
   ): Promise<CheckoutInstance> {
     const isLoaded = await this.loadCheckoutWeb(env);
 
@@ -51,10 +53,20 @@ export class PayoneerSDKUtils {
       throw new Error("Checkout Web is not available on the window object!");
     }
 
-    return await window.Payoneer.CheckoutWeb({
+    // Build configuration object
+    const config = {
       longId,
       env,
+      refetchListBeforeCharge,
       preload: [...preload],
-    });
+    };
+
+    // Add callbacks if provided
+    if (callbacks) {
+      Object.assign(config, callbacks);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return await window.Payoneer.CheckoutWeb(config as any);
   }
 }
