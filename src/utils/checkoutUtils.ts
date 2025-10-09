@@ -69,3 +69,15 @@ export const buildListSessionUpdates = (
     },
   };
 };
+
+export const getCurrencySymbol = (curr: string) => {
+  const symbols: { [key: string]: string } = {
+    USD: "$",
+    EUR: "€",
+    GBP: "£",
+    CNY: "¥",
+    JPY: "¥",
+    RUB: "₽",
+  };
+  return symbols[curr] || "$";
+};

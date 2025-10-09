@@ -4,7 +4,7 @@ import { useCheckoutStore } from "../store/checkoutStore";
 
 import type { ListSessionResponse } from "../types/checkout";
 
-export const usePayoneerCheckout = (
+export const useInitCheckout = (
   listSessionData: ListSessionResponse | null
 ) => {
   const navigate = useNavigate();

@@ -2,14 +2,14 @@ import DemoCardNumbers from "../components/checkout/DemoCardNumbers";
 import ConfigurationPanel from "../components/checkout/ConfigurationPanel";
 import PaymentMethodsSection from "../components/checkout/PaymentMethodsSection";
 import ShoppingCartSection from "../components/checkout/ShoppingCartSection";
-import { useCheckoutSession } from "../hooks/useCheckoutSession";
-import { usePayoneerCheckout } from "../hooks/usePayoneerCheckout";
+import { useInitSession } from "../hooks/useInitSession";
+import { useInitCheckout } from "../hooks/useInitCheckout";
 import { usePaymentMethods } from "../hooks/usePaymentMethods";
 import { useConfigurationStore } from "../store/configuration";
 
 const Checkout = () => {
-  const { listSessionData } = useCheckoutSession();
-  const { checkout } = usePayoneerCheckout(listSessionData);
+  const { listSessionData } = useInitSession();
+  const { checkout } = useInitCheckout(listSessionData);
   const {
     payButtonType,
     primaryColor,
@@ -24,18 +24,6 @@ const Checkout = () => {
     availableMethods,
     isSubmitting,
   } = usePaymentMethods(checkout);
-
-  const getCurrencySymbol = (curr: string) => {
-    const symbols: { [key: string]: string } = {
-      USD: "$",
-      EUR: "€",
-      GBP: "£",
-      CNY: "¥",
-      JPY: "¥",
-      RUB: "₽",
-    };
-    return symbols[curr] || "$";
-  };
 
   return (
     <div className="bg-gray-50 min-h-screen font-sans">
@@ -62,7 +50,6 @@ const Checkout = () => {
             quantity={quantity}
             currency={currency}
             amount={amount}
-            getCurrencySymbol={getCurrencySymbol}
           />
         </div>
       </div>
