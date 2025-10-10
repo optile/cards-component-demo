@@ -8,8 +8,5 @@ export default defineConfig({
   server: {
     port: 3000,
   },
-  // build: {
-  //   outDir: "docs", // Use default 'dist' for GitHub Actions
-  // },
-  base: "/cards-component-demo/", // Set base to repository name for GitHub Pages
+  base: "/cards-component-demo/",
 });
