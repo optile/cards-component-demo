@@ -2,13 +2,23 @@ import { useState, useMemo } from "react";
 import Button from "../ui/Button";
 import Input from "../ui/Input";
 import { DEMO_CARD_CATEGORIES } from "../../constants/demoCards";
-import { copyCardNumberToClipboard } from "../../utils/clipboard";
-import { filterCardCategories } from "../../utils/cardFilters";
+import {
+  copyCardNumberToClipboard,
+  filterCardCategories,
+} from "../../utils/demoCardsUtils";
+import { useClickOutside } from "../../hooks/useClickOutside";
 
 export default function DemoCardNumbers() {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Close dialog when clicking outside
+  const dialogRef = useClickOutside<HTMLDivElement>(() => {
+    if (open) {
+      setOpen(false);
+    }
+  });
 
   const filteredCategories = useMemo(() => {
     return filterCardCategories(DEMO_CARD_CATEGORIES, searchTerm);
@@ -38,6 +48,7 @@ export default function DemoCardNumbers() {
 
   return (
     <div
+      ref={dialogRef}
       className="fixed bottom-4 right-4 bg-white p-4 pt-0 rounded-lg shadow-lg w-[32rem] max-h-[500px] overflow-auto"
       role="dialog"
       aria-label="Demo card numbers"
