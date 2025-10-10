@@ -14,6 +14,9 @@ export interface DropInComponent {
   unmount(): void;
   pay(): Promise<void>;
   updateNode(options: { hidePaymentButton: boolean }): void;
+  element: {
+    hidePaymentButton: (hide: boolean) => void;
+  };
 }
 
 export interface CheckoutInstance {

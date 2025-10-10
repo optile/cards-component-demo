@@ -58,7 +58,6 @@ export const useCheckoutUI = (checkout: CheckoutInstance | null) => {
   const updatePayButton = (payButtonType: string) => {
     const isPayButtonHidden = payButtonType === "custom";
     useCheckoutStore.getState().dropIns.forEach((component) => {
-      // @ts-expect-error - The hidePaymentButton method exists on the instance but not in the current type
       component.element.hidePaymentButton(isPayButtonHidden);
     });
   };
