@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useConfigurationStore } from "../../store/configuration";
+import { useConfigurationStore } from "../../store/configurationStore";
 import { useCheckoutStore } from "../../store/checkoutStore";
 import { buildListSessionUpdates } from "../../utils/checkoutUtils";
 import Input from "../ui/Input";
@@ -39,7 +39,7 @@ const MerchantStoreCartTab: React.FC = () => {
     localQuantity !== quantity ||
     localCurrency !== currency;
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setMerchantCart({
       amount: localAmount,
       itemName: localItemName,
@@ -61,7 +61,7 @@ const MerchantStoreCartTab: React.FC = () => {
       sameAddress,
       env
     );
-    updateListSession(
+    await updateListSession(
       updates,
       listSessionData.id,
       listSessionData.transactionId

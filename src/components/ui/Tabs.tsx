@@ -13,8 +13,8 @@ const Tabs: React.FC<TabsProps> = ({ tabs }) => {
   const [activeTab, setActiveTab] = useState(0);
 
   return (
-    <div>
-      <div className="flex border-b border-gray-200">
+    <div className="w-full relative">
+      <div className="flex border-b border-gray-200 sticky">
         {tabs.map((tab, index) => (
           <button
             key={index}
@@ -29,7 +29,9 @@ const Tabs: React.FC<TabsProps> = ({ tabs }) => {
           </button>
         ))}
       </div>
-      <div className="mt-4">{tabs[activeTab].content}</div>
+      <div className="mt-4 overflow-y-auto ">
+        <div className="max-w-4xl mx-auto">{tabs[activeTab].content}</div>
+      </div>
     </div>
   );
 };

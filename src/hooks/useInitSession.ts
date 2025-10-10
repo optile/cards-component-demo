@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useCheckoutStore } from "../store/checkoutStore";
 
-export const useCheckoutSession = () => {
+export const useInitSession = () => {
   const { listSessionData, sessionLoading, sessionError, initSession } =
     useCheckoutStore();
   const initializedRef = useRef(false);

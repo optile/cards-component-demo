@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useCheckoutStore } from "../store/checkoutStore";
-import { useConfigurationStore } from "../store/configuration";
+import { useConfigurationStore } from "../store/configurationStore";
 import type { CheckoutInstance, DropInComponent } from "../types/checkout";
 
 export const useCheckoutUI = (checkout: CheckoutInstance | null) => {
@@ -58,7 +58,6 @@ export const useCheckoutUI = (checkout: CheckoutInstance | null) => {
   const updatePayButton = (payButtonType: string) => {
     const isPayButtonHidden = payButtonType === "custom";
     useCheckoutStore.getState().dropIns.forEach((component) => {
-      // @ts-expect-error - The hidePaymentButton method exists on the instance but not in the current type
       component.element.hidePaymentButton(isPayButtonHidden);
     });
   };

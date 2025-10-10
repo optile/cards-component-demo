@@ -1,9 +1,10 @@
+import { getCurrencySymbol } from "../../utils/checkoutUtils";
+
 interface ShoppingCartSectionProps {
   itemName: string;
   quantity: number;
   currency: string;
   amount: number;
-  getCurrencySymbol: (curr: string) => string;
 }
 
 const ShoppingCartSection = ({
@@ -11,7 +12,6 @@ const ShoppingCartSection = ({
   quantity,
   currency,
   amount,
-  getCurrencySymbol,
 }: ShoppingCartSectionProps) => (
   <div className="md:col-span-1">
     <div className="bg-white p-6 rounded-lg shadow-md">

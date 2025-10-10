@@ -3,7 +3,7 @@ import type {
   BillingAddress,
   ShippingAddress,
   MerchantCart,
-} from "../store/configuration";
+} from "../store/configurationStore";
 
 export const buildListSessionUpdates = (
   merchantCart: MerchantCart,
@@ -68,4 +68,16 @@ export const buildListSessionUpdates = (
       currency: merchantCart.currency,
     },
   };
+};
+
+export const getCurrencySymbol = (curr: string) => {
+  const symbols: { [key: string]: string } = {
+    USD: "$",
+    EUR: "€",
+    GBP: "£",
+    CNY: "¥",
+    JPY: "¥",
+    RUB: "₽",
+  };
+  return symbols[curr] || "$";
 };

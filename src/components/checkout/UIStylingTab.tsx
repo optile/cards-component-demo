@@ -1,5 +1,5 @@
 import React from "react";
-import { useConfigurationStore } from "../../store/configuration";
+import { useConfigurationStore } from "../../store/configurationStore";
 import RadioGroup from "../ui/RadioGroup";
 import ColorPicker from "../ui/ColorPicker";
 import InfoTooltip from "../ui/InfoTooltip";

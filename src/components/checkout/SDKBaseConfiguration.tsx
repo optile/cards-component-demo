@@ -11,7 +11,7 @@ const SDKBaseConfiguration: React.FC = () => {
     env,
     preload,
     refetchListBeforeCharge,
-    updateEnvironment,
+    updateSdkConfig,
     checkoutLoading,
     checkoutError,
   } = useCheckoutStore();
@@ -32,9 +32,11 @@ const SDKBaseConfiguration: React.FC = () => {
     // Update store
     useCheckoutStore.setState({ refetchListBeforeCharge: selectedRefetch });
     // Update env if changed
-    if (selectedEnv !== env) {
-      await updateEnvironment(selectedEnv);
-    }
+
+    await updateSdkConfig({
+      env: selectedEnv,
+      refetchListBeforeCharge: selectedRefetch,
+    });
   };
 
   const envOptions = Object.keys(Divisions).map((envKey) => ({
