@@ -128,8 +128,6 @@ export const useCheckoutStore = create<CheckoutState>((set, get) => ({
         callbackConfigs
       );
 
-      // @ts-expect-error - Debugging purpose
-      window.checkoutInstance = checkoutInstance; // For debugging
       set({
         checkout: checkoutInstance,
         checkoutError: null,
@@ -313,9 +311,6 @@ export const useCheckoutStore = create<CheckoutState>((set, get) => ({
         isCheckoutInitialized: true,
         checkoutError: null,
       });
-
-      // @ts-expect-error - Debugging purpose
-      window.checkoutInstance = newCheckoutInstance;
 
       console.log("✅ Checkout instance recreated successfully");
     } catch (err) {
