@@ -4,7 +4,7 @@ import Checkout from "./pages/Checkout";
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/cards-component-demo">
       <div className="min-h-screen bg-white dark:bg-gray-800">
         <Header />
         <main className="flex justify-center p-4">
