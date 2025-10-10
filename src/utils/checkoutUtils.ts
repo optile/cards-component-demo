@@ -3,7 +3,7 @@ import type {
   BillingAddress,
   ShippingAddress,
   MerchantCart,
-} from "../store/configuration";
+} from "../store/configurationStore";
 
 export const buildListSessionUpdates = (
   merchantCart: MerchantCart,

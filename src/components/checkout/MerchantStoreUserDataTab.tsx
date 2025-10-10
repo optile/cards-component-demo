@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useConfigurationStore } from "../../store/configuration";
+import { useConfigurationStore } from "../../store/configurationStore";
 import { useCheckoutStore } from "../../store/checkoutStore";
 import { buildListSessionUpdates } from "../../utils/checkoutUtils";
 import AddressForm, { type Address } from "./AddressForm";

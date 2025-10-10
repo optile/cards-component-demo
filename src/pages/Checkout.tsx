@@ -5,7 +5,7 @@ import ShoppingCartSection from "../components/checkout/ShoppingCartSection";
 import { useInitSession } from "../hooks/useInitSession";
 import { useInitCheckout } from "../hooks/useInitCheckout";
 import { usePaymentMethods } from "../hooks/usePaymentMethods";
-import { useConfigurationStore } from "../store/configuration";
+import { useConfigurationStore } from "../store/configurationStore";
 
 const Checkout = () => {
   const { listSessionData } = useInitSession();

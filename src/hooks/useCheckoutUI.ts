@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useCheckoutStore } from "../store/checkoutStore";
-import { useConfigurationStore } from "../store/configuration";
+import { useConfigurationStore } from "../store/configurationStore";
 import type { CheckoutInstance, DropInComponent } from "../types/checkout";
 
 export const useCheckoutUI = (checkout: CheckoutInstance | null) => {

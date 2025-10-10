@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { CheckoutApiService } from "../services/checkoutApi";
 import { PayoneerSDKUtils } from "../utils/payoneerSdk";
-import { useConfigurationStore } from "../store/configuration";
+import { useConfigurationStore } from "./configurationStore";
 import { buildListSessionUpdates } from "../utils/checkoutUtils";
 import type {
   CheckoutInstance,
