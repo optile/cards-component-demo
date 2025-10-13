@@ -140,10 +140,6 @@ export const useCheckoutStore = create<CheckoutState>((set, get) => ({
         callbackConfigs
       );
 
-      // Expose instance for debugging
-      // @ts-expect-error - Allow attaching to window
-      window.checkoutInstance = checkoutInstance; // For debugging
-
       set({
         checkout: checkoutInstance,
         checkoutError: null,
@@ -177,7 +173,6 @@ export const useCheckoutStore = create<CheckoutState>((set, get) => ({
       return;
     }
 
-    // @ts-expect-error - Long ID update is missing in types
     await checkout.updateLongId(listSessionId);
   },
 
@@ -328,9 +323,6 @@ export const useCheckoutStore = create<CheckoutState>((set, get) => ({
         isCheckoutInitialized: true,
         checkoutError: null,
       });
-
-      // @ts-expect-error - Allow attaching to window
-      window.checkoutInstance = newCheckoutInstance; // For debugging
 
       console.log("✅ Checkout instance recreated successfully");
     } catch (err) {

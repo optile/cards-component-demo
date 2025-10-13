@@ -63,7 +63,6 @@ export class PayoneerSDKUtils {
         checkout: CheckoutInstance,
         diff: ComponentListDiff
       ) => {
-        console.log("onComponentListChange diff:", diff);
         useCheckoutStore.getState().setComponenetsDiff(checkout, diff);
       },
       preload: [...preload],

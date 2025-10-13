@@ -28,6 +28,7 @@ export interface CheckoutInstance {
   ): DropInComponent;
   charge(): void;
   update(config: { env?: string; longId?: string }): Promise<CheckoutInstance>; // Add update method
+  updateLongId(longId: string): Promise<void>;
 }
 
 export interface CheckoutInstanceConfig {
