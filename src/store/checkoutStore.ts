@@ -10,6 +10,7 @@ import type {
   PaymentMethod,
   ListSessionRequest,
   CheckoutInstanceConfig,
+  ComponentListDiff,
 } from "../types/checkout";
 
 interface CheckoutState {
@@ -28,6 +29,10 @@ interface CheckoutState {
   preload: string[]; // New: Preload array
   isEnvChanging: boolean; // New: Flag to prevent updates during env change
   refetchListBeforeCharge: boolean; // New: Toggle for refetching list before charge
+
+  // componentListChange diff
+  componentListDiff: ComponentListDiff | null;
+  hasChangedComponents: boolean;
 
   // Payment methods state
   activeNetwork: string;
@@ -54,6 +59,10 @@ interface CheckoutState {
     partialConfig: Partial<CheckoutInstanceConfig>
   ) => Promise<void>; // New action
   recreateCheckout: () => Promise<void>; // New dedicated recreation function
+  setComponenetsDiff: (
+    checkout: CheckoutInstance,
+    diff: ComponentListDiff | null
+  ) => void;
 }
 
 export const useCheckoutStore = create<CheckoutState>((set, get) => ({
@@ -71,6 +80,9 @@ export const useCheckoutStore = create<CheckoutState>((set, get) => ({
   preload: ["stripe:cards"], // Initialize preload
   isEnvChanging: false, // Initialize flag
   refetchListBeforeCharge: false, // Initialize refetch toggle
+
+  componentListDiff: null,
+  hasChangedComponents: false,
 
   activeNetwork: "",
   availableMethods: [],
@@ -128,6 +140,10 @@ export const useCheckoutStore = create<CheckoutState>((set, get) => ({
         callbackConfigs
       );
 
+      // Expose instance for debugging
+      // @ts-expect-error - Allow attaching to window
+      window.checkoutInstance = checkoutInstance; // For debugging
+
       set({
         checkout: checkoutInstance,
         checkoutError: null,
@@ -161,7 +177,8 @@ export const useCheckoutStore = create<CheckoutState>((set, get) => ({
       return;
     }
 
-    await checkout.update({});
+    // @ts-expect-error - Long ID update is missing in types
+    await checkout.updateLongId(listSessionId);
   },
 
   setAvailableMethods: (methods) => {
@@ -312,6 +329,9 @@ export const useCheckoutStore = create<CheckoutState>((set, get) => ({
         checkoutError: null,
       });
 
+      // @ts-expect-error - Allow attaching to window
+      window.checkoutInstance = newCheckoutInstance; // For debugging
+
       console.log("✅ Checkout instance recreated successfully");
     } catch (err) {
       const errorMessage =
@@ -321,5 +341,19 @@ export const useCheckoutStore = create<CheckoutState>((set, get) => ({
     } finally {
       set({ checkoutLoading: false });
     }
+  },
+  setComponenetsDiff: async (
+    checkout: CheckoutInstance,
+    componentListDiff: ComponentListDiff | null
+  ) => {
+    const available = await checkout.availableDropInComponents();
+
+    useCheckoutStore.getState().setAvailableMethods(available);
+
+    set({
+      componentListDiff,
+      checkout,
+      hasChangedComponents: true,
+    });
   },
 }));

@@ -1,5 +1,6 @@
 import { getApiEndpoints } from "../constants/checkout";
-import type { CheckoutInstance } from "../types/checkout";
+import { useCheckoutStore } from "../store/checkoutStore";
+import type { CheckoutInstance, ComponentListDiff } from "../types/checkout";
 
 export class PayoneerSDKUtils {
   private static isSDKLoaded(): boolean {
@@ -58,6 +59,13 @@ export class PayoneerSDKUtils {
       longId,
       env,
       refetchListBeforeCharge,
+      onComponentListChange: (
+        checkout: CheckoutInstance,
+        diff: ComponentListDiff
+      ) => {
+        console.log("onComponentListChange diff:", diff);
+        useCheckoutStore.getState().setComponenetsDiff(checkout, diff);
+      },
       preload: [...preload],
     };
 

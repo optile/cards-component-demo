@@ -75,4 +75,10 @@ declare global {
   }
 }
 
+export interface ComponentListDiff {
+  addedComponents: Set<string>;
+  removedComponents: Set<string>;
+  availableComponents: Set<string>;
+}
+
 export declare const Payoneer: typeof window.Payoneer;
