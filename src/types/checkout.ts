@@ -28,6 +28,7 @@ export interface CheckoutInstance {
   ): DropInComponent;
   charge(): void;
   update(config: { env?: string; longId?: string }): Promise<CheckoutInstance>; // Add update method
+  updateLongId(longId: string): Promise<void>;
 }
 
 export interface CheckoutInstanceConfig {
@@ -73,6 +74,12 @@ declare global {
       ) => Promise<CheckoutInstance>;
     };
   }
+}
+
+export interface ComponentListDiff {
+  addedComponents: Set<string>;
+  removedComponents: Set<string>;
+  availableComponents: Set<string>;
 }
 
 export declare const Payoneer: typeof window.Payoneer;
