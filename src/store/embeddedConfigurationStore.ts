@@ -39,12 +39,8 @@ export const useEmbeddedConfigurationStore =
                 shippingAddress: { ...currentConfigState.shippingAddress },
                 sameAddress: currentConfigState.sameAddress,
               });
-
-              console.log(
-                "✅ URL sharing enabled - current state synced to URL"
-              );
-            } catch (error) {
-              console.error("Failed to sync state to URL:", error);
+            } catch {
+              // Silently handle any sync errors
             }
           } else {
             // If disabling, immediately clear URL
