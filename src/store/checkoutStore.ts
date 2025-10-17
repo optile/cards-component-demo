@@ -3,6 +3,8 @@ import { CheckoutApiService } from "../services/checkoutApi";
 import { PayoneerSDKUtils } from "../utils/payoneerSdk";
 import { useConfigurationStore } from "./configurationStore";
 import { buildListSessionUpdates } from "../utils/checkoutUtils";
+import { persist, createJSONStorage } from "zustand/middleware";
+
 import type {
   CheckoutInstance,
   DropInComponent,
@@ -12,6 +14,7 @@ import type {
   CheckoutInstanceConfig,
   ComponentListDiff,
 } from "../types/checkout";
+import hashStorage from "../utils/urlHashStorage";
 
 interface CheckoutState {
   // Session state
@@ -65,287 +68,314 @@ interface CheckoutState {
   ) => void;
 }
 
-export const useCheckoutStore = create<CheckoutState>((set, get) => ({
-  // Initial state
-  listSessionData: null,
-  sessionLoading: true,
-  sessionError: null,
-  isSessionInitialized: false,
+export const useCheckoutStore = create<CheckoutState>()(
+  persist(
+    (set, get) => ({
+      // Initial state
+      listSessionData: null,
+      sessionLoading: true,
+      sessionError: null,
+      isSessionInitialized: false,
 
-  checkout: null,
-  checkoutLoading: false,
-  checkoutError: null,
-  isCheckoutInitialized: false,
-  env: "sandbox",
-  preload: ["stripe:cards"], // Initialize preload
-  isEnvChanging: false, // Initialize flag
-  refetchListBeforeCharge: false, // Initialize refetch toggle
-
-  componentListDiff: null,
-  hasChangedComponents: false,
-
-  activeNetwork: "",
-  availableMethods: [],
-  dropIns: [],
-  isSubmitting: false,
-  areComponentsMounted: false,
-
-  // Actions
-  initSession: async () => {
-    const { isSessionInitialized } = get();
-    if (isSessionInitialized) return;
-    set({ sessionLoading: true });
-    try {
-      const configState = useConfigurationStore.getState();
-      const initialRequest = buildListSessionUpdates(
-        configState.merchantCart,
-        configState.billingAddress,
-        configState.shippingAddress,
-        configState.sameAddress,
-        get().env
-      );
-      const response = await CheckoutApiService.generateListSession(
-        initialRequest,
-        get().env
-      );
-      set({
-        listSessionData: response,
-        sessionError: null,
-        isSessionInitialized: true,
-      });
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to generate list session";
-      set({ sessionError: errorMessage });
-      console.error("Failed to generate list session:", err);
-    } finally {
-      set({ sessionLoading: false });
-    }
-  },
-
-  initCheckout: async (listSessionId, navigate) => {
-    const { isCheckoutInitialized } = get();
-    if (!listSessionId || isCheckoutInitialized) return;
-    set({ checkoutLoading: true });
-    try {
-      // Load callback configurations from callback store
-      const { useCallbackStore } = await import("./callbackStore");
-      const callbackConfigs = useCallbackStore.getState().prepareSDKCallbacks();
-
-      const checkoutInstance = await PayoneerSDKUtils.initCheckout(
-        listSessionId,
-        get().env,
-        get().preload,
-        get().refetchListBeforeCharge,
-        callbackConfigs
-      );
-
-      set({
-        checkout: checkoutInstance,
-        checkoutError: null,
-        isCheckoutInitialized: true,
-      });
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to initialize checkout";
-      set({ checkoutError: errorMessage });
-      console.error("Failed to initialize checkout:", err);
-      navigate("/failed");
-    } finally {
-      set({ checkoutLoading: false });
-    }
-  },
-
-  updateListSession: async (updates, listSessionId, transactionId) => {
-    const { checkout, isEnvChanging } = get();
-    if (!checkout || !listSessionId || !transactionId || isEnvChanging) return;
-    const updatedListSessionObject = {
-      ...updates,
-      transactionId,
-    };
-    const response = await CheckoutApiService.updateListSession(
-      listSessionId,
-      updatedListSessionObject,
-      get().env
-    );
-    if (!response.ok) {
-      console.error("Failed to update list session:", response.statusText);
-      return;
-    }
-
-    await checkout.updateLongId(listSessionId);
-  },
-
-  setAvailableMethods: (methods) => {
-    set({ availableMethods: methods });
-    const { activeNetwork } = get();
-    if (methods.length > 0 && !activeNetwork) {
-      set({ activeNetwork: methods[0].name });
-    }
-  },
-
-  setActiveNetwork: (network) => set({ activeNetwork: network }),
-
-  getActiveDropIn: () => {
-    const { dropIns, availableMethods, activeNetwork } = get();
-    return dropIns.find(
-      (_, index) => availableMethods[index].name === activeNetwork
-    );
-  },
-
-  updateSdkConfig: async (partialConfig: Partial<CheckoutInstanceConfig>) => {
-    const { checkout } = get();
-    if (!checkout) {
-      set({ checkoutError: "Checkout not initialized" });
-      return;
-    }
-
-    set({
-      checkoutLoading: true,
+      checkout: null,
+      checkoutLoading: false,
       checkoutError: null,
-      isEnvChanging: true,
-    });
+      isCheckoutInitialized: false,
+      env: "sandbox",
+      preload: ["stripe:cards"], // Initialize preload
+      isEnvChanging: false, // Initialize flag
+      refetchListBeforeCharge: false, // Initialize refetch toggle
 
-    try {
-      // Update environment settings in store first
-      if (partialConfig.env) {
-        set({ env: partialConfig.env });
-      }
-      if (partialConfig.preload) {
-        set({ preload: partialConfig.preload });
-      }
+      componentListDiff: null,
+      hasChangedComponents: false,
 
-      if (partialConfig.refetchListBeforeCharge)
-        set({ refetchListBeforeCharge: partialConfig.refetchListBeforeCharge });
+      activeNetwork: "",
+      availableMethods: [],
+      dropIns: [],
+      isSubmitting: false,
+      areComponentsMounted: false,
 
-      // For environment changes, we need a new session
-      if (partialConfig.env) {
-        // Build new list session updates with new env
-        const configState = useConfigurationStore.getState();
-        const newUpdates = buildListSessionUpdates(
-          configState.merchantCart,
-          configState.billingAddress,
-          configState.shippingAddress,
-          configState.sameAddress,
-          partialConfig.env
-        );
-
-        // Generate new list session
-        const newListSession = await CheckoutApiService.generateListSession(
-          newUpdates,
-          partialConfig.env
-        );
-        set({ listSessionData: newListSession });
-      }
-
-      // Use dedicated recreate function to apply all changes
-      await get().recreateCheckout();
-
-      set({ checkoutError: null, isEnvChanging: false });
-      console.log("✅ SDK configuration updated successfully");
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to update environment";
-      set({ checkoutError: errorMessage });
-      console.error("Failed to update environment:", err);
-    } finally {
-      set({ checkoutLoading: false, isEnvChanging: false }); // Reset flag
-    }
-  },
-
-  recreateCheckout: async () => {
-    const { checkout, listSessionData } = get();
-
-    if (!checkout) {
-      set({ checkoutError: "Checkout not initialized" });
-      return;
-    }
-
-    set({
-      checkoutLoading: true,
-      checkoutError: null,
-    });
-
-    try {
-      // Step 1: Cleanup existing checkout instance
-      const { checkout, dropIns } = get();
-
-      if (!checkout) {
-        throw new Error("No existing checkout instance to recreate");
-      }
-
-      // Unmount all existing DropIn components
-      dropIns.forEach((dropIn) => {
+      // Actions
+      initSession: async () => {
+        const { isSessionInitialized } = get();
+        if (isSessionInitialized) return;
+        set({ sessionLoading: true });
         try {
-          dropIn.unmount();
-        } catch (error) {
-          console.warn("Failed to unmount component:", error);
+          const configState = useConfigurationStore.getState();
+          const initialRequest = buildListSessionUpdates(
+            configState.merchantCart,
+            configState.billingAddress,
+            configState.shippingAddress,
+            configState.sameAddress,
+            get().env
+          );
+          const response = await CheckoutApiService.generateListSession(
+            initialRequest,
+            get().env
+          );
+          set({
+            listSessionData: response,
+            sessionError: null,
+            isSessionInitialized: true,
+          });
+        } catch (err) {
+          const errorMessage =
+            err instanceof Error
+              ? err.message
+              : "Failed to generate list session";
+          set({ sessionError: errorMessage });
+          console.error("Failed to generate list session:", err);
+        } finally {
+          set({ sessionLoading: false });
         }
-      });
+      },
 
-      // Clear UI state
-      set({
-        dropIns: [],
-        areComponentsMounted: false,
-        activeNetwork: "",
-        checkout: null,
-        isCheckoutInitialized: false,
-      });
+      initCheckout: async (listSessionId, navigate) => {
+        const { isCheckoutInitialized } = get();
+        if (!listSessionId || isCheckoutInitialized) return;
+        set({ checkoutLoading: true });
+        try {
+          // Load callback configurations from callback store
+          const { useCallbackStore } = await import("./callbackStore");
+          const callbackConfigs = useCallbackStore
+            .getState()
+            .prepareSDKCallbacks();
 
-      // Step 2: Use existing session (no session recreation needed for callback changes)
-      const sessionIdToUse = listSessionData?.id;
+          const checkoutInstance = await PayoneerSDKUtils.initCheckout(
+            listSessionId,
+            get().env,
+            get().preload,
+            get().refetchListBeforeCharge,
+            callbackConfigs
+          );
 
-      if (!sessionIdToUse) {
-        throw new Error("No list session available for checkout recreation");
-      }
+          set({
+            checkout: checkoutInstance,
+            checkoutError: null,
+            isCheckoutInitialized: true,
+          });
+        } catch (err) {
+          const errorMessage =
+            err instanceof Error
+              ? err.message
+              : "Failed to initialize checkout";
+          set({ checkoutError: errorMessage });
+          console.error("Failed to initialize checkout:", err);
+          navigate("/failed");
+        } finally {
+          set({ checkoutLoading: false });
+        }
+      },
 
-      // Step 3: Read current callback configuration from callback store
-      const { useCallbackStore } = await import("./callbackStore");
-      const callbackConfig = useCallbackStore.getState().prepareSDKCallbacks();
+      updateListSession: async (updates, listSessionId, transactionId) => {
+        const { checkout, isEnvChanging } = get();
+        if (!checkout || !listSessionId || !transactionId || isEnvChanging)
+          return;
+        const updatedListSessionObject = {
+          ...updates,
+          transactionId,
+        };
+        const response = await CheckoutApiService.updateListSession(
+          listSessionId,
+          updatedListSessionObject,
+          get().env
+        );
+        if (!response.ok) {
+          console.error("Failed to update list session:", response.statusText);
+          return;
+        }
 
-      // Step 4: Read current environment and preload settings from checkout store
-      const currentEnv = get().env;
-      const currentPreload = get().preload;
-      const currentRefetch = get().refetchListBeforeCharge;
+        await checkout.updateLongId(listSessionId);
+      },
 
-      // Step 5: Create new checkout instance with current settings
-      const newCheckoutInstance = await PayoneerSDKUtils.initCheckout(
-        sessionIdToUse,
-        currentEnv,
-        currentPreload,
-        currentRefetch,
-        callbackConfig
-      );
+      setAvailableMethods: (methods) => {
+        set({ availableMethods: methods });
+        const { activeNetwork } = get();
+        if (methods.length > 0 && !activeNetwork) {
+          set({ activeNetwork: methods[0].name });
+        }
+      },
 
-      // Step 6: Update store with new instance
-      set({
-        checkout: newCheckoutInstance,
-        isCheckoutInitialized: true,
-        checkoutError: null,
-      });
+      setActiveNetwork: (network) => set({ activeNetwork: network }),
 
-      console.log("✅ Checkout instance recreated successfully");
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to recreate checkout";
-      set({ checkoutError: errorMessage });
-      console.error("Failed to recreate checkout:", err);
-    } finally {
-      set({ checkoutLoading: false });
+      getActiveDropIn: () => {
+        const { dropIns, availableMethods, activeNetwork } = get();
+        return dropIns.find(
+          (_, index) => availableMethods[index].name === activeNetwork
+        );
+      },
+
+      updateSdkConfig: async (
+        partialConfig: Partial<CheckoutInstanceConfig>
+      ) => {
+        const { checkout } = get();
+        if (!checkout) {
+          set({ checkoutError: "Checkout not initialized" });
+          return;
+        }
+
+        set({
+          checkoutLoading: true,
+          checkoutError: null,
+          isEnvChanging: true,
+        });
+
+        try {
+          // Update environment settings in store first
+          if (partialConfig.env) {
+            set({ env: partialConfig.env });
+          }
+          if (partialConfig.preload) {
+            set({ preload: partialConfig.preload });
+          }
+
+          if (partialConfig.refetchListBeforeCharge)
+            set({
+              refetchListBeforeCharge: partialConfig.refetchListBeforeCharge,
+            });
+
+          // For environment changes, we need a new session
+          if (partialConfig.env) {
+            // Build new list session updates with new env
+            const configState = useConfigurationStore.getState();
+            const newUpdates = buildListSessionUpdates(
+              configState.merchantCart,
+              configState.billingAddress,
+              configState.shippingAddress,
+              configState.sameAddress,
+              partialConfig.env
+            );
+
+            // Generate new list session
+            const newListSession = await CheckoutApiService.generateListSession(
+              newUpdates,
+              partialConfig.env
+            );
+            set({ listSessionData: newListSession });
+          }
+
+          // Use dedicated recreate function to apply all changes
+          await get().recreateCheckout();
+
+          set({ checkoutError: null, isEnvChanging: false });
+          console.log("✅ SDK configuration updated successfully");
+        } catch (err) {
+          const errorMessage =
+            err instanceof Error ? err.message : "Failed to update environment";
+          set({ checkoutError: errorMessage });
+          console.error("Failed to update environment:", err);
+        } finally {
+          set({ checkoutLoading: false, isEnvChanging: false }); // Reset flag
+        }
+      },
+
+      recreateCheckout: async () => {
+        const { checkout, listSessionData } = get();
+
+        if (!checkout) {
+          set({ checkoutError: "Checkout not initialized" });
+          return;
+        }
+
+        set({
+          checkoutLoading: true,
+          checkoutError: null,
+        });
+
+        try {
+          // Step 1: Cleanup existing checkout instance
+          const { checkout, dropIns } = get();
+
+          if (!checkout) {
+            throw new Error("No existing checkout instance to recreate");
+          }
+
+          // Unmount all existing DropIn components
+          dropIns.forEach((dropIn) => {
+            try {
+              dropIn.unmount();
+            } catch (error) {
+              console.warn("Failed to unmount component:", error);
+            }
+          });
+
+          // Clear UI state
+          set({
+            dropIns: [],
+            areComponentsMounted: false,
+            activeNetwork: "",
+            checkout: null,
+            isCheckoutInitialized: false,
+          });
+
+          // Step 2: Use existing session (no session recreation needed for callback changes)
+          const sessionIdToUse = listSessionData?.id;
+
+          if (!sessionIdToUse) {
+            throw new Error(
+              "No list session available for checkout recreation"
+            );
+          }
+
+          // Step 3: Read current callback configuration from callback store
+          const { useCallbackStore } = await import("./callbackStore");
+          const callbackConfig = useCallbackStore
+            .getState()
+            .prepareSDKCallbacks();
+
+          // Step 4: Read current environment and preload settings from checkout store
+          const currentEnv = get().env;
+          const currentPreload = get().preload;
+          const currentRefetch = get().refetchListBeforeCharge;
+
+          // Step 5: Create new checkout instance with current settings
+          const newCheckoutInstance = await PayoneerSDKUtils.initCheckout(
+            sessionIdToUse,
+            currentEnv,
+            currentPreload,
+            currentRefetch,
+            callbackConfig
+          );
+
+          // Step 6: Update store with new instance
+          set({
+            checkout: newCheckoutInstance,
+            isCheckoutInitialized: true,
+            checkoutError: null,
+          });
+
+          console.log("✅ Checkout instance recreated successfully");
+        } catch (err) {
+          const errorMessage =
+            err instanceof Error ? err.message : "Failed to recreate checkout";
+          set({ checkoutError: errorMessage });
+          console.error("Failed to recreate checkout:", err);
+        } finally {
+          set({ checkoutLoading: false });
+        }
+      },
+      setComponenetsDiff: async (
+        checkout: CheckoutInstance,
+        componentListDiff: ComponentListDiff | null
+      ) => {
+        const available = await checkout.availableDropInComponents();
+
+        useCheckoutStore.getState().setAvailableMethods(available);
+
+        set({
+          componentListDiff,
+          checkout,
+          hasChangedComponents: true,
+        });
+      },
+    }),
+    {
+      name: "checkout-storage",
+      storage: createJSONStorage(() => hashStorage),
+      partialize: (state) => ({
+        env: state.env,
+        refetchListBeforeCharge: state.refetchListBeforeCharge,
+      }),
     }
-  },
-  setComponenetsDiff: async (
-    checkout: CheckoutInstance,
-    componentListDiff: ComponentListDiff | null
-  ) => {
-    const available = await checkout.availableDropInComponents();
-
-    useCheckoutStore.getState().setAvailableMethods(available);
-
-    set({
-      componentListDiff,
-      checkout,
-      hasChangedComponents: true,
-    });
-  },
-}));
+  )
+);

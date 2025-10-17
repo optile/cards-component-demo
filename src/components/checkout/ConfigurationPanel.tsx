@@ -5,6 +5,7 @@ import MerchantStoreCartTab from "./MerchantStoreCartTab";
 import MerchantStoreUserDataTab from "./MerchantStoreUserDataTab";
 import SDKBaseConfiguration from "./SDKBaseConfiguration";
 import SDKAdvancedConfiguration from "./SDKAdvancedConfiguration";
+import URLSharingTab from "./URLSharingTab";
 
 const ConfigurationPanel: React.FC = () => {
   const tabs = [
@@ -27,6 +28,10 @@ const ConfigurationPanel: React.FC = () => {
     {
       label: "UI and Styling",
       content: <UIStylingTab />,
+    },
+    {
+      label: "URL Sharing",
+      content: <URLSharingTab />,
     },
   ];
 
