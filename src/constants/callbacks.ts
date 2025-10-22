@@ -16,6 +16,21 @@ export const CALLBACK_DESCRIPTIONS: Record<CallbackName, string> = {
     "Called when a payment is declined. Return false to prevent default declined handling.",
 };
 
+export const CALLBACK_DOCUMENTATION_LINKS: Record<CallbackName, string> = {
+  onBeforeCharge:
+    "https://checkoutdocs.payoneer.com/checkout-2/docs/advanced-use-cases#onbeforecharge",
+  onBeforeError:
+    "https://checkoutdocs.payoneer.com/checkout-2/docs/advanced-use-cases#onbeforeerror",
+  onPaymentSuccess:
+    "https://checkoutdocs.payoneer.com/checkout-2/docs/advanced-use-cases#onpaymentsuccess",
+  onPaymentFailure:
+    "https://checkoutdocs.payoneer.com/checkout-2/docs/advanced-use-cases#onpaymentfailure",
+  onBeforeProviderRedirect:
+    "https://checkoutdocs.payoneer.com/checkout-2/docs/advanced-use-cases#onbeforeproviderredirect",
+  onPaymentDeclined:
+    "https://checkoutdocs.payoneer.com/checkout-2/docs/advanced-use-cases#onpaymentdeclined",
+};
+
 // Log level options for UI dropdowns
 export const LOG_LEVEL_OPTIONS = [
   { value: "info", label: "Info" },

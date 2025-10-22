@@ -5,6 +5,7 @@ import Button from "../ui/Button";
 import Checkbox from "../ui/Checkbox";
 import Select from "../ui/Select";
 import InfoTooltip from "../ui/InfoTooltip";
+import ExternalLink from "../ui/ExternalLink";
 
 const SDKBaseConfiguration: React.FC = () => {
   const {
@@ -46,7 +47,10 @@ const SDKBaseConfiguration: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <h3>SDK Base Configuration</h3>
+      <div className="flex gap-1 items-center">
+        <h3>SDK Base Configuration</h3>
+        <ExternalLink link="https://checkoutdocs.payoneer.com/checkout-2/docs/basic-integration-checkout-web-sdk" />
+      </div>
       <Select
         label="Environment:"
         value={selectedEnv}
@@ -58,6 +62,7 @@ const SDKBaseConfiguration: React.FC = () => {
         <div className="flex items-center gap-1">
           <span>Preloaded Components:</span>
           <InfoTooltip content="The components that will be preloaded in the SDK. Stripe:cards is preloaded since it is the preselected option for payment." />
+          <ExternalLink link="https://checkoutdocs.payoneer.com/checkout-2/docs/payment-methods-list#preloading-components-using-preload-option" />
         </div>
 
         <div className="flex gap-2">
@@ -77,6 +82,7 @@ const SDKBaseConfiguration: React.FC = () => {
           label="Refetch List Before Charge"
         />
         <InfoTooltip content="If enabled, the checkout will refetch the list session before processing a charge to ensure the latest data is used." />
+        <ExternalLink link="https://checkoutdocs.payoneer.com/checkout-2/docs/basic-integration-checkout-web-sdk#refetch-the-list-before-charge" />
       </div>
 
       <Button onClick={handleSave} disabled={!hasChanges}>

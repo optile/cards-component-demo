@@ -3,6 +3,7 @@ import { useConfigurationStore } from "../../store/configurationStore";
 import RadioGroup from "../ui/RadioGroup";
 import ColorPicker from "../ui/ColorPicker";
 import InfoTooltip from "../ui/InfoTooltip";
+import ExternalLink from "../ui/ExternalLink";
 
 const UIStylingTab: React.FC = () => {
   const {
@@ -20,6 +21,7 @@ const UIStylingTab: React.FC = () => {
         <div className="flex items-center gap-1">
           <h3 className="font-semibold">Payment button type:</h3>
           <InfoTooltip content="Choose between the default payment button provided by the SDK or a custom button that you can style and position as you like." />
+          <ExternalLink link="https://checkoutdocs.payoneer.com/checkout-2/docs/payment-button" />
         </div>
         <RadioGroup
           name="payButtonType"

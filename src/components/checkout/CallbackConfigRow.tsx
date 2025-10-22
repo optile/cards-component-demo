@@ -7,8 +7,10 @@ import {
   LOG_LEVEL_OPTIONS,
   PROCEED_OPTIONS,
   CALLBACK_DESCRIPTIONS,
+  CALLBACK_DOCUMENTATION_LINKS,
 } from "../../constants/callbacks";
 import type { CallbackName, CallbackConfig } from "../../types/callbacks";
+import ExternalLink from "../ui/ExternalLink";
 
 interface CallbackConfigRowProps {
   callbackName: CallbackName;
@@ -37,11 +39,12 @@ const CallbackConfigRow: React.FC<CallbackConfigRowProps> = ({
           className="mt-0.5"
         />
         <div className="flex-1">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <h4 className="font-mono text-sm font-semibold text-gray-900">
               {callbackName}
             </h4>
             <InfoTooltip content={CALLBACK_DESCRIPTIONS[callbackName]} />
+            <ExternalLink link={CALLBACK_DOCUMENTATION_LINKS[callbackName]} />
             <button
               onClick={onReset}
               className="ml-auto text-xs text-gray-500 hover:text-gray-700 underline"
