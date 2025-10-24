@@ -5,6 +5,7 @@ import { useCheckoutStore } from "../../store/checkoutStore";
 import type { CallbackConfig, CallbackName } from "../../types/callbacks";
 import Button from "../ui/Button";
 import CallbackConfigRow from "./CallbackConfigRow";
+import ExternalLink from "../ui/ExternalLink";
 
 const SDKAdvancedConfiguration: React.FC = () => {
   const { checkout, checkoutLoading, checkoutError } = useCheckoutStore();
@@ -55,8 +56,9 @@ const SDKAdvancedConfiguration: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">
+          <h3 className="text-lg font-semibold text-gray-900 flex gap-1 items-center">
             SDK Advanced Configuration
+            <ExternalLink link="https://checkoutdocs.payoneer.com/checkout-2/docs/advanced-use-cases" />
           </h3>
           <p className="text-sm text-gray-600">
             Configure callback handlers for payment flow control ({enabledCount}
