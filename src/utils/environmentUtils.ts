@@ -1,4 +1,4 @@
-import { Divisions } from "../features/embeddedCheckout/constants/checkout";
+import { Divisions } from "@/features/embeddedCheckout/constants/checkout";
 
 export interface EnvironmentOption {
   value: string;

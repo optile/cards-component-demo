@@ -1,12 +1,12 @@
 import { useState, useMemo } from "react";
-import Button from "../../../components/ui/Button";
-import Input from "../../../components/ui/Input";
-import { DEMO_CARD_CATEGORIES } from "../constants/demoCards";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
+import { DEMO_CARD_CATEGORIES } from "@/features/embeddedCheckout/constants/demoCards";
 import {
   copyCardNumberToClipboard,
   filterCardCategories,
-} from "../utils/demoCardsUtils";
-import { useClickOutside } from "../../../hooks/useClickOutside";
+} from "@/features/embeddedCheckout/utils/demoCardsUtils";
+import { useClickOutside } from "@/hooks/useClickOutside";
 
 export default function DemoCardNumbers() {
   const [open, setOpen] = useState(false);

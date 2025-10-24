@@ -1,5 +1,5 @@
 import React from "react";
-import type { ReviewSectionProps } from "../types/hostedPayment";
+import type { ReviewSectionProps } from "@/features/hostedCheckout/types/hostedPayment";
 
 interface ReviewEnvironmentSectionProps extends ReviewSectionProps {
   env: string;

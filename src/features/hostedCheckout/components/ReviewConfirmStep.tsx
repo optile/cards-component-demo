@@ -1,8 +1,8 @@
 import React from "react";
-import type { StepComponentProps } from "../../../components/ui/MultiStepper";
-import Button from "../../../components/ui/Button";
-import { useHostedConfigurationStore } from "../store/hostedConfigurationStore";
-import { useHostedPaymentFlow } from "../hooks/useHostedPaymentFlow";
+import type { StepComponentProps } from "@/components/ui/MultiStepper";
+import Button from "@/components/ui/Button";
+import { useHostedConfigurationStore } from "@/features/hostedCheckout/store/hostedConfigurationStore";
+import { useHostedPaymentFlow } from "@/features/hostedCheckout/hooks/useHostedPaymentFlow";
 import ReviewEnvironmentSection from "./ReviewEnvironmentSection";
 import ReviewCartSection from "./ReviewCartSection";
 import ReviewCustomerSection from "./ReviewCustomerSection";

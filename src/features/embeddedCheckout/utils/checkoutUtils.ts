@@ -1,11 +1,11 @@
-import { Divisions } from "../constants/checkout";
-import { getCallbackUrls } from "../../hostedCheckout/constants/hostedPaymentConfig";
+import { Divisions } from "@/features/embeddedCheckout/constants/checkout";
+import { getCallbackUrls } from "@/features/hostedCheckout/constants/hostedPaymentConfig";
 import type {
   BillingAddress,
   ShippingAddress,
   MerchantCart,
-} from "../../../types/merchant";
-import { INTEGRATION_TYPE } from "../types/checkout";
+} from "@/types/merchant";
+import { INTEGRATION_TYPE } from "@/features/embeddedCheckout/types/checkout";
 
 export const buildListSessionUpdates = (
   merchantCart: MerchantCart,

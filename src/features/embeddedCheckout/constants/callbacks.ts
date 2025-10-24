@@ -1,4 +1,4 @@
-import type { CallbackName } from "../types/callbacks";
+import type { CallbackName } from "@/features/embeddedCheckout/types/callbacks";
 
 // Callback descriptions for UI tooltips and help text
 export const CALLBACK_DESCRIPTIONS: Record<CallbackName, string> = {

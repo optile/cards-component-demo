@@ -1,7 +1,10 @@
 import { useEffect, useRef } from "react";
-import { useCheckoutStore } from "../store/checkoutStore";
-import { useConfigurationStore } from "./../store/configurationStore";
-import type { CheckoutInstance, DropInComponent } from "../types/checkout";
+import { useCheckoutStore } from "@/features/embeddedCheckout/store/checkoutStore";
+import { useConfigurationStore } from "@/features/embeddedCheckout/store/configurationStore";
+import type {
+  CheckoutInstance,
+  DropInComponent,
+} from "@/features/embeddedCheckout/types/checkout";
 
 export const useCheckoutUI = (checkout: CheckoutInstance | null) => {
   const componentRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});

@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { useEmbeddedConfigurationStore } from "../store/embeddedConfigurationStore";
-import CollapsibleSection from "../../../components/ui/CollapsibleSection";
-import Button from "../../../components/ui/Button";
-import Checkbox from "../../../components/ui/Checkbox";
+import { useEmbeddedConfigurationStore } from "@/features/embeddedCheckout/store/embeddedConfigurationStore";
+import CollapsibleSection from "@/components/ui/CollapsibleSection";
+import Button from "@/components/ui/Button";
+import Checkbox from "@/components/ui/Checkbox";
 
 const URLSharingTab: React.FC = () => {
   const { urlSharingEnabled, setUrlSharingEnabled } =
@@ -35,7 +35,9 @@ const URLSharingTab: React.FC = () => {
         <div className="space-y-4">
           <Checkbox
             checked={urlSharingEnabled}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUrlSharingEnabled(e.target.checked)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              setUrlSharingEnabled(e.target.checked)
+            }
             label="Enable URL configuration sharing"
             className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
           />

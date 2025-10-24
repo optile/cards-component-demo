@@ -1,10 +1,10 @@
 import React from "react";
-import type { StepComponentProps } from "../../../components/ui/MultiStepper";
-import Button from "../../../components/ui/Button";
-import Input from "../../../components/ui/Input";
-import Select from "../../../components/ui/Select";
-import { useHostedConfigurationStore } from "../store/hostedConfigurationStore";
-import { CURRENCY_OPTIONS } from "../../../constants";
+import type { StepComponentProps } from "@/components/ui/MultiStepper";
+import Button from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
+import { useHostedConfigurationStore } from "@/features/hostedCheckout/store/hostedConfigurationStore";
+import { CURRENCY_OPTIONS } from "@/constants";
 
 const ConfigureCartStep: React.FC<StepComponentProps> = ({
   goToNext,

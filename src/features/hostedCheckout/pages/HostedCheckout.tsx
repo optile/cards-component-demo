@@ -1,13 +1,13 @@
 import { useMemo } from "react";
-import { MultiStepper } from "../../../components/ui/MultiStepper";
-import ChooseEnvironmentStep from "../components/ChooseEnvironmentStep";
-import ConfigureCartStep from "../components/ConfigureCartStep";
-import ConfigureAddressStep from "../components/ConfigureAddressStep";
-import ReviewConfirmStep from "../components/ReviewConfirmStep";
+import { MultiStepper } from "@/components/ui/MultiStepper";
+import ChooseEnvironmentStep from "@/features/hostedCheckout/components/ChooseEnvironmentStep";
+import ConfigureCartStep from "@/features/hostedCheckout/components/ConfigureCartStep";
+import ConfigureAddressStep from "@/features/hostedCheckout/components/ConfigureAddressStep";
+import ReviewConfirmStep from "@/features/hostedCheckout/components/ReviewConfirmStep";
 import {
   CurrentStep,
   useHostedConfigurationStore,
-} from "../store/hostedConfigurationStore";
+} from "@/features/hostedCheckout/store/hostedConfigurationStore";
 
 const HostedCheckout = () => {
   const { currentStep, setCurrentStep } = useHostedConfigurationStore();

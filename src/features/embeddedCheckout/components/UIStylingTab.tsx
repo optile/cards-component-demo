@@ -1,9 +1,9 @@
 import React from "react";
-import { useConfigurationStore } from "../store/configurationStore";
-import RadioGroup from "../../../components/ui/RadioGroup";
-import ColorPicker from "../../../components/ui/ColorPicker";
-import InfoTooltip from "../../../components/ui/InfoTooltip";
-import ExternalLink from "../../../components/ui/ExternalLink";
+import { useConfigurationStore } from "@/features/embeddedCheckout/store/configurationStore";
+import RadioGroup from "@/components/ui/RadioGroup";
+import ColorPicker from "@/components/ui/ColorPicker";
+import InfoTooltip from "@/components/ui/InfoTooltip";
+import ExternalLink from "@/components/ui/ExternalLink";
 
 const UIStylingTab: React.FC = () => {
   const {

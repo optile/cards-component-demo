@@ -1,5 +1,5 @@
 import React from "react";
-import Tabs from "../../../components/ui/Tabs";
+import Tabs from "@/components/ui/Tabs";
 import UIStylingTab from "./UIStylingTab";
 import MerchantStoreCartTab from "./MerchantStoreCartTab";
 import MerchantStoreUserDataTab from "./MerchantStoreUserDataTab";

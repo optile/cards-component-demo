@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { useCheckoutStore } from "../store/checkoutStore";
-import { createEnvironmentOptions } from "../../../utils";
-import Button from "../../../components/ui/Button";
-import Checkbox from "../../../components/ui/Checkbox";
-import Select from "../../../components/ui/Select";
-import InfoTooltip from "../../../components/ui/InfoTooltip";
-import ExternalLink from "../../../components/ui/ExternalLink";
+import { useCheckoutStore } from "@/features/embeddedCheckout/store/checkoutStore";
+import { createEnvironmentOptions } from "@/utils";
+import Button from "@/components/ui/Button";
+import Checkbox from "@/components/ui/Checkbox";
+import Select from "@/components/ui/Select";
+import InfoTooltip from "@/components/ui/InfoTooltip";
+import ExternalLink from "@/components/ui/ExternalLink";
 
 const SDKBaseConfiguration: React.FC = () => {
   const {
@@ -51,7 +51,9 @@ const SDKBaseConfiguration: React.FC = () => {
       <Select
         label="Environment:"
         value={selectedEnv}
-        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => setSelectedEnv(e.target.value)}
+        onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+          setSelectedEnv(e.target.value)
+        }
         options={envOptions}
         id="env-select"
       />
@@ -75,7 +77,9 @@ const SDKBaseConfiguration: React.FC = () => {
       <div className="flex items-center gap-1">
         <Checkbox
           checked={selectedRefetch}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSelectedRefetch(e.target.checked)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            setSelectedRefetch(e.target.checked)
+          }
           label="Refetch List Before Charge"
         />
         <InfoTooltip content="If enabled, the checkout will refetch the list session before processing a charge to ensure the latest data is used." />

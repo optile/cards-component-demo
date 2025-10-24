@@ -1,4 +1,4 @@
-import type { CardCategory } from "../types/demoCards";
+import type { CardCategory } from "@/features/embeddedCheckout/types/demoCards";
 
 /**
  * Copies a card number to clipboard, stripping whitespace

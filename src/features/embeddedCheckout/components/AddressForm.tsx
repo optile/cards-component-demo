@@ -1,6 +1,6 @@
 import React from "react";
-import Input from "../../../components/ui/Input";
-import Select from "../../../components/ui/Select";
+import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
 
 interface FormAddress {
   firstName: string;
@@ -55,14 +55,18 @@ const AddressForm: React.FC<AddressFormProps> = ({
       <Input
         type="text"
         value={address.firstName}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange("firstName", e.target.value)}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+          onChange("firstName", e.target.value)
+        }
         label="First Name"
         id={`${title.toLowerCase().replace(" ", "-")}-first-name`}
       />
       <Input
         type="text"
         value={address.lastName}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange("lastName", e.target.value)}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+          onChange("lastName", e.target.value)
+        }
         label="Last Name"
         id={`${title.toLowerCase().replace(" ", "-")}-last-name`}
       />
@@ -70,7 +74,9 @@ const AddressForm: React.FC<AddressFormProps> = ({
         <Input
           type="email"
           value={address.email || ""}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange("email", e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+            onChange("email", e.target.value)
+          }
           label="Email"
           id={`${title.toLowerCase().replace(" ", "-")}-email`}
         />
@@ -78,48 +84,62 @@ const AddressForm: React.FC<AddressFormProps> = ({
       <Input
         type="tel"
         value={address.phone}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange("phone", e.target.value)}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+          onChange("phone", e.target.value)
+        }
         label="Phone"
         id={`${title.toLowerCase().replace(" ", "-")}-phone`}
       />
       <Input
         type="text"
         value={address.street}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange("street", e.target.value)}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+          onChange("street", e.target.value)
+        }
         label="Street"
         id={`${title.toLowerCase().replace(" ", "-")}-street`}
       />
       <Input
         type="text"
         value={address.houseNumber}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange("houseNumber", e.target.value)}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+          onChange("houseNumber", e.target.value)
+        }
         label="House Number"
         id={`${title.toLowerCase().replace(" ", "-")}-house-number`}
       />
       <Input
         type="text"
         value={address.zip}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange("zip", e.target.value)}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+          onChange("zip", e.target.value)
+        }
         label="ZIP"
         id={`${title.toLowerCase().replace(" ", "-")}-zip`}
       />
       <Input
         type="text"
         value={address.city}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange("city", e.target.value)}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+          onChange("city", e.target.value)
+        }
         label="City"
         id={`${title.toLowerCase().replace(" ", "-")}-city`}
       />
       <Input
         type="text"
         value={address.state}
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange("state", e.target.value)}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+          onChange("state", e.target.value)
+        }
         label="State"
         id={`${title.toLowerCase().replace(" ", "-")}-state`}
       />
       <Select
         value={address.country}
-        onChange={(e: React.ChangeEvent<HTMLSelectElement>) => onChange("country", e.target.value)}
+        onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+          onChange("country", e.target.value)
+        }
         options={countries}
         label="Country"
         id={`${title.toLowerCase().replace(" ", "-")}-country`}

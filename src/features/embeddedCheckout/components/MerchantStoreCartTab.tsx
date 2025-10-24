@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { useConfigurationStore } from "../store/configurationStore";
-import { useCheckoutStore } from "../store/checkoutStore";
-import { buildListSessionUpdates } from "../utils/checkoutUtils";
-import { CURRENCY_OPTIONS } from "../../../constants";
-import Input from "../../../components/ui/Input";
-import Select from "../../../components/ui/Select";
-import Button from "../../../components/ui/Button";
+import { useConfigurationStore } from "@/features/embeddedCheckout/store/configurationStore";
+import { useCheckoutStore } from "@/features/embeddedCheckout/store/checkoutStore";
+import { buildListSessionUpdates } from "@/features/embeddedCheckout/utils/checkoutUtils";
+import { CURRENCY_OPTIONS } from "@/constants";
+import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
+import Button from "@/components/ui/Button";
 
 const MerchantStoreCartTab: React.FC = () => {
   const {

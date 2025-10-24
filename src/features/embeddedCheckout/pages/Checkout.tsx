@@ -1,12 +1,12 @@
-import DemoCardNumbers from "../components/DemoCardNumbers";
-import ConfigurationPanel from "../components/ConfigurationPanel";
-import PaymentMethodsSection from "../components/PaymentMethodsSection";
-import ShoppingCartSection from "../components/ShoppingCartSection";
-import { useInitSession } from "../hooks/useInitSession";
-import { useInitCheckout } from "../hooks/useInitCheckout";
-import { usePaymentMethods } from "../hooks/usePaymentMethods";
-import { useConfigurationStore } from "../store/configurationStore";
-import Link from "../../../components/ui/Link";
+import DemoCardNumbers from "@/features/embeddedCheckout/components/DemoCardNumbers";
+import ConfigurationPanel from "@/features/embeddedCheckout/components/ConfigurationPanel";
+import PaymentMethodsSection from "@/features/embeddedCheckout/components/PaymentMethodsSection";
+import ShoppingCartSection from "@/features/embeddedCheckout/components/ShoppingCartSection";
+import { useInitSession } from "@/features/embeddedCheckout/hooks/useInitSession";
+import { useInitCheckout } from "@/features/embeddedCheckout/hooks/useInitCheckout";
+import { usePaymentMethods } from "@/features/embeddedCheckout/hooks/usePaymentMethods";
+import { useConfigurationStore } from "@/features/embeddedCheckout/store/configurationStore";
+import Link from "@/components/ui/Link";
 
 const Checkout = () => {
   const { listSessionData } = useInitSession();

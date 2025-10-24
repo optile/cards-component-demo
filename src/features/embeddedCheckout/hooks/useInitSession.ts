@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { useCheckoutStore } from "../store/checkoutStore";
+import { useCheckoutStore } from "@/features/embeddedCheckout/store/checkoutStore";
 
 export const useInitSession = () => {
   const { listSessionData, sessionLoading, sessionError, initSession } =

@@ -1,5 +1,5 @@
-import type { PaymentMethod } from "../types/checkout";
-import Button from "../../../components/ui/Button";
+import type { PaymentMethod } from "@/features/embeddedCheckout/types/checkout";
+import Button from "@/components/ui/Button";
 
 interface PaymentMethodsSectionProps {
   availableMethods: PaymentMethod[];

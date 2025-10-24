@@ -1,8 +1,8 @@
 import { create } from "zustand";
-import { CheckoutApiService } from "../../../services/checkoutApi";
-import { PayoneerSDKUtils } from "../utils/payoneerSdk";
+import { CheckoutApiService } from "@/services/checkoutApi";
+import { PayoneerSDKUtils } from "@/features/embeddedCheckout/utils/payoneerSdk";
 import { useConfigurationStore } from "./configurationStore";
-import { buildListSessionUpdates } from "../utils/checkoutUtils";
+import { buildListSessionUpdates } from "@/features/embeddedCheckout/utils/checkoutUtils";
 import { persist, createJSONStorage } from "zustand/middleware";
 
 import type {
@@ -13,8 +13,8 @@ import type {
   ListSessionRequest,
   CheckoutInstanceConfig,
   ComponentListDiff,
-} from "../types/checkout";
-import hashStorage from "../../../utils/urlHashStorage";
+} from "@/features/embeddedCheckout/types/checkout";
+import hashStorage from "@/utils/urlHashStorage";
 
 interface CheckoutState {
   // Session state

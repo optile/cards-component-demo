@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { CheckoutApiService } from "../../../services/checkoutApi";
-import { buildListSessionUpdates } from "../../embeddedCheckout/utils/checkoutUtils";
-import { INTEGRATION_TYPE } from "../../embeddedCheckout/types/checkout";
-import { getHostedPaymentPageUrl } from "../constants/hostedPaymentConfig";
-import type { ListSessionRequest } from "../../embeddedCheckout/types/checkout";
-import type { HostedPaymentFlowState } from "../types/hostedPayment";
+import { CheckoutApiService } from "@/services/checkoutApi";
+import { buildListSessionUpdates } from "@/features/embeddedCheckout/utils/checkoutUtils";
+import { INTEGRATION_TYPE } from "@/features/embeddedCheckout/types/checkout";
+import { getHostedPaymentPageUrl } from "@/features/hostedCheckout/constants/hostedPaymentConfig";
+import type { ListSessionRequest } from "@/features/embeddedCheckout/types/checkout";
+import type { HostedPaymentFlowState } from "@/features/hostedCheckout/types/hostedPayment";
 import type {
   MerchantCart,
   BillingAddress,

@@ -1,16 +1,19 @@
 import React from "react";
-import Checkbox from "../../../components/ui/Checkbox";
-import Select from "../../../components/ui/Select";
-import InfoTooltip from "../../../components/ui/InfoTooltip";
-import Input from "../../../components/ui/Input";
+import Checkbox from "@/components/ui/Checkbox";
+import Select from "@/components/ui/Select";
+import InfoTooltip from "@/components/ui/InfoTooltip";
+import Input from "@/components/ui/Input";
 import {
   LOG_LEVEL_OPTIONS,
   PROCEED_OPTIONS,
   CALLBACK_DESCRIPTIONS,
   CALLBACK_DOCUMENTATION_LINKS,
-} from "../constants/callbacks";
-import type { CallbackName, CallbackConfig } from "../types/callbacks";
-import ExternalLink from "../../../components/ui/ExternalLink";
+} from "@/features/embeddedCheckout/constants/callbacks";
+import type {
+  CallbackName,
+  CallbackConfig,
+} from "@/features/embeddedCheckout/types/callbacks";
+import ExternalLink from "@/components/ui/ExternalLink";
 
 interface CallbackConfigRowProps {
   callbackName: CallbackName;

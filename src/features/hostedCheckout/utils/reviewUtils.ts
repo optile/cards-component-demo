@@ -1,4 +1,4 @@
-import type { BillingAddress, ShippingAddress } from "../../../types/merchant";
+import type { BillingAddress, ShippingAddress } from "@/types/merchant";
 
 /**
  * Format currency amount with proper locale and currency symbol

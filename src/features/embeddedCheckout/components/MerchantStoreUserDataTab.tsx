@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { useConfigurationStore } from "../store/configurationStore";
-import { useCheckoutStore } from "../store/checkoutStore";
-import { buildListSessionUpdates } from "../utils/checkoutUtils";
+import { useConfigurationStore } from "@/features/embeddedCheckout/store/configurationStore";
+import { useCheckoutStore } from "@/features/embeddedCheckout/store/checkoutStore";
+import { buildListSessionUpdates } from "@/features/embeddedCheckout/utils/checkoutUtils";
 import AddressForm, { type Address } from "./AddressForm";
-import Checkbox from "../../../components/ui/Checkbox";
-import Button from "../../../components/ui/Button";
+import Checkbox from "@/components/ui/Checkbox";
+import Button from "@/components/ui/Button";
 
 const MerchantStoreUserDataTab: React.FC = () => {
   const {

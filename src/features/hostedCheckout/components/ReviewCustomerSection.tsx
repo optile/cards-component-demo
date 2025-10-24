@@ -1,7 +1,10 @@
 import React from "react";
-import { formatAddress, formatFullName } from "../utils/reviewUtils";
-import type { BillingAddress, ShippingAddress } from "../../../types/merchant";
-import type { ReviewSectionProps } from "../types/hostedPayment";
+import {
+  formatAddress,
+  formatFullName,
+} from "@/features/hostedCheckout/utils/reviewUtils";
+import type { BillingAddress, ShippingAddress } from "@/types/merchant";
+import type { ReviewSectionProps } from "@/features/hostedCheckout/types/hostedPayment";
 
 interface ReviewCustomerSectionProps extends ReviewSectionProps {
   billingAddress: BillingAddress;

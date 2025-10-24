@@ -1,6 +1,9 @@
-import { getApiEndpoints } from "../constants/checkout";
-import { useCheckoutStore } from "../store/checkoutStore";
-import type { CheckoutInstance, ComponentListDiff } from "../types/checkout";
+import { getApiEndpoints } from "@/features/embeddedCheckout/constants/checkout";
+import { useCheckoutStore } from "@/features/embeddedCheckout/store/checkoutStore";
+import type {
+  CheckoutInstance,
+  ComponentListDiff,
+} from "@/features/embeddedCheckout/types/checkout";
 
 export class PayoneerSDKUtils {
   private static isSDKLoaded(): boolean {

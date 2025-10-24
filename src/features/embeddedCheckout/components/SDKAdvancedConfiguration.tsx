@@ -1,11 +1,14 @@
 import React, { useEffect } from "react";
-import { CALLBACK_CATEGORIES } from "../constants/callbacks";
-import { useCallbackStore } from "../store/callbackStore";
-import { useCheckoutStore } from "../store/checkoutStore";
-import type { CallbackConfig, CallbackName } from "../types/callbacks";
-import Button from "../../../components/ui/Button";
+import { CALLBACK_CATEGORIES } from "@/features/embeddedCheckout/constants/callbacks";
+import { useCallbackStore } from "@/features/embeddedCheckout/store/callbackStore";
+import { useCheckoutStore } from "@/features/embeddedCheckout/store/checkoutStore";
+import type {
+  CallbackConfig,
+  CallbackName,
+} from "@/features/embeddedCheckout/types/callbacks";
+import Button from "@/components/ui/Button";
 import CallbackConfigRow from "./CallbackConfigRow";
-import ExternalLink from "../../../components/ui/ExternalLink";
+import ExternalLink from "@/components/ui/ExternalLink";
 
 const SDKAdvancedConfiguration: React.FC = () => {
   const { checkout, checkoutLoading, checkoutError } = useCheckoutStore();

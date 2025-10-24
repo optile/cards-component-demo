@@ -1,8 +1,8 @@
 import { useEffect } from "react";
-import { useCheckoutStore } from "../store/checkoutStore";
+import { useCheckoutStore } from "@/features/embeddedCheckout/store/checkoutStore";
 import { useCheckoutUI } from "./useCheckoutUI";
 
-import type { CheckoutInstance } from "../types/checkout";
+import type { CheckoutInstance } from "@/features/embeddedCheckout/types/checkout";
 
 export const usePaymentMethods = (checkout: CheckoutInstance | null) => {
   const {

@@ -1,7 +1,7 @@
 import React from "react";
-import { formatCurrency } from "../utils/reviewUtils";
-import type { MerchantCart } from "../../../types/merchant";
-import type { ReviewSectionProps } from "../types/hostedPayment";
+import { formatCurrency } from "@/features/hostedCheckout/utils/reviewUtils";
+import type { MerchantCart } from "@/types/merchant";
+import type { ReviewSectionProps } from "@/features/hostedCheckout/types/hostedPayment";
 
 interface ReviewCartSectionProps extends ReviewSectionProps {
   merchantCart: MerchantCart;

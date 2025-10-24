@@ -1,8 +1,8 @@
 import React from "react";
-import type { StepComponentProps } from "../../../components/ui/MultiStepper";
-import Button from "../../../components/ui/Button";
-import { useHostedConfigurationStore } from "../store/hostedConfigurationStore";
-import { createDetailedEnvironmentOptions } from "../../../utils";
+import type { StepComponentProps } from "@/components/ui/MultiStepper";
+import Button from "@/components/ui/Button";
+import { useHostedConfigurationStore } from "@/features/hostedCheckout/store/hostedConfigurationStore";
+import { createDetailedEnvironmentOptions } from "@/utils";
 
 const ChooseEnvironmentStep: React.FC<StepComponentProps> = ({
   goToNext,
@@ -40,7 +40,9 @@ const ChooseEnvironmentStep: React.FC<StepComponentProps> = ({
               value={environment.value}
               className="mr-3"
               checked={env === environment.value}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleEnvironmentChange(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                handleEnvironmentChange(e.target.value)
+              }
             />
             <div>
               <span className="font-semibold">{environment.title}</span>

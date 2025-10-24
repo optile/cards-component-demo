@@ -1,4 +1,4 @@
-import { CURRENCY_OPTIONS } from "../constants/currencies";
+import { CURRENCY_OPTIONS } from "@/constants/currencies";
 
 /**
  * Get currency symbol by currency code

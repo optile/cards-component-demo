@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useCheckoutStore } from "../store/checkoutStore";
+import { useCheckoutStore } from "@/features/embeddedCheckout/store/checkoutStore";
 
-import type { ListSessionResponse } from "../types/checkout";
+import type { ListSessionResponse } from "@/features/embeddedCheckout/types/checkout";
 
 export const useInitCheckout = (
   listSessionData: ListSessionResponse | null

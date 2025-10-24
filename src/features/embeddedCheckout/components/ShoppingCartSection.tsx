@@ -1,4 +1,4 @@
-import { getCurrencySymbol } from "../utils/checkoutUtils";
+import { getCurrencySymbol } from "@/features/embeddedCheckout/utils/checkoutUtils";
 
 interface ShoppingCartSectionProps {
   itemName: string;

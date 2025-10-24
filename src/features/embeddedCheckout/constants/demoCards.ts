@@ -1,4 +1,4 @@
-import type { CardCategory } from "../types/demoCards";
+import type { CardCategory } from "@/features/embeddedCheckout/types/demoCards";
 
 export const DEMO_CARD_CATEGORIES: CardCategory[] = [
   {

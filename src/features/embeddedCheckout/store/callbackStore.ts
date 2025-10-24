@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { useCheckoutStore } from "./checkoutStore";
-import { DEFAULT_CALLBACK_CONFIGS } from "../types";
+import { DEFAULT_CALLBACK_CONFIGS } from "@/features/embeddedCheckout/types";
 import type {
   CallbackStoreState,
   CallbackName,

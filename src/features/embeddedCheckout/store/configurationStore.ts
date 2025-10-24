@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import hashStorage from "../../../utils/urlHashStorage";
+import hashStorage from "@/utils/urlHashStorage";
 import type {
   BillingAddress,
   MerchantCart,

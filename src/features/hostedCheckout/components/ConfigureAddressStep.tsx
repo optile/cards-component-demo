@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
-import type { StepComponentProps } from "../../../components/ui/MultiStepper";
-import Button from "../../../components/ui/Button";
-import AddressForm, { type Address } from "../../embeddedCheckout/components/AddressForm";
-import Checkbox from "../../../components/ui/Checkbox";
-import { useHostedConfigurationStore } from "../store/hostedConfigurationStore";
+import type { StepComponentProps } from "@/components/ui/MultiStepper";
+import Button from "@/components/ui/Button";
+import AddressForm, {
+  type Address,
+} from "@/features/embeddedCheckout/components/AddressForm";
+import Checkbox from "@/components/ui/Checkbox";
+import { useHostedConfigurationStore } from "@/features/hostedCheckout/store/hostedConfigurationStore";
 
 const ConfigureAddressStep: React.FC<StepComponentProps> = ({
   goToNext,
