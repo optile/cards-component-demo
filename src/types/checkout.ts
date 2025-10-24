@@ -62,7 +62,13 @@ export interface ListSessionRequest {
 export interface ListSessionResponse {
   id: string;
   transactionId: string;
+  url: string;
   [key: string]: unknown;
+}
+
+export enum INTEGRATION_TYPE {
+  EMBEDDED = "EMBEDDED",
+  HOSTED = "HOSTED",
 }
 
 // Type for the Payoneer global object

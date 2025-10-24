@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Divisions } from "../../constants/checkout";
 import { useCheckoutStore } from "../../store/checkoutStore";
+import { createEnvironmentOptions } from "../../utils";
 import Button from "../ui/Button";
 import Checkbox from "../ui/Checkbox";
 import Select from "../ui/Select";
@@ -40,10 +40,7 @@ const SDKBaseConfiguration: React.FC = () => {
     });
   };
 
-  const envOptions = Object.keys(Divisions).map((envKey) => ({
-    value: envKey,
-    label: envKey,
-  }));
+  const envOptions = createEnvironmentOptions();
 
   return (
     <div className="flex flex-col gap-4">
