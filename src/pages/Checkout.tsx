@@ -6,6 +6,7 @@ import { useInitSession } from "../hooks/useInitSession";
 import { useInitCheckout } from "../hooks/useInitCheckout";
 import { usePaymentMethods } from "../hooks/usePaymentMethods";
 import { useConfigurationStore } from "../store/configurationStore";
+import Link from "../components/ui/Link";
 
 const Checkout = () => {
   const { listSessionData } = useInitSession();
@@ -27,6 +28,9 @@ const Checkout = () => {
 
   return (
     <div className="bg-gray-50 min-h-screen font-sans">
+      <Link to="/" variant="secondary" className="m-4 z-50 top-0 left-0">
+        &larr; Back to Flow Selection
+      </Link>
       <div className="mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-center mb-8">Checkout page</h1>
         <ConfigurationPanel />

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useConfigurationStore } from "../../store/configurationStore";
 import { useCheckoutStore } from "../../store/checkoutStore";
 import { buildListSessionUpdates } from "../../utils/checkoutUtils";
+import { CURRENCY_OPTIONS } from "../../constants";
 import Input from "../ui/Input";
 import Select from "../ui/Select";
 import Button from "../ui/Button";
@@ -75,14 +76,7 @@ const MerchantStoreCartTab: React.FC = () => {
     setLocalCurrency(currency);
   };
 
-  const currencies = [
-    { value: "USD", label: "USD" },
-    { value: "EUR", label: "EUR" },
-    { value: "GBP", label: "GBP" },
-    { value: "CNY", label: "Chinese Yuan" },
-    { value: "JPY", label: "Japanese Yen" },
-    { value: "RUB", label: "Russian Ruble" },
-  ];
+  const currencies = CURRENCY_OPTIONS;
 
   return (
     <div>
