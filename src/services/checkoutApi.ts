@@ -42,15 +42,4 @@ export class CheckoutApiService {
       body: JSON.stringify({ ...listRequest }),
     });
   }
-
-  static async getListSession(listId: string, env: string) {
-    const API_ENDPOINTS = getApiEndpoints(env);
-    return fetch(`${API_ENDPOINTS.GET_LIST_SESSION}/${listId}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-    });
-  }
 }
