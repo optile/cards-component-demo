@@ -1,8 +1,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Header from "./components/global/Header";
-import Checkout from "./pages/Checkout";
 import ChooseFlow from "./pages/ChooseFlow";
-import HostedCheckout from "./pages/HostedCheckout";
+import { Checkout } from "./features/embeddedCheckout";
+import { HostedCheckout } from "./features/hostedCheckout";
 
 function App() {
   return (
