@@ -19,7 +19,7 @@ function App() {
     const sdk = new HoneycombWebSDK({
       // endpoint: "otel-collector.dev.oscato.com", // crashing the app  if uncommented (Configuration: Could not parse user-provided export URL: 'otel-collector.dev.oscato.com/v1/traces')
       debug: true,
-      serviceName: "hosted_v6",
+      serviceName: "demo_page",
       instrumentations: [
         getWebAutoInstrumentations({
           "@opentelemetry/instrumentation-xml-http-request": configDefaults,
