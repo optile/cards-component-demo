@@ -1,8 +1,8 @@
 import type {
   ListSessionRequest,
   ListSessionResponse,
-} from "../types/checkout";
-import { getApiEndpoints } from "../constants/checkout";
+} from "@/features/embeddedCheckout/types/checkout";
+import { getApiEndpoints } from "@/features/embeddedCheckout/constants/checkout";
 
 export class CheckoutApiService {
   static async generateListSession(
