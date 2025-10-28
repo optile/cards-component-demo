@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HashRouter as Router, Routes, Route } from "react-router-dom";
 import Header from "@/components/global/Header";
 import ChooseFlow from "@/pages/ChooseFlow";
 import Checkout from "@/features/embeddedCheckout/pages/Checkout";
@@ -6,7 +6,7 @@ import HostedCheckout from "@/features/hostedCheckout/pages/HostedCheckout";
 
 function App() {
   return (
-    <BrowserRouter basename="/cards-component-demo">
+    <Router basename="/">
       <div className="min-h-screen bg-white dark:bg-gray-800">
         <Header />
         <main className="flex justify-center p-4">
@@ -17,7 +17,7 @@ function App() {
           </Routes>
         </main>
       </div>
-    </BrowserRouter>
+    </Router>
   );
 }
 
