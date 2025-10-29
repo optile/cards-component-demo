@@ -3,8 +3,38 @@ import Header from "@/components/global/Header";
 import ChooseFlow from "@/pages/ChooseFlow";
 import Checkout from "@/features/embeddedCheckout/pages/Checkout";
 import HostedCheckout from "@/features/hostedCheckout/pages/HostedCheckout";
+import { getWebAutoInstrumentations } from "@opentelemetry/auto-instrumentations-web";
+import { HoneycombWebSDK } from "@honeycombio/opentelemetry-web";
+import { useLayoutEffect } from "react";
+
+const configDefaults = {
+  ignoreNetworkEvents: true,
+  // propagateTraceHeaderCorsUrls: [
+  // /.+/g, // Regex to match your backend URLs. Update to the domains you wish to include.
+  // ]
+};
 
 function App() {
+  useLayoutEffect(() => {
+    try {
+      const sdk = new HoneycombWebSDK({
+        endpoint: "otel-collector.dev.oscato.com",
+        debug: true,
+        serviceName: "demo_page",
+        instrumentations: [
+          getWebAutoInstrumentations({
+            "@opentelemetry/instrumentation-xml-http-request": configDefaults,
+            "@opentelemetry/instrumentation-fetch": configDefaults,
+            "@opentelemetry/instrumentation-document-load": configDefaults,
+          }),
+        ],
+      });
+      sdk.start();
+    } catch (error) {
+      console.warn("Error initializing Honeycomb:", error);
+    }
+  }, []);
+
   return (
     <Router basename="/">
       <div className="min-h-screen bg-white dark:bg-gray-800">
