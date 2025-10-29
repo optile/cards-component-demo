@@ -16,19 +16,23 @@ const configDefaults = {
 
 function App() {
   useLayoutEffect(() => {
-    const sdk = new HoneycombWebSDK({
-      // endpoint: "otel-collector.dev.oscato.com", // crashing the app  if uncommented (Configuration: Could not parse user-provided export URL: 'otel-collector.dev.oscato.com/v1/traces')
-      debug: true,
-      serviceName: "demo_page",
-      instrumentations: [
-        getWebAutoInstrumentations({
-          "@opentelemetry/instrumentation-xml-http-request": configDefaults,
-          "@opentelemetry/instrumentation-fetch": configDefaults,
-          "@opentelemetry/instrumentation-document-load": configDefaults,
-        }),
-      ],
-    });
-    sdk.start();
+    try {
+      const sdk = new HoneycombWebSDK({
+        endpoint: "otel-collector.dev.oscato.com",
+        debug: true,
+        serviceName: "demo_page",
+        instrumentations: [
+          getWebAutoInstrumentations({
+            "@opentelemetry/instrumentation-xml-http-request": configDefaults,
+            "@opentelemetry/instrumentation-fetch": configDefaults,
+            "@opentelemetry/instrumentation-document-load": configDefaults,
+          }),
+        ],
+      });
+      sdk.start();
+    } catch (error) {
+      console.warn("Error initializing Honeycomb:", error);
+    }
   }, []);
 
   return (
