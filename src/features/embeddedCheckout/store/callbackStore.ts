@@ -1,11 +1,12 @@
-import { create } from "zustand";
-import { useCheckoutStore } from "./checkoutStore";
 import { DEFAULT_CALLBACK_CONFIGS } from "@/features/embeddedCheckout/types";
+import { create } from "zustand";
 import type {
-  CallbackStoreState,
-  CallbackName,
   CallbackConfig,
+  CallbackName,
+  CallbackStoreState,
 } from "../types";
+import { createCallbackConfigs } from "../utils/callbackUtils";
+import { useCheckoutStore } from "./checkoutStore";
 
 // Local storage key for persisting callback configurations
 
@@ -86,31 +87,7 @@ export const useCallbackStore = create<CallbackStoreState>((set, get) => ({
   // Method to prepare SDK-compatible callback configurations
   prepareSDKCallbacks: (): Record<string, unknown> => {
     const { configs } = get();
-    const callbackConfig: Record<string, unknown> = {};
-
-    Object.entries(configs).forEach(([callbackName, config]) => {
-      if (config.enabled) {
-        // Create the callback handler using the same pattern as index.html
-        callbackConfig[callbackName] = (...args: unknown[]) => {
-          const message = config.customMessage || `${callbackName} called`;
-
-          // Log based on log level
-          const logMethod =
-            config.logLevel === "warn"
-              ? console.warn
-              : config.logLevel === "error"
-              ? console.error
-              : console.log;
-          logMethod(`\n\n ${callbackName} - ${message} \n`);
-          logMethod([...args]);
-          logMethod(
-            `\n ${callbackName} - Returning: ${config.shouldProceed} \n\n`
-          );
-
-          return config.shouldProceed;
-        };
-      }
-    });
+    const callbackConfig = createCallbackConfigs(configs);
 
     return callbackConfig;
   },
