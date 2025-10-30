@@ -7,6 +7,7 @@ import { useInitCheckout } from "@/features/embeddedCheckout/hooks/useInitChecko
 import { usePaymentMethods } from "@/features/embeddedCheckout/hooks/usePaymentMethods";
 import { useConfigurationStore } from "@/features/embeddedCheckout/store/configurationStore";
 import Link from "@/components/ui/Link";
+import ChargeFlowEventLogger from "../components/ChargeFlowEventLogger";
 
 const Checkout = () => {
   const { listSessionData } = useInitSession();
@@ -58,6 +59,7 @@ const Checkout = () => {
         </div>
       </div>
       <DemoCardNumbers />
+      <ChargeFlowEventLogger />
     </div>
   );
 };

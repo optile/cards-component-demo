@@ -9,6 +9,7 @@ import type {
 import Button from "@/components/ui/Button";
 import CallbackConfigRow from "./CallbackConfigRow";
 import ExternalLink from "@/components/ui/ExternalLink";
+import ChargeFlowVisualizer from "@/features/embeddedCheckout/components/ChargeFlowVisualizer";
 
 const SDKAdvancedConfiguration: React.FC = () => {
   const { checkout, checkoutLoading, checkoutError } = useCheckoutStore();
@@ -78,7 +79,7 @@ const SDKAdvancedConfiguration: React.FC = () => {
           </Button>
         </div>
       </div>
-
+      <ChargeFlowVisualizer />
       {/* Info banner */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
         <div className="flex items-start gap-2">
