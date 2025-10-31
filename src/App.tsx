@@ -18,7 +18,7 @@ function App() {
   useLayoutEffect(() => {
     try {
       const sdk = new HoneycombWebSDK({
-        endpoint: "otel-collector.dev.oscato.com",
+        endpoint: "https://otel-collector.dev.oscato.com",
         debug: true,
         serviceName: "demo_page",
         instrumentations: [
