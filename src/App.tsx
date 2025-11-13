@@ -6,6 +6,7 @@ import HostedCheckout from "@/features/hostedCheckout/pages/HostedCheckout";
 import { getWebAutoInstrumentations } from "@opentelemetry/auto-instrumentations-web";
 import { HoneycombWebSDK } from "@honeycombio/opentelemetry-web";
 import { useLayoutEffect } from "react";
+import ScrollToTop from "./components/global/ScrollToTop";
 
 const configDefaults = {
   ignoreNetworkEvents: true,
@@ -38,6 +39,7 @@ function App() {
   return (
     <Router basename="/cards-component-demo">
       <div className="min-h-screen relative bg-white dark:bg-gray-800">
+        <ScrollToTop />
         <Header />
         <main className="flex justify-center p-4 mt-[60px] container mx-auto">
           <Routes>
