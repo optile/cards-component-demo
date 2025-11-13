@@ -37,9 +37,9 @@ function App() {
 
   return (
     <Router basename="/cards-component-demo">
-      <div className="min-h-screen bg-white dark:bg-gray-800">
+      <div className="min-h-screen relative bg-white dark:bg-gray-800">
         <Header />
-        <main className="flex justify-center p-4">
+        <main className="flex justify-center p-4 mt-[60px] container mx-auto">
           <Routes>
             <Route path="/" element={<ChooseFlow />} />
             <Route path="/embedded" element={<Checkout />} />

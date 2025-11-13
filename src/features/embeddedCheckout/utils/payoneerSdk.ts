@@ -2,6 +2,7 @@ import { getApiEndpoints } from "@/features/embeddedCheckout/constants/checkout"
 import { useCheckoutStore } from "@/features/embeddedCheckout/store/checkoutStore";
 import type {
   CheckoutInstance,
+  CheckoutWebMetaInfo,
   ComponentListDiff,
 } from "@/features/embeddedCheckout/types/checkout";
 
@@ -78,5 +79,22 @@ export class PayoneerSDKUtils {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return await window.Payoneer.CheckoutWeb(config as any);
+  }
+
+  static getCheckoutMetaInfo(env: string): Promise<CheckoutWebMetaInfo> {
+    return new Promise((resolve, reject) => {
+      const API_ENDPOINTS = getApiEndpoints(env);
+      fetch(API_ENDPOINTS.META_INFO)
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(
+              `Failed to fetch meta info: ${response.status} ${response.statusText}`
+            );
+          }
+          return response.json();
+        })
+        .then((data) => resolve(data))
+        .catch((error) => reject(error));
+    });
   }
 }

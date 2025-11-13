@@ -89,3 +89,14 @@ export interface ComponentListDiff {
 }
 
 export declare const Payoneer: typeof window.Payoneer;
+export interface CheckoutWebMetaInfo {
+  "checkout-web": CheckoutWebVariant[];
+}
+
+interface CheckoutWebVariant {
+  src: string;
+  version: string;
+  integrity: string;
+  isMinified: boolean;
+  isVersioned: boolean;
+}
