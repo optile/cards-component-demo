@@ -6,4 +6,5 @@ export const Divisions = {
 export const getApiEndpoints = (env: string) => ({
   LIST_SESSION: `https://api.${env}.oscato.com/checkout/session`,
   SDK_URL: `https://resources.${env}.oscato.com/web/libraries/checkout-web/umd/checkout-web.min.js`,
+  META_INFO: `https://resources.${env}.oscato.com/web/libraries/checkout-web/meta-info.json`,
 });

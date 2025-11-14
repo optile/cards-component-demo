@@ -2,7 +2,10 @@ import { create } from "zustand";
 import { CheckoutApiService } from "@/services/checkoutApi";
 import { PayoneerSDKUtils } from "@/features/embeddedCheckout/utils/payoneerSdk";
 import { useConfigurationStore } from "./configurationStore";
-import { buildListSessionUpdates } from "@/features/embeddedCheckout/utils/checkoutUtils";
+import {
+  buildListSessionUpdates,
+  extractSdkVersionFromMetaInfo,
+} from "@/features/embeddedCheckout/utils/checkoutUtils";
 import { persist, createJSONStorage } from "zustand/middleware";
 
 import type {
@@ -29,6 +32,7 @@ interface CheckoutState {
   checkoutError: string | null;
   isCheckoutInitialized: boolean;
   env: string; // New: Current environment
+  version: string; // New: SDK version
   preload: string[]; // New: Preload array
   isEnvChanging: boolean; // New: Flag to prevent updates during env change
   refetchListBeforeCharge: boolean; // New: Toggle for refetching list before charge
@@ -82,6 +86,7 @@ export const useCheckoutStore = create<CheckoutState>()(
       checkoutError: null,
       isCheckoutInitialized: false,
       env: "sandbox",
+      version: "",
       preload: ["stripe:cards"], // Initialize preload
       isEnvChanging: false, // Initialize flag
       refetchListBeforeCharge: false, // Initialize refetch toggle
@@ -149,10 +154,16 @@ export const useCheckoutStore = create<CheckoutState>()(
             callbackConfigs
           );
 
+          const metaInfo = await PayoneerSDKUtils.getCheckoutMetaInfo(
+            get().env
+          );
+          const version = extractSdkVersionFromMetaInfo(metaInfo);
+
           set({
             checkout: checkoutInstance,
             checkoutError: null,
             isCheckoutInitialized: true,
+            version,
           });
         } catch (err) {
           const errorMessage =

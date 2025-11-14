@@ -5,7 +5,10 @@ import type {
   ShippingAddress,
   MerchantCart,
 } from "@/types/merchant";
-import { INTEGRATION_TYPE } from "@/features/embeddedCheckout/types/checkout";
+import {
+  INTEGRATION_TYPE,
+  type CheckoutWebMetaInfo,
+} from "@/features/embeddedCheckout/types/checkout";
 
 export const buildListSessionUpdates = (
   merchantCart: MerchantCart,
@@ -103,4 +106,12 @@ export const getCurrencySymbol = (curr: string) => {
     RUB: "₽",
   };
   return symbols[curr] || "$";
+};
+
+export const extractSdkVersionFromMetaInfo = (sdkMI: CheckoutWebMetaInfo) => {
+  const checkoutWebVariants = sdkMI["checkout-web"];
+  const minifiedVariant = checkoutWebVariants.find(
+    (variant) => variant.isMinified
+  );
+  return minifiedVariant ? minifiedVariant.version : "unknown";
 };

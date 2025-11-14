@@ -1,1 +1,20 @@
 @import "tailwindcss";
+
+@layer base {
+  /* Prevent overscrolling / bounce at scroll edges */
+  html,
+  body,
+  #root {
+    height: 100%;
+    @apply overscroll-none; /* stops scroll chaining and pull-to-refresh */
+  }
+
+  /* Use a dedicated scroll container for app content */
+  .app-scroll,
+  .main {
+    height: 100%;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch; /* smooth momentum on iOS */
+    @apply overscroll-contain;
+  }
+}
