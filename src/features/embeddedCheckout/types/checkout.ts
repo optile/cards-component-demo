@@ -57,6 +57,10 @@ export interface ListSessionRequest {
     birthday: string;
     email: string;
   };
+  products: Array<{
+    name: string;
+    amount: number;
+  }>;
 }
 
 export interface ListSessionResponse {
