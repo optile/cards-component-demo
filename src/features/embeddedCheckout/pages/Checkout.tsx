@@ -18,7 +18,7 @@ const Checkout = () => {
     payButtonType,
     primaryColor,
     primaryTextColor,
-    merchantCart: { amount, itemName, quantity, currency },
+    merchantCart: { products, currency },
   } = useConfigurationStore();
   const {
     activeNetwork,
@@ -80,10 +80,8 @@ const Checkout = () => {
           </div>
 
           <ShoppingCartSection
-            itemName={itemName}
-            quantity={quantity}
+            products={products}
             currency={currency}
-            amount={amount}
           />
         </div>
       </div>

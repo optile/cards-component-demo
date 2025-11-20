@@ -3,48 +3,35 @@ import { useConfigurationStore } from "@/features/embeddedCheckout/store/configu
 import { useCheckoutStore } from "@/features/embeddedCheckout/store/checkoutStore";
 import { buildListSessionUpdates } from "@/features/embeddedCheckout/utils/checkoutUtils";
 import { CURRENCY_OPTIONS } from "@/constants";
+import type { CartProduct } from "@/types/merchant";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 import Button from "@/components/ui/Button";
 
 const MerchantStoreCartTab: React.FC = () => {
   const {
-    merchantCart: { amount, itemName, quantity, currency },
+    merchantCart: { products, currency },
     setMerchantCart,
   } = useConfigurationStore();
   const { updateListSession, env, listSessionData } = useCheckoutStore();
-  const [localAmount, setLocalAmount] = useState(amount);
-  const [localItemName, setLocalItemName] = useState(itemName);
-  const [localQuantity, setLocalQuantity] = useState(quantity);
+  const [localProducts, setLocalProducts] = useState<CartProduct[]>(products);
   const [localCurrency, setLocalCurrency] = useState(currency);
 
   useEffect(() => {
-    setLocalAmount(amount);
-  }, [amount]);
-
-  useEffect(() => {
-    setLocalItemName(itemName);
-  }, [itemName]);
-
-  useEffect(() => {
-    setLocalQuantity(quantity);
-  }, [quantity]);
+    setLocalProducts(products);
+  }, [products]);
 
   useEffect(() => {
     setLocalCurrency(currency);
   }, [currency]);
 
   const hasChanges =
-    localAmount !== amount ||
-    localItemName !== itemName ||
-    localQuantity !== quantity ||
+    JSON.stringify(localProducts) !== JSON.stringify(products) ||
     localCurrency !== currency;
 
   const handleSave = async () => {
     setMerchantCart({
-      amount: localAmount,
-      itemName: localItemName,
-      quantity: localQuantity,
+      products: localProducts,
       currency: localCurrency,
     });
     if (!listSessionData) return;
@@ -52,9 +39,7 @@ const MerchantStoreCartTab: React.FC = () => {
       useConfigurationStore.getState();
     const updates = buildListSessionUpdates(
       {
-        amount: localAmount,
-        itemName: localItemName,
-        quantity: localQuantity,
+        products: localProducts,
         currency: localCurrency,
       },
       billingAddress,
@@ -70,38 +55,44 @@ const MerchantStoreCartTab: React.FC = () => {
   };
 
   const handleCancel = () => {
-    setLocalAmount(amount);
-    setLocalItemName(itemName);
-    setLocalQuantity(quantity);
+    setLocalProducts(products);
     setLocalCurrency(currency);
+  };
+
+  const handleAddProduct = () => {
+    setLocalProducts([
+      ...localProducts,
+      { name: "", price: 0, quantity: 1 },
+    ]);
+  };
+
+  const handleRemoveProduct = (index: number) => {
+    setLocalProducts(localProducts.filter((_, i) => i !== index));
+  };
+
+  const handleProductChange = (
+    index: number,
+    field: keyof CartProduct,
+    value: string | number
+  ) => {
+    setLocalProducts(
+      localProducts.map((product, i) =>
+        i === index ? { ...product, [field]: value } : product
+      )
+    );
+  };
+
+  const calculateTotal = () => {
+    return localProducts.reduce(
+      (total, product) => total + product.price * product.quantity,
+      0
+    );
   };
 
   const currencies = CURRENCY_OPTIONS;
 
   return (
     <div>
-      <div className="mb-4">
-        <Input
-          type="text"
-          value={localItemName}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setLocalItemName(e.target.value)
-          }
-          label="Item Name"
-          id="itemName"
-        />
-      </div>
-      <div className="mb-4">
-        <Input
-          type="number"
-          value={localAmount}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-            setLocalAmount(Number(e.target.value))
-          }
-          label="Amount"
-          id="amount"
-        />
-      </div>
       <div className="mb-4">
         <Select
           value={localCurrency}
@@ -113,6 +104,71 @@ const MerchantStoreCartTab: React.FC = () => {
           id="currency"
         />
       </div>
+
+      <div className="mb-4">
+        <h3 className="text-sm font-semibold mb-2">Products</h3>
+        {localProducts.map((product, index) => (
+          <div key={index} className="mb-4 p-4 border border-gray-300 rounded">
+            <div className="mb-2">
+              <Input
+                type="text"
+                value={product.name}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  handleProductChange(index, "name", e.target.value)
+                }
+                label="Product Name"
+                id={`product-name-${index}`}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <Input
+                type="number"
+                value={product.price}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  handleProductChange(index, "price", Number(e.target.value))
+                }
+                label="Price"
+                id={`product-price-${index}`}
+              />
+              <Input
+                type="number"
+                value={product.quantity}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  handleProductChange(index, "quantity", Number(e.target.value))
+                }
+                label="Quantity"
+                id={`product-quantity-${index}`}
+              />
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-600">
+                Line Total: {localCurrency} {(product.price * product.quantity).toFixed(2)}
+              </span>
+              {localProducts.length > 1 && (
+                <Button
+                  onClick={() => handleRemoveProduct(index)}
+                  variant="secondary"
+                >
+                  Remove
+                </Button>
+              )}
+            </div>
+          </div>
+        ))}
+        <Button onClick={handleAddProduct} variant="secondary" className="mb-4">
+          Add Product
+        </Button>
+      </div>
+
+      <div className="mb-4 p-4 bg-gray-100 rounded">
+        <div className="flex justify-between items-center">
+          <span className="font-semibold">Total Amount:</span>
+          <span className="text-lg font-bold">
+            {localCurrency} {calculateTotal().toFixed(2)}
+          </span>
+        </div>
+      </div>
+
       <div className="flex gap-2">
         <Button onClick={handleSave} disabled={!hasChanges} variant="primary">
           Save

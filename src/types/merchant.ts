@@ -16,9 +16,13 @@ export interface BillingAddress extends ShippingAddress {
   email: string;
 }
 
-export interface MerchantCart {
-  amount: number;
-  itemName: string;
+export interface CartProduct {
+  name: string;
+  price: number;
   quantity: number;
+}
+
+export interface MerchantCart {
+  products: CartProduct[];
   currency: string;
 }
