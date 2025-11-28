@@ -3,6 +3,7 @@ import type {
   BillingAddress,
   MerchantCart,
   ShippingAddress,
+  CartProduct,
 } from "../../../types/merchant";
 
 export enum CurrentStep {
@@ -22,19 +23,27 @@ interface HostedConfigurationStore {
   setCurrentStep?: (step: CurrentStep) => void;
   setEnv?: (env: string) => void;
   setMerchantCart?: (cart: Partial<MerchantCart>) => void;
+  addProduct?: (product: CartProduct) => void;
+  updateProduct?: (index: number, product: Partial<CartProduct>) => void;
+  removeProduct?: (index: number) => void;
   setBillingAddress?: (address: Partial<BillingAddress>) => void;
   setShippingAddress?: (address: Partial<ShippingAddress>) => void;
   setSameAddress?: (value: boolean) => void;
+  getTotalAmount?: () => number;
 }
 
 export const useHostedConfigurationStore = create<HostedConfigurationStore>()(
-  (set) => ({
+  (set, get) => ({
     currentStep: CurrentStep.CHOOSE_ENV,
     env: "sandbox",
     merchantCart: {
-      amount: 15,
-      itemName: "Sample Item",
-      quantity: 1,
+      products: [
+        {
+          name: "Sample Item",
+          price: 15,
+          quantity: 1,
+        },
+      ],
       currency: "USD",
     },
     billingAddress: {
@@ -72,6 +81,29 @@ export const useHostedConfigurationStore = create<HostedConfigurationStore>()(
       set((state) => ({
         merchantCart: { ...state.merchantCart, ...cart },
       })),
+    addProduct: (product: CartProduct) =>
+      set((state) => ({
+        merchantCart: {
+          ...state.merchantCart,
+          products: [...state.merchantCart.products, product],
+        },
+      })),
+    updateProduct: (index: number, product: Partial<CartProduct>) =>
+      set((state) => ({
+        merchantCart: {
+          ...state.merchantCart,
+          products: state.merchantCart.products.map((p, i) =>
+            i === index ? { ...p, ...product } : p
+          ),
+        },
+      })),
+    removeProduct: (index: number) =>
+      set((state) => ({
+        merchantCart: {
+          ...state.merchantCart,
+          products: state.merchantCart.products.filter((_, i) => i !== index),
+        },
+      })),
     setBillingAddress: (address: Partial<BillingAddress>) =>
       set((state) => ({
         billingAddress: { ...state.billingAddress, ...address },
@@ -81,5 +113,12 @@ export const useHostedConfigurationStore = create<HostedConfigurationStore>()(
         shippingAddress: { ...state.shippingAddress, ...address },
       })),
     setSameAddress: (value: boolean) => set({ sameAddress: value }),
+    getTotalAmount: () => {
+      const state = get();
+      return state.merchantCart.products.reduce(
+        (total, product) => total + product.price * product.quantity,
+        0
+      );
+    },
   })
 );

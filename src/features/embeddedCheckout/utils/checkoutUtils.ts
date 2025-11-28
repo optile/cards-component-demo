@@ -21,9 +21,21 @@ export const buildListSessionUpdates = (
   const isHosted = integrationType === INTEGRATION_TYPE.HOSTED;
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
 
+  // Calculate total amount from products
+  const totalAmount = merchantCart.products.reduce(
+    (total, product) => total + product.price * product.quantity,
+    0
+  );
+
+  // Map products to API format (name and amount where amount is the line total)
+  const products = merchantCart.products.map((product) => ({
+    name: product.name,
+    amount: product.price * product.quantity,
+  }));
+
   const request = {
     currency: merchantCart.currency,
-    amount: merchantCart.amount,
+    amount: totalAmount,
     country: billingAddress.country,
     division: Divisions[env as keyof typeof Divisions],
     customer: {
@@ -74,10 +86,11 @@ export const buildListSessionUpdates = (
     },
     integration: integrationType,
     payment: {
-      amount: merchantCart.amount,
+      amount: totalAmount,
       currency: merchantCart.currency,
       reference: `ref-${Date.now()}`,
     },
+    products,
     ...(isHosted && {
       callback: getCallbackUrls(baseUrl),
       style: {
