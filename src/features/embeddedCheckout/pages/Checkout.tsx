@@ -1,3 +1,5 @@
+import { useParams, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import DemoCardNumbers from "@/features/embeddedCheckout/components/DemoCardNumbers";
 import ConfigurationPanel from "@/features/embeddedCheckout/components/ConfigurationPanel";
 import PaymentMethodsSection from "@/features/embeddedCheckout/components/PaymentMethodsSection";
@@ -6,11 +8,26 @@ import { useInitSession } from "@/features/embeddedCheckout/hooks/useInitSession
 import { useInitCheckout } from "@/features/embeddedCheckout/hooks/useInitCheckout";
 import { usePaymentMethods } from "@/features/embeddedCheckout/hooks/usePaymentMethods";
 import { useConfigurationStore } from "@/features/embeddedCheckout/store/configurationStore";
-import Link from "@/components/ui/Link";
 import ChargeFlowEventLogger from "../components/ChargeFlowEventLogger";
 import { useCheckoutStore } from "../store/checkoutStore";
 
 const Checkout = () => {
+  const { env } = useParams<{ env: string }>();
+  const navigate = useNavigate();
+
+  // Validate and set environment from URL params
+  useEffect(() => {
+    if (!env || (env !== "sandbox" && env !== "checkout.integration")) {
+      console.error(`Invalid environment: ${env}. Redirecting to environment selection.`);
+      navigate("/embedded");
+      return;
+    }
+
+    // Set environment in store
+    useCheckoutStore.setState({ env });
+    console.log(`[Checkout] Environment set to: ${env}`);
+  }, [env, navigate]);
+
   const { listSessionData } = useInitSession();
   const { version } = useCheckoutStore();
   const { checkout } = useInitCheckout(listSessionData);
@@ -31,9 +48,12 @@ const Checkout = () => {
 
   return (
     <div className="bg-gray-50 min-h-screen font-sans">
-      <Link to="/" variant="secondary" className="m-4 z-50 top-0 left-0">
-        &larr; Back to Flow Selection
-      </Link>
+      <a
+        href="/cards-component-demo/embedded"
+        className="inline-block m-4 px-4 py-2 rounded-md bg-gray-600 text-white hover:bg-gray-700 no-underline"
+      >
+        &larr; Back to Environment Selection
+      </a>
       <div className="mx-auto px-4 py-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold">Checkout page</h1>
