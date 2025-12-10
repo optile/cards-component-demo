@@ -271,22 +271,19 @@ export const useCheckoutStore = create<CheckoutState>()(
         set({
           checkoutLoading: true,
           checkoutError: null,
-          isEnvChanging: true,
         });
 
         try {
-          // Update environment settings in store first
-          if (partialConfig.env) {
-            set({ env: partialConfig.env });
-          }
+          // Update settings in store
           if (partialConfig.preload) {
             set({ preload: partialConfig.preload });
           }
 
-          if (partialConfig.refetchListBeforeCharge)
+          if (partialConfig.refetchListBeforeCharge !== undefined) {
             set({
               refetchListBeforeCharge: partialConfig.refetchListBeforeCharge,
             });
+          }
 
           // For environment changes, we need a new session (unless manual list ID is set)
           if (partialConfig.env) {
@@ -316,20 +313,21 @@ export const useCheckoutStore = create<CheckoutState>()(
                 );
               set({ listSessionData: newListSession });
             }
+            set({ env: partialConfig.env });
           }
 
-          // Use dedicated recreate function to apply all changes
+          // Recreate checkout instance with new configuration
           await get().recreateCheckout();
 
-          set({ checkoutError: null, isEnvChanging: false });
+          set({ checkoutError: null });
           console.log("✅ SDK configuration updated successfully");
         } catch (err) {
           const errorMessage =
-            err instanceof Error ? err.message : "Failed to update environment";
+            err instanceof Error ? err.message : "Failed to update configuration";
           set({ checkoutError: errorMessage });
-          console.error("Failed to update environment:", err);
+          console.error("Failed to update configuration:", err);
         } finally {
-          set({ checkoutLoading: false, isEnvChanging: false }); // Reset flag
+          set({ checkoutLoading: false });
         }
       },
 
@@ -427,11 +425,11 @@ export const useCheckoutStore = create<CheckoutState>()(
           set({ checkoutLoading: false });
         }
       },
-      setComponenetsDiff: async (
+      setComponenetsDiff: (
         checkout: CheckoutInstance,
         componentListDiff: ComponentListDiff | null
       ) => {
-        const available = await checkout.availableDropInComponents();
+        const available = checkout.availableDropInComponents();
 
         useCheckoutStore.getState().setAvailableMethods(available);
 

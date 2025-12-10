@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Header from "@/components/global/Header";
 import ChooseFlow from "@/pages/ChooseFlow";
+import SelectEnvironment from "@/features/embeddedCheckout/pages/SelectEnvironment";
 import Checkout from "@/features/embeddedCheckout/pages/Checkout";
 import HostedCheckout from "@/features/hostedCheckout/pages/HostedCheckout";
 import { getWebAutoInstrumentations } from "@opentelemetry/auto-instrumentations-web";
@@ -44,7 +45,8 @@ function App() {
         <main className="flex justify-center p-4 mt-[60px] container mx-auto">
           <Routes>
             <Route path="/" element={<ChooseFlow />} />
-            <Route path="/embedded" element={<Checkout />} />
+            <Route path="/embedded" element={<SelectEnvironment />} />
+            <Route path="/embedded/:env" element={<Checkout />} />
             <Route path="/hosted" element={<HostedCheckout />} />
           </Routes>
         </main>

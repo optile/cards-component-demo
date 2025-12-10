@@ -38,7 +38,7 @@ export default function DemoCardNumbers() {
     return (
       <Button
         onClick={() => setOpen(true)}
-        className="fixed bottom-4 z-50 right-4 shadow-lg transition-colors"
+        className="fixed bottom-4 z-50 left-4 shadow-lg transition-colors"
         variant="primary"
       >
         Demo card numbers
@@ -49,7 +49,7 @@ export default function DemoCardNumbers() {
   return (
     <div
       ref={dialogRef}
-      className="fixed bottom-4 z-50 right-4 bg-white p-4 pt-0 rounded-lg shadow-lg w-[32rem] max-h-[500px] overflow-auto"
+      className="fixed bottom-4 z-50 left-4 bg-white p-4 pt-0 rounded-lg shadow-lg w-[32rem] max-h-[500px] overflow-auto"
       role="dialog"
       aria-label="Demo card numbers"
     >

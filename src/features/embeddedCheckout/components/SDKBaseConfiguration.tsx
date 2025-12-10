@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useCheckoutStore } from "@/features/embeddedCheckout/store/checkoutStore";
-import { createEnvironmentOptions } from "@/utils";
 import Button from "@/components/ui/Button";
 import Checkbox from "@/components/ui/Checkbox";
 import Select from "@/components/ui/Select";
@@ -9,6 +8,11 @@ import InfoTooltip from "@/components/ui/InfoTooltip";
 import ExternalLink from "@/components/ui/ExternalLink";
 import LocalModeToggle from "./LocalModeToggle";
 import type { ListSessionResponse } from "@/features/embeddedCheckout/types/checkout";
+
+const envOptions = [
+  { value: "sandbox", label: "Sandbox" },
+  { value: "production", label: "Production" },
+];
 
 const SDKBaseConfiguration: React.FC = () => {
   const {
@@ -21,18 +25,18 @@ const SDKBaseConfiguration: React.FC = () => {
     checkoutLoading,
     checkoutError,
   } = useCheckoutStore();
-  const [selectedEnv, setSelectedEnv] = useState(env);
   const [selectedRefetch, setSelectedRefetch] = useState(
     refetchListBeforeCharge
   );
   const [localManualListId, setLocalManualListId] = useState(
     manualListId || ""
   );
+  const [selectedEnv, setSelectedEnv] = useState(env);
 
   useEffect(() => {
-    setSelectedEnv(env);
     setSelectedRefetch(refetchListBeforeCharge);
     setLocalManualListId(manualListId || "");
+    setSelectedEnv(env);
   }, [env, refetchListBeforeCharge, manualListId]);
 
   const hasChanges =
@@ -85,8 +89,6 @@ const SDKBaseConfiguration: React.FC = () => {
       });
     }
   };
-
-  const envOptions = createEnvironmentOptions();
 
   return (
     <div className="flex flex-col gap-4">

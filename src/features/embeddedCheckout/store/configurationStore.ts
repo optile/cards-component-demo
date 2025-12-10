@@ -5,6 +5,7 @@ import type {
   BillingAddress,
   MerchantCart,
   ShippingAddress,
+  CartProduct,
 } from "../../../types/merchant";
 
 type PayButtonType = "default" | "custom";
@@ -21,21 +22,29 @@ interface ConfigurationState {
   setPrimaryColor: (color: string) => void;
   setPrimaryTextColor: (color: string) => void;
   setMerchantCart: (cart: Partial<MerchantCart>) => void;
+  addProduct: (product: CartProduct) => void;
+  updateProduct: (index: number, product: Partial<CartProduct>) => void;
+  removeProduct: (index: number) => void;
   setBillingAddress: (address: Partial<BillingAddress>) => void;
   setShippingAddress: (address: Partial<ShippingAddress>) => void;
   setSameAddress: (value: boolean) => void;
+  getTotalAmount: () => number;
 }
 
 export const useConfigurationStore = create<ConfigurationState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       payButtonType: "default",
       primaryColor: "#000000",
       primaryTextColor: "#ffffff",
       merchantCart: {
-        amount: 15,
-        itemName: "Sample Item",
-        quantity: 1,
+        products: [
+          {
+            name: "Sample Item",
+            price: 15,
+            quantity: 1,
+          },
+        ],
         currency: "USD",
       },
       billingAddress: {
@@ -72,6 +81,29 @@ export const useConfigurationStore = create<ConfigurationState>()(
       setPrimaryTextColor: (color) => set({ primaryTextColor: color }),
       setMerchantCart: (cart) =>
         set((state) => ({ merchantCart: { ...state.merchantCart, ...cart } })),
+      addProduct: (product) =>
+        set((state) => ({
+          merchantCart: {
+            ...state.merchantCart,
+            products: [...state.merchantCart.products, product],
+          },
+        })),
+      updateProduct: (index, product) =>
+        set((state) => ({
+          merchantCart: {
+            ...state.merchantCart,
+            products: state.merchantCart.products.map((p, i) =>
+              i === index ? { ...p, ...product } : p
+            ),
+          },
+        })),
+      removeProduct: (index) =>
+        set((state) => ({
+          merchantCart: {
+            ...state.merchantCart,
+            products: state.merchantCart.products.filter((_, i) => i !== index),
+          },
+        })),
       setBillingAddress: (address) =>
         set((state) => ({
           billingAddress: { ...state.billingAddress, ...address },
@@ -81,15 +113,20 @@ export const useConfigurationStore = create<ConfigurationState>()(
           shippingAddress: { ...state.shippingAddress, ...address },
         })),
       setSameAddress: (value) => set({ sameAddress: value }),
+      getTotalAmount: () => {
+        const state = get();
+        return state.merchantCart.products.reduce(
+          (total, product) => total + product.price * product.quantity,
+          0
+        );
+      },
     }),
     {
       name: "configuration-storage",
       storage: createJSONStorage(() => hashStorage),
       partialize: (state) => ({
         merchantCart: {
-          amount: state.merchantCart.amount,
-          itemName: state.merchantCart.itemName,
-          quantity: state.merchantCart.quantity,
+          products: state.merchantCart.products,
           currency: state.merchantCart.currency,
         },
         billingAddress: {
