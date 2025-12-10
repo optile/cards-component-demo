@@ -18,6 +18,11 @@ import type {
   ComponentListDiff,
 } from "@/features/embeddedCheckout/types/checkout";
 import hashStorage from "@/utils/urlHashStorage";
+import {
+  detectLocalServers,
+  type ServerStatus,
+} from "@/utils/localServerDetection";
+import type { LocalModeConfig } from "@/features/embeddedCheckout/constants/checkout";
 
 interface CheckoutState {
   // Session state
@@ -36,6 +41,11 @@ interface CheckoutState {
   preload: string[]; // New: Preload array
   isEnvChanging: boolean; // New: Flag to prevent updates during env change
   refetchListBeforeCharge: boolean; // New: Toggle for refetching list before charge
+  manualListId: string | null; // New: Optional manual list ID to override generated session
+
+  // Local development mode - automatically uses local servers when available
+  localServersStatus: ServerStatus; // Status of local servers
+  isDetectingServers: boolean; // Loading state for server detection
 
   // componentListChange diff
   componentListDiff: ComponentListDiff | null;
@@ -66,10 +76,12 @@ interface CheckoutState {
     partialConfig: Partial<CheckoutInstanceConfig>
   ) => Promise<void>; // New action
   recreateCheckout: () => Promise<void>; // New dedicated recreation function
+  setManualListId: (listId: string | null) => void; // New action to set manual list ID
   setComponenetsDiff: (
     checkout: CheckoutInstance,
     diff: ComponentListDiff | null
   ) => void;
+  detectLocalServers: () => Promise<void>;
 }
 
 export const useCheckoutStore = create<CheckoutState>()(
@@ -90,6 +102,13 @@ export const useCheckoutStore = create<CheckoutState>()(
       preload: ["stripe:cards"], // Initialize preload
       isEnvChanging: false, // Initialize flag
       refetchListBeforeCharge: false, // Initialize refetch toggle
+      manualListId: null, // Initialize manual list ID
+
+      localServersStatus: {
+        checkoutWeb: false,
+        checkoutWebStripe: false,
+      },
+      isDetectingServers: false,
 
       componentListDiff: null,
       hasChangedComponents: false,
@@ -102,27 +121,42 @@ export const useCheckoutStore = create<CheckoutState>()(
 
       // Actions
       initSession: async () => {
-        const { isSessionInitialized } = get();
+        const { isSessionInitialized, manualListId } = get();
         if (isSessionInitialized) return;
         set({ sessionLoading: true });
         try {
-          const configState = useConfigurationStore.getState();
-          const initialRequest = buildListSessionUpdates(
-            configState.merchantCart,
-            configState.billingAddress,
-            configState.shippingAddress,
-            configState.sameAddress,
-            get().env
-          );
-          const response = await CheckoutApiService.generateListSession(
-            initialRequest,
-            get().env
-          );
-          set({
-            listSessionData: response,
-            sessionError: null,
-            isSessionInitialized: true,
-          });
+          // If manual list ID is provided, use it instead of generating a session
+          if (manualListId) {
+            // Create a minimal list session data object with the manual ID
+            const manualSessionData: ListSessionResponse = {
+              id: manualListId,
+              transactionId: "", // Empty string as we don't have this from manual input
+              url: "", // Empty string as we don't have this from manual input
+            };
+            set({
+              listSessionData: manualSessionData,
+              sessionError: null,
+              isSessionInitialized: true,
+            });
+          } else {
+            const configState = useConfigurationStore.getState();
+            const initialRequest = buildListSessionUpdates(
+              configState.merchantCart,
+              configState.billingAddress,
+              configState.shippingAddress,
+              configState.sameAddress,
+              get().env
+            );
+            const response = await CheckoutApiService.generateListSession(
+              initialRequest,
+              get().env
+            );
+            set({
+              listSessionData: response,
+              sessionError: null,
+              isSessionInitialized: true,
+            });
+          }
         } catch (err) {
           const errorMessage =
             err instanceof Error
@@ -136,7 +170,7 @@ export const useCheckoutStore = create<CheckoutState>()(
       },
 
       initCheckout: async (listSessionId, navigate) => {
-        const { isCheckoutInitialized } = get();
+        const { isCheckoutInitialized, localServersStatus } = get();
         if (!listSessionId || isCheckoutInitialized) return;
         set({ checkoutLoading: true });
         try {
@@ -146,16 +180,25 @@ export const useCheckoutStore = create<CheckoutState>()(
             .getState()
             .prepareSDKCallbacks();
 
+          // Prepare local mode config - automatically use local servers if available
+          const localModeConfig: LocalModeConfig = {
+            enabled: true, // Always enabled, will use local if available
+            checkoutWebAvailable: localServersStatus.checkoutWeb,
+            checkoutWebStripeAvailable: localServersStatus.checkoutWebStripe,
+          };
+
           const checkoutInstance = await PayoneerSDKUtils.initCheckout(
             listSessionId,
             get().env,
             get().preload,
             get().refetchListBeforeCharge,
-            callbackConfigs
+            callbackConfigs,
+            localModeConfig
           );
 
           const metaInfo = await PayoneerSDKUtils.getCheckoutMetaInfo(
-            get().env
+            get().env,
+            localModeConfig
           );
           const version = extractSdkVersionFromMetaInfo(metaInfo);
 
@@ -245,24 +288,34 @@ export const useCheckoutStore = create<CheckoutState>()(
               refetchListBeforeCharge: partialConfig.refetchListBeforeCharge,
             });
 
-          // For environment changes, we need a new session
+          // For environment changes, we need a new session (unless manual list ID is set)
           if (partialConfig.env) {
-            // Build new list session updates with new env
-            const configState = useConfigurationStore.getState();
-            const newUpdates = buildListSessionUpdates(
-              configState.merchantCart,
-              configState.billingAddress,
-              configState.shippingAddress,
-              configState.sameAddress,
-              partialConfig.env
-            );
+            const { manualListId } = get();
+            if (manualListId) {
+              // If manual list ID is set, use it instead of generating a new session
+              const manualSessionData: ListSessionResponse = {
+                id: manualListId,
+                transactionId: "",
+                url: "",
+              };
+              set({ listSessionData: manualSessionData });
+            } else {
+              const configState = useConfigurationStore.getState();
+              const newUpdates = buildListSessionUpdates(
+                configState.merchantCart,
+                configState.billingAddress,
+                configState.shippingAddress,
+                configState.sameAddress,
+                partialConfig.env
+              );
 
-            // Generate new list session
-            const newListSession = await CheckoutApiService.generateListSession(
-              newUpdates,
-              partialConfig.env
-            );
-            set({ listSessionData: newListSession });
+              const newListSession =
+                await CheckoutApiService.generateListSession(
+                  newUpdates,
+                  partialConfig.env
+                );
+              set({ listSessionData: newListSession });
+            }
           }
 
           // Use dedicated recreate function to apply all changes
@@ -338,6 +391,14 @@ export const useCheckoutStore = create<CheckoutState>()(
           const currentEnv = get().env;
           const currentPreload = get().preload;
           const currentRefetch = get().refetchListBeforeCharge;
+          const localServersStatus = get().localServersStatus;
+
+          // Prepare local mode config - automatically use local servers if available
+          const localModeConfig: LocalModeConfig = {
+            enabled: true, // Always enabled, will use local if available
+            checkoutWebAvailable: localServersStatus.checkoutWeb,
+            checkoutWebStripeAvailable: localServersStatus.checkoutWebStripe,
+          };
 
           // Step 5: Create new checkout instance with current settings
           const newCheckoutInstance = await PayoneerSDKUtils.initCheckout(
@@ -345,7 +406,8 @@ export const useCheckoutStore = create<CheckoutState>()(
             currentEnv,
             currentPreload,
             currentRefetch,
-            callbackConfig
+            callbackConfig,
+            localModeConfig
           );
 
           // Step 6: Update store with new instance
@@ -378,6 +440,47 @@ export const useCheckoutStore = create<CheckoutState>()(
           checkout,
           hasChangedComponents: true,
         });
+      },
+
+      setManualListId: (listId: string | null) => {
+        set({ manualListId: listId });
+        // Reset session and checkout initialization so they can be re-initialized with the new list ID
+        set({
+          isSessionInitialized: false,
+          listSessionData: null,
+          isCheckoutInitialized: false,
+          checkout: null,
+        });
+      },
+
+      // Local mode actions
+      detectLocalServers: async () => {
+        set({ isDetectingServers: true });
+        try {
+          const status = await detectLocalServers();
+          const previousStatus = get().localServersStatus;
+          set({ localServersStatus: status });
+
+          // Log status changes
+          if (
+            status.checkoutWeb !== previousStatus.checkoutWeb ||
+            status.checkoutWebStripe !== previousStatus.checkoutWebStripe
+          ) {
+            console.log("📡 Local servers detected:", status);
+
+            // Recreate checkout if already initialized to pick up new servers
+            if (get().isCheckoutInitialized) {
+              console.log(
+                "🔄 Recreating checkout with updated server status..."
+              );
+              await get().recreateCheckout();
+            }
+          }
+        } catch (error) {
+          console.error("Failed to detect local servers:", error);
+        } finally {
+          set({ isDetectingServers: false });
+        }
       },
     }),
     {

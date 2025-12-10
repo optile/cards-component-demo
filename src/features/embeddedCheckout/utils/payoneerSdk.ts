@@ -1,4 +1,7 @@
-import { getApiEndpoints } from "@/features/embeddedCheckout/constants/checkout";
+import {
+  getApiEndpoints,
+  type LocalModeConfig,
+} from "@/features/embeddedCheckout/constants/checkout";
 import { useCheckoutStore } from "@/features/embeddedCheckout/store/checkoutStore";
 import type {
   CheckoutInstance,
@@ -15,7 +18,10 @@ export class PayoneerSDKUtils {
     );
   }
 
-  static async loadCheckoutWeb(env: string): Promise<boolean> {
+  static async loadCheckoutWeb(
+    env: string,
+    localModeConfig?: LocalModeConfig
+  ): Promise<boolean> {
     return new Promise((resolve) => {
       // Check if SDK is already loaded
       if (this.isSDKLoaded()) {
@@ -24,7 +30,7 @@ export class PayoneerSDKUtils {
       }
 
       // Load SDK script
-      const API_ENDPOINTS = getApiEndpoints(env);
+      const API_ENDPOINTS = getApiEndpoints(env, localModeConfig);
       const script = document.createElement("script");
       script.src = API_ENDPOINTS.SDK_URL;
       script.async = true;
@@ -46,9 +52,10 @@ export class PayoneerSDKUtils {
     env: string,
     preload: string[],
     refetchListBeforeCharge: boolean,
-    callbacks?: Record<string, unknown> // Optional callbacks for advanced configuration
+    callbacks?: Record<string, unknown>, // Optional callbacks for advanced configuration
+    localModeConfig?: LocalModeConfig
   ): Promise<CheckoutInstance> {
-    const isLoaded = await this.loadCheckoutWeb(env);
+    const isLoaded = await this.loadCheckoutWeb(env, localModeConfig);
 
     if (!isLoaded) {
       throw new Error("Failed to load Checkout Web SDK");
@@ -81,9 +88,12 @@ export class PayoneerSDKUtils {
     return await window.Payoneer.CheckoutWeb(config as any);
   }
 
-  static getCheckoutMetaInfo(env: string): Promise<CheckoutWebMetaInfo> {
+  static getCheckoutMetaInfo(
+    env: string,
+    localModeConfig?: LocalModeConfig
+  ): Promise<CheckoutWebMetaInfo> {
     return new Promise((resolve, reject) => {
-      const API_ENDPOINTS = getApiEndpoints(env);
+      const API_ENDPOINTS = getApiEndpoints(env, localModeConfig);
       fetch(API_ENDPOINTS.META_INFO)
         .then((response) => {
           if (!response.ok) {

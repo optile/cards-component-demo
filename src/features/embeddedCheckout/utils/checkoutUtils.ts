@@ -110,6 +110,16 @@ export const getCurrencySymbol = (curr: string) => {
 
 export const extractSdkVersionFromMetaInfo = (sdkMI: CheckoutWebMetaInfo) => {
   const checkoutWebVariants = sdkMI["checkout-web"];
+
+  // Handle case where checkout-web might not be an array (e.g., malformed meta-info)
+  if (!checkoutWebVariants || !Array.isArray(checkoutWebVariants)) {
+    console.warn(
+      "Meta-info 'checkout-web' is not an array:",
+      checkoutWebVariants
+    );
+    return "unknown";
+  }
+
   const minifiedVariant = checkoutWebVariants.find(
     (variant) => variant.isMinified
   );
