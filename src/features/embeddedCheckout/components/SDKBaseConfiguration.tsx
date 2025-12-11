@@ -2,17 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useCheckoutStore } from "@/features/embeddedCheckout/store/checkoutStore";
 import Button from "@/components/ui/Button";
 import Checkbox from "@/components/ui/Checkbox";
-import Select from "@/components/ui/Select";
 import Input from "@/components/ui/Input";
 import InfoTooltip from "@/components/ui/InfoTooltip";
 import ExternalLink from "@/components/ui/ExternalLink";
 import LocalModeToggle from "./LocalModeToggle";
 import type { ListSessionResponse } from "@/features/embeddedCheckout/types/checkout";
-
-const envOptions = [
-  { value: "sandbox", label: "Sandbox" },
-  { value: "production", label: "Production" },
-];
 
 const SDKBaseConfiguration: React.FC = () => {
   const {
@@ -31,28 +25,24 @@ const SDKBaseConfiguration: React.FC = () => {
   const [localManualListId, setLocalManualListId] = useState(
     manualListId || ""
   );
-  const [selectedEnv, setSelectedEnv] = useState(env);
 
   useEffect(() => {
     setSelectedRefetch(refetchListBeforeCharge);
     setLocalManualListId(manualListId || "");
-    setSelectedEnv(env);
-  }, [env, refetchListBeforeCharge, manualListId]);
+  }, [refetchListBeforeCharge, manualListId]);
 
   const hasChanges =
-    selectedEnv !== env ||
     selectedRefetch !== refetchListBeforeCharge ||
     localManualListId !== (manualListId || "");
 
   const handleSave = async () => {
     const trimmedListId = localManualListId.trim() || null;
     const manualListIdChanged = trimmedListId !== (manualListId || "");
-    const envChanged = selectedEnv !== env;
     const refetchChanged = selectedRefetch !== refetchListBeforeCharge;
 
     // If only manual list ID changed, handle it separately without calling updateSdkConfig
     // (updateSdkConfig requires checkout to exist, which we'd reset with setManualListId)
-    if (manualListIdChanged && !envChanged && !refetchChanged) {
+    if (manualListIdChanged && !refetchChanged) {
       setManualListId(trimmedListId);
       const { initSession } = useCheckoutStore.getState();
       await initSession();
@@ -79,12 +69,11 @@ const SDKBaseConfiguration: React.FC = () => {
       useCheckoutStore.setState({ refetchListBeforeCharge: selectedRefetch });
     }
 
-    // If environment or refetch changed, call updateSdkConfig
+    // If refetch changed, call updateSdkConfig
     // This will handle session updates and checkout recreation
     // updateSdkConfig will use the manualListId and listSessionData we just set
-    if (envChanged || refetchChanged) {
+    if (refetchChanged) {
       await updateSdkConfig({
-        env: selectedEnv,
         refetchListBeforeCharge: selectedRefetch,
       });
     }
@@ -99,15 +88,20 @@ const SDKBaseConfiguration: React.FC = () => {
 
       <LocalModeToggle />
 
-      <Select
-        label="Environment:"
-        value={selectedEnv}
-        onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-          setSelectedEnv(e.target.value)
-        }
-        options={envOptions}
-        id="env-select"
-      />
+      <div className="flex flex-col gap-2">
+        <span className="font-medium">Environment:</span>
+        <div className="flex items-center gap-3">
+          <span className="px-3 py-2 bg-blue-50 border border-blue-200 rounded font-mono text-sm">
+            {env}
+          </span>
+          <a
+            href="/cards-component-demo/embedded"
+            className="inline-block px-4 py-2 rounded-md bg-gray-600 text-white hover:bg-gray-700 text-sm no-underline"
+          >
+            Change Environment
+          </a>
+        </div>
+      </div>
       <Input
         type="text"
         label="Manual List ID (optional):"
