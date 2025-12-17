@@ -42,7 +42,7 @@ const LocalModeToggle: React.FC = () => {
       <div className="flex gap-1 items-center justify-between">
         <div className="flex gap-1 items-center">
           <h3 className="font-semibold">Local Development Mode</h3>
-          <InfoTooltip content="Use local versions of checkout-web and checkout-web-stripe for development and testing. Make sure the dev servers are running on ports 8700 and 8991." />
+          <InfoTooltip content="Use local versions of checkout-web and/or checkout-web-stripe for development and testing. Mixed mode is supported - run just one dev server or both on ports 8700 and 8991." />
         </div>
         <button
           type="button"
@@ -96,26 +96,29 @@ const LocalModeToggle: React.FC = () => {
             </div>
           </div>
 
-          {/* Info message when no servers are available */}
-          {!anyServerAvailable && (
-            <div className="mt-2 p-3 bg-blue-100 border border-blue-400 rounded text-sm">
-              <strong>ℹ️ Info:</strong> No local servers detected. Using remote
-              CDN URLs.
-              <div className="mt-2">
-                <strong>To use local development:</strong>
-                <ul className="list-disc ml-5 mt-1">
-                  <li>
-                    checkout-web: Run <code>npm run dev</code> in checkout-web
-                    directory
-                  </li>
-                  <li>
-                    checkout-web-stripe: Run <code>npm run dev</code> in
-                    checkout-web-stripe directory
-                  </li>
-                </ul>
-              </div>
+          {/* Info message about current mode */}
+          <div className="mt-2 p-3 bg-blue-100 border border-blue-400 rounded text-sm">
+            <strong>ℹ️ Current Mode:</strong>{" "}
+            {!anyServerAvailable && "Using remote CDN for both libraries"}
+            {checkoutWeb && !checkoutWebStripe && "Using local checkout-web + CDN stripe"}
+            {!checkoutWeb && checkoutWebStripe && "Using CDN checkout-web + local stripe"}
+            {checkoutWeb && checkoutWebStripe && "Using local versions of both libraries"}
+            <div className="mt-2">
+              <strong>Mixed Mode Support:</strong> You can run just one dev server or
+              both. The app will use local versions when available and fall back to
+              CDN for the rest.
+              <ul className="list-disc ml-5 mt-1">
+                <li>
+                  checkout-web: Run <code>npm run dev</code> in checkout-web
+                  directory (port 8700)
+                </li>
+                <li>
+                  checkout-web-stripe: Run <code>npm run dev</code> in
+                  checkout-web-stripe directory (port 8991)
+                </li>
+              </ul>
             </div>
-          )}
+          </div>
         </div>
       )}
     </div>

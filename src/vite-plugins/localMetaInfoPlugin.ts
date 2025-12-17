@@ -1,62 +1,21 @@
 import type { Plugin } from "vite";
 
 /**
- * Vite plugin to intercept and modify meta-info.json responses
- * This allows us to rewrite URLs in the meta-info to point to local servers
+ * Vite plugin to proxy and rewrite local SDK server requests
+ *
+ * This plugin:
+ * 1. Proxies /local-checkout-web/* requests to localhost:8700
+ * 2. Proxies /local-checkout-web-stripe/* requests to localhost:8991
+ * 3. Rewrites URLs in meta-info.json to use proxied paths
+ *
+ * The fetch override for stripe meta-info is handled separately in payoneerSdk.ts
+ * to support mixed mode (CDN checkout-web + local stripe or vice versa)
  */
 export function localMetaInfoPlugin(): Plugin {
   return {
     name: "local-meta-info-rewriter",
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
-        // Intercept checkout-web script to inject local stripe URL override
-        if (
-          req.url?.includes("/local-checkout-web/build/umd/checkout-web.min.js")
-        ) {
-          try {
-            // Fetch the actual checkout-web script
-            const response = await fetch(
-              "http://localhost:8700/build/umd/checkout-web.min.js"
-            );
-            let script = await response.text();
-
-            // Inject code to override the stripe meta-info URL
-            // This MUST run before checkout-web captures fetch reference
-            const override = `
-            // Override fetch BEFORE any other code runs
-            console.log('🔧 Installing fetch override for local stripe meta-info');
-            const originalFetch = globalThis.fetch || window.fetch;
-            globalThis.fetch = window.fetch = function(url, options) {
-              console.log('🌐 Fetch intercepted:', url);
-              // Intercept stripe meta-info requests and redirect to local
-              if (typeof url === 'string' && url.includes('/web/libraries/checkout-web-stripe/meta-info.json')) {
-                console.log('🔀 Redirecting stripe meta-info to local:', url, '→', 'http://localhost:3000/local-checkout-web-stripe/meta-info.json');
-                return originalFetch.call(this, 'http://localhost:3000/local-checkout-web-stripe/meta-info.json', options);
-              }
-              // Also intercept any direct requests to stripe loader
-              if (typeof url === 'string' && url.includes('payoneer-stripe-loader.js')) {
-                console.log('🔀 Redirecting stripe loader to local:', url, '→', 'http://localhost:3000/local-checkout-web-stripe/payoneer-stripe-loader.js');
-                return originalFetch.call(this, 'http://localhost:3000/local-checkout-web-stripe/payoneer-stripe-loader.js', options);
-              }
-              return originalFetch.call(this, url, options);
-            };
-            `;
-            script = override + script;
-
-            res.setHeader("Content-Type", "application/javascript");
-            res.setHeader("Access-Control-Allow-Origin", "*");
-            res.end(script);
-            return;
-          } catch (error) {
-            console.error(
-              "Failed to fetch and patch checkout-web script:",
-              error
-            );
-            next();
-            return;
-          }
-        }
-
         // Intercept requests to local proxied meta-info.json files
         if (req.url?.includes("/local-checkout-web/build/meta-info.json")) {
           try {

@@ -106,10 +106,12 @@ You can test local changes to `checkout-web` and `checkout-web-stripe` in real-t
 ### How It Works
 
 * **Auto-detection**: The app checks if local servers are running on ports 8700 and 8991 using health checks
-* **Automatic fallback**: If local mode is enabled but servers aren't running, the app falls back to the remote CDN
-* **Vite proxy**: Requests to `/local-checkout-web` and `/local-checkout-web-stripe` are proxied to avoid CORS issues
+* **Mixed mode support**: Run just one local server or both - the app independently uses local versions when available and falls back to CDN for the rest
+  * Example: Test checkout-web-stripe changes with production checkout-web
+  * Example: Test checkout-web changes with production stripe integration
+* **Vite proxy**: Requests to `/local-checkout-web` and `/local-checkout-web-stripe` are proxied through the dev server to avoid CORS issues
 * **Meta-info rewriting**: Script URLs in meta-info.json files are automatically rewritten to point to local proxy paths
-* **Mixed mode**: You can run just one local server (e.g., only checkout-web-stripe) while loading the other from CDN
+* **Fetch override**: When local stripe is available, a global fetch override redirects stripe meta-info requests to the local server (works even with CDN checkout-web)
 
 ### Troubleshooting
 
@@ -123,6 +125,11 @@ You can test local changes to `checkout-web` and `checkout-web-stripe` in real-t
 
 * Hard refresh the browser (Cmd+Shift+R / Ctrl+Shift+R)
 * The dev servers auto-rebuild, but browser cache may need clearing
+
+**Switching between local and CDN checkout-web?**
+
+* When you start/stop the checkout-web dev server (port 8700), you'll need to refresh the page to reload the SDK script
+* Switching stripe (port 8991) works dynamically without page refresh thanks to the fetch override
 
 **Stripe components not loading locally?**
 

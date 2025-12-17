@@ -16,7 +16,7 @@ export class CheckoutApiService {
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      body: JSON.stringify({ ...listRequest, country: "ID" }),
+      body: JSON.stringify({ ...listRequest }),
     });
 
     if (!response.ok) {
