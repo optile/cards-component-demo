@@ -16,7 +16,7 @@ export class CheckoutApiService {
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      body: JSON.stringify(listRequest),
+      body: JSON.stringify({ ...listRequest }),
     });
 
     if (!response.ok) {
@@ -39,7 +39,7 @@ export class CheckoutApiService {
         "Content-Type": "application/json",
         Accept: "application/json",
       },
-      body: JSON.stringify({ ...listRequest }),
+      body: JSON.stringify({ ...listRequest, style: { language: "de_DE" } }),
     });
   }
 }

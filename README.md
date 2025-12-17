@@ -75,6 +75,67 @@ Use the header navigation to switch flows or return to the chooser.
 * If your network blocks cross-origin requests to Payoneer domains, the list session calls will fail. Use the browser console to inspect errors and confirm connectivity.
 * The router `basename` (`/cards-component-demo`) keeps relative paths working when the build is deployed to GitHub Pages or a similar static host that serves assets from a subdirectory. Update the basename in `src/App.tsx` if you deploy at root.
 
+## Local Development Mode
+
+You can test local changes to `checkout-web` and `checkout-web-stripe` in real-time without deploying to remote servers. The app automatically detects local development servers and seamlessly switches between local and CDN sources.
+
+### Quick Start
+
+1. **Start local servers** (optional - run one or both):
+
+   ```bash
+   # In checkout-web directory
+   npm run dev  # Runs on port 8700
+
+   # In checkout-web-stripe directory
+   npm run dev  # Runs on port 8991
+   ```
+
+2. **Start this demo app**:
+
+   ```bash
+   npm run dev  # Runs on port 3000
+   ```
+
+3. **Check local mode status**:
+   * Open the demo at `http://localhost:3000/cards-component-demo/`
+   * Look for the **Local Development Mode** card (only visible on localhost)
+   * Server status indicators show which local servers are detected
+   * Click **Refresh Servers** if you start a server after loading the page
+
+### How It Works
+
+* **Auto-detection**: The app checks if local servers are running on ports 8700 and 8991 using health checks
+* **Mixed mode support**: Run just one local server or both - the app independently uses local versions when available and falls back to CDN for the rest
+  * Example: Test checkout-web-stripe changes with production checkout-web
+  * Example: Test checkout-web changes with production stripe integration
+* **Vite proxy**: Requests to `/local-checkout-web` and `/local-checkout-web-stripe` are proxied through the dev server to avoid CORS issues
+* **Meta-info rewriting**: Script URLs in meta-info.json files are automatically rewritten to point to local proxy paths
+* **Fetch override**: When local stripe is available, a global fetch override redirects stripe meta-info requests to the local server (works even with CDN checkout-web)
+
+### Troubleshooting
+
+**Local servers not detected?**
+
+* Verify servers are running: `curl http://localhost:8700/build/meta-info.json` and `curl http://localhost:8991/meta-info.json`
+* Click the **Refresh Servers** button
+* Check browser console for errors
+
+**Changes not reflecting?**
+
+* Hard refresh the browser (Cmd+Shift+R / Ctrl+Shift+R)
+* The dev servers auto-rebuild, but browser cache may need clearing
+
+**Switching between local and CDN checkout-web?**
+
+* When you start/stop the checkout-web dev server (port 8700), you'll need to refresh the page to reload the SDK script
+* Switching stripe (port 8991) works dynamically without page refresh thanks to the fetch override
+
+**Stripe components not loading locally?**
+
+* Verify checkout-web-stripe is running on port 8991
+* Check Network tab for requests to `/local-checkout-web-stripe/`
+
 ## Tech Stack
 
 * React 19 with React Router 7 for routing.

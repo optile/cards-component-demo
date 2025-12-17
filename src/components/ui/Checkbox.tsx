@@ -5,6 +5,7 @@ interface CheckboxProps {
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   label: string;
   className?: string;
+  disabled?: boolean;
 }
 
 const Checkbox: React.FC<CheckboxProps> = ({
@@ -12,6 +13,7 @@ const Checkbox: React.FC<CheckboxProps> = ({
   onChange,
   label,
   className = "form-checkbox h-4 w-4 text-indigo-600 transition duration-150 ease-in-out",
+  disabled = false,
 }) => (
   <label className="flex items-center">
     <input
@@ -19,6 +21,7 @@ const Checkbox: React.FC<CheckboxProps> = ({
       checked={checked}
       onChange={onChange}
       className={className}
+      disabled={disabled}
     />
     <span className="ml-2 text-sm text-gray-700">{label}</span>
   </label>
