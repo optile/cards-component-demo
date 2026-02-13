@@ -13,6 +13,7 @@ import type {
   CallbackName,
   CallbackConfig,
 } from "@/features/embeddedCheckout/types/callbacks";
+import { NOTIFICATION_CALLBACKS } from "@/features/embeddedCheckout/types/callbacks";
 import ExternalLink from "@/components/ui/ExternalLink";
 
 interface CallbackConfigRowProps {
@@ -31,6 +32,8 @@ const CallbackConfigRow: React.FC<CallbackConfigRowProps> = ({
   onConfigChange,
   onReset,
 }) => {
+  const isNotificationOnly = NOTIFICATION_CALLBACKS.includes(callbackName);
+
   return (
     <div className="border rounded-lg p-3 bg-white shadow-sm">
       {/* Header with callback name and description */}
@@ -48,6 +51,11 @@ const CallbackConfigRow: React.FC<CallbackConfigRowProps> = ({
             <h4 className="font-mono text-sm font-semibold text-gray-900">
               {callbackName}
             </h4>
+            {isNotificationOnly && (
+              <span className="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full font-medium">
+                notification
+              </span>
+            )}
             <InfoTooltip content={CALLBACK_DESCRIPTIONS[callbackName]} />
             <ExternalLink link={CALLBACK_DOCUMENTATION_LINKS[callbackName]} />
             <button
@@ -69,17 +77,19 @@ const CallbackConfigRow: React.FC<CallbackConfigRowProps> = ({
         <div className="ml-6 space-y-3">
           {/* Flow control and log level in same row */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="w-full">
-              <Select
-                label="Flow Control"
-                value={config.shouldProceed ? "true" : "false"}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                  onConfigChange("shouldProceed", e.target.value === "true")
-                }
-                options={[...PROCEED_OPTIONS]}
-                id={`${callbackName}-proceed`}
-              />
-            </div>
+            {!isNotificationOnly && (
+              <div className="w-full">
+                <Select
+                  label="Flow Control"
+                  value={config.shouldProceed ? "true" : "false"}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                    onConfigChange("shouldProceed", e.target.value === "true")
+                  }
+                  options={[...PROCEED_OPTIONS]}
+                  id={`${callbackName}-proceed`}
+                />
+              </div>
+            )}
 
             <div className="w-full">
               <Select
@@ -114,9 +124,15 @@ const CallbackConfigRow: React.FC<CallbackConfigRowProps> = ({
                 {callbackName} -{" "}
                 {config.customMessage || `${callbackName} called`}
               </div>
-              <div className="text-gray-600 text-xs">
-                Returns: {config.shouldProceed.toString()}
-              </div>
+              {isNotificationOnly ? (
+                <div className="text-blue-600 text-xs">
+                  Notification only (no flow control)
+                </div>
+              ) : (
+                <div className="text-gray-600 text-xs">
+                  Returns: {config.shouldProceed.toString()}
+                </div>
+              )}
             </div>
           </div>
         </div>

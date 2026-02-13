@@ -14,10 +14,14 @@ export interface CallbackConfigs {
   onPaymentFailure: CallbackConfig;
   onBeforeProviderRedirect: CallbackConfig;
   onPaymentDeclined: CallbackConfig;
+  onReady: CallbackConfig;
 }
 
 // Type for callback names
 export type CallbackName = keyof CallbackConfigs;
+
+// Notification-only callbacks that don't control flow (no shouldProceed)
+export const NOTIFICATION_CALLBACKS: ReadonlyArray<CallbackName> = ["onReady"];
 
 // Callback handler function signature based on index.html example
 // The SDK passes various arguments, we capture them with ...args
@@ -62,6 +66,7 @@ export const DEFAULT_CALLBACK_CONFIGS: CallbackConfigs = {
   onPaymentFailure: { ...DEFAULT_CALLBACK_CONFIG },
   onBeforeProviderRedirect: { ...DEFAULT_CALLBACK_CONFIG },
   onPaymentDeclined: { ...DEFAULT_CALLBACK_CONFIG },
+  onReady: { ...DEFAULT_CALLBACK_CONFIG },
 };
 
 // Callback descriptions for UI tooltips and help text
@@ -78,6 +83,8 @@ export const CALLBACK_DESCRIPTIONS: Record<CallbackName, string> = {
     "Called before redirecting to a payment provider. Return false to prevent redirect.",
   onPaymentDeclined:
     "Called when a payment is declined. Return false to prevent default declined handling.",
+  onReady:
+    "Called when the payment component is fully initialized and ready to accept input. Provides component name, available networks, and readiness data.",
 };
 
 // Log level options for UI
