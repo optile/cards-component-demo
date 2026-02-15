@@ -39,12 +39,14 @@ export class PayoneerSDKUtils {
       return;
     }
 
-    console.log("🔧 Installing dynamic fetch override for local stripe support");
+    console.log(
+      "🔧 Installing dynamic fetch override for local stripe support"
+    );
 
     const originalFetch = window.fetch.bind(window);
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
 
-    // @ts-expect-error - Overriding global fetch
     window.fetch = function (url: RequestInfo | URL, options?: RequestInit) {
       const urlString = typeof url === "string" ? url : url.toString();
 
@@ -55,14 +57,21 @@ export class PayoneerSDKUtils {
 
       if (useLocalStripe) {
         // Intercept stripe meta-info requests and redirect to local
-        if (urlString.includes("/web/libraries/checkout-web-stripe/meta-info.json")) {
+        if (
+          urlString.includes(
+            "/web/libraries/checkout-web-stripe/meta-info.json"
+          )
+        ) {
           console.log(
             "🔀 Redirecting stripe meta-info to local:",
             urlString,
             "→",
             "/local-checkout-web-stripe/meta-info.json"
           );
-          return originalFetch("/local-checkout-web-stripe/meta-info.json", options);
+          return originalFetch(
+            "/local-checkout-web-stripe/meta-info.json",
+            options
+          );
         }
 
         // Also intercept any direct requests to stripe loader
