@@ -14,6 +14,8 @@ export const CALLBACK_DESCRIPTIONS: Record<CallbackName, string> = {
     "Called before redirecting to a payment provider. Return false to prevent redirect.",
   onPaymentDeclined:
     "Called when a payment is declined. Return false to prevent default declined handling.",
+  onReady:
+    "Called when the payment component is fully initialized and ready to accept input. Provides component name, available networks, and readiness data.",
 };
 
 export const CALLBACK_DOCUMENTATION_LINKS: Record<CallbackName, string> = {
@@ -29,6 +31,8 @@ export const CALLBACK_DOCUMENTATION_LINKS: Record<CallbackName, string> = {
     "https://checkoutdocs.payoneer.com/checkout-2/docs/advanced-use-cases#onbeforeproviderredirect",
   onPaymentDeclined:
     "https://checkoutdocs.payoneer.com/checkout-2/docs/advanced-use-cases#onpaymentdeclined",
+  onReady:
+    "https://checkoutdocs.payoneer.com/checkout-2/docs/advanced-use-cases#onready",
 };
 
 // Log level options for UI dropdowns
@@ -66,6 +70,12 @@ export const CALLBACK_CATEGORIES = {
     description: "Callbacks for external payment provider redirects",
     callbacks: ["onBeforeProviderRedirect"] as CallbackName[],
   },
+  lifecycle: {
+    title: "Lifecycle",
+    description:
+      "Notification callbacks for component lifecycle events (no flow control)",
+    callbacks: ["onReady"] as CallbackName[],
+  },
 } as const;
 
 // Default custom messages for each callback
@@ -76,6 +86,7 @@ export const DEFAULT_CALLBACK_MESSAGES: Record<CallbackName, string> = {
   onPaymentFailure: "Payment processing failed",
   onBeforeProviderRedirect: "Redirecting to payment provider",
   onPaymentDeclined: "Payment was declined",
+  onReady: "Payment component is ready",
 };
 
 // Configuration presets for common testing scenarios

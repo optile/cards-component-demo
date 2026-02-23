@@ -1,13 +1,17 @@
 import type { LoggerEvent } from "../types/visualization";
 
+const resolveEndStatus = (result: unknown): string => {
+  if (result === "stop") return "stopped";
+  if (result === "notified") return "notified";
+  return "completed";
+};
+
 export const getLoggerEventStatus = (ev: LoggerEvent) => {
   if (ev.type === "start") return "completed";
-  if (ev.type === "end")
-    return ev.meta?.result === "stop" ? "stopped" : "completed";
+  if (ev.type === "end") return resolveEndStatus(ev.meta?.result);
   if (ev.type === "callback") {
     if (ev.phase === "start") return "running";
-    if (ev.phase === "end")
-      return ev.meta?.result === "stop" ? "stopped" : "completed";
+    if (ev.phase === "end") return resolveEndStatus(ev.meta?.result);
   }
   return "unknown";
 };
