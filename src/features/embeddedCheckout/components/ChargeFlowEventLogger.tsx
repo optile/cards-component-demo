@@ -3,7 +3,8 @@ import { useVisualizationStore } from "../store/visualizationStore";
 import MetaViewer from "./MetaViewer";
 import { getLoggerEventStatus } from "../utils/visualizationUtils";
 
-const badgeClass = (status: string) => {
+const badgeClass = (status: string, type?: string) => {
+  if (type === "event") return "bg-blue-100 text-blue-800";
   switch (status) {
     case "running":
       return "bg-yellow-100 text-yellow-800";
@@ -62,10 +63,11 @@ const ChargeFlowEventLogger = () => {
                 <div className="flex items-center gap-3">
                   <div
                     className={`px-2 py-1 rounded text-xs font-semibold ${badgeClass(
-                      status
+                      status,
+                      e.type
                     )}`}
                   >
-                    {e.type === "callback" ? "CALLBACK" : e.type.toUpperCase()}
+                    {e.type === "callback" ? "CALLBACK" : e.type === "event" ? "EVENT" : e.type.toUpperCase()}
                   </div>
                   <div className="text-sm font-medium">
                     {e.name}
