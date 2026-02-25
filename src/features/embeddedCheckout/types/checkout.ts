@@ -27,8 +27,12 @@ export interface CheckoutInstance {
     options?: { hidePaymentButton: boolean }
   ): DropInComponent;
   charge(): void;
-  update(config: { env?: string; longId?: string }): Promise<CheckoutInstance>; // Add update method
+  update(config: { env?: string; longId?: string }): Promise<CheckoutInstance>;
   updateLongId(longId: string): Promise<void>;
+  on(event: string, handler: (data: unknown) => void): void;
+  off(event: string, handler: (data: unknown) => void): void;
+  once(event: string, handler: (data: unknown) => void): void;
+  destroy(): void;
 }
 
 export interface CheckoutInstanceConfig {
