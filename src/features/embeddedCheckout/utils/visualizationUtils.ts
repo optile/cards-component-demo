@@ -7,6 +7,7 @@ const resolveEndStatus = (result: unknown): string => {
 };
 
 export const getLoggerEventStatus = (ev: LoggerEvent) => {
+  if (ev.type === "event") return "completed";
   if (ev.type === "start") return "completed";
   if (ev.type === "end") return resolveEndStatus(ev.meta?.result);
   if (ev.type === "callback") {

@@ -17,12 +17,48 @@ import type {
   CheckoutInstanceConfig,
   ComponentListDiff,
 } from "@/features/embeddedCheckout/types/checkout";
+import { useVisualizationStore } from "./visualizationStore";
 import hashStorage from "@/utils/urlHashStorage";
 import {
   detectLocalServers,
   type ServerStatus,
 } from "@/utils/localServerDetection";
 import type { LocalModeConfig } from "@/features/embeddedCheckout/constants/checkout";
+
+const CHECKOUT_EVENTS = [
+  "destroyed",
+  "component:mounted",
+  "component:unmounted",
+  "charge:started",
+  "charge:completed",
+  "payment:success",
+  "payment:declined",
+  "payment:failed",
+  "payment:cancelled",
+  "payment:3ds:started",
+  "payment:3ds:completed",
+  "payment:3ds:failed",
+  "form:validated",
+  "form:submitted",
+  "redirect:provider",
+] as const;
+
+function attachEventListeners(checkout: CheckoutInstance): void {
+  for (const eventName of CHECKOUT_EVENTS) {
+    checkout.on(eventName, (data: unknown) => {
+      const viz = useVisualizationStore.getState();
+      if (!viz.enabled) return;
+
+      viz.addEvent({
+        type: "event",
+        name: eventName,
+        meta: data && typeof data === "object"
+          ? (data as Record<string, unknown>)
+          : { value: data },
+      });
+    });
+  }
+}
 
 interface CheckoutState {
   // Session state
@@ -201,6 +237,8 @@ export const useCheckoutStore = create<CheckoutState>()(
             localModeConfig
           );
           const version = extractSdkVersionFromMetaInfo(metaInfo);
+
+          attachEventListeners(checkoutInstance);
 
           set({
             checkout: checkoutInstance,
@@ -409,6 +447,8 @@ export const useCheckoutStore = create<CheckoutState>()(
           );
 
           // Step 6: Update store with new instance
+          attachEventListeners(newCheckoutInstance);
+
           set({
             checkout: newCheckoutInstance,
             isCheckoutInitialized: true,
