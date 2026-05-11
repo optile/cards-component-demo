@@ -1,5 +1,5 @@
 const env = "checkout.integration";
-const defaultDivision = "45667";
+const defaultDivision = "58783";
 let isDifferentShippingAddress = false;
 const listRequest = {
   currency: "USD",
@@ -270,7 +270,7 @@ function onComponentListChange(checkout, diff) {
    * Container of payment methods list
    */
   const paymentMethodsContainer = document.getElementById(
-    "payment-methods-container"
+    "payment-methods-container",
   );
 
   /**
@@ -295,7 +295,7 @@ function onComponentListChange(checkout, diff) {
       const parentElement = document.createElement("div");
       parentElement.classList = "payment-method-component-container";
       const componentInfo = componentsInfo.find(
-        ({ name }) => name === component
+        ({ name }) => name === component,
       );
       const template = `
                 <label
@@ -318,7 +318,7 @@ function onComponentListChange(checkout, diff) {
                         ?.map(
                           (info) =>
                             info.logoUrl &&
-                            `<img src="${info.logoUrl}" alt="${componentInfo.label}" />`
+                            `<img src="${info.logoUrl}" alt="${componentInfo.label}" />`,
                         )
                         .join("") || ""
                     }
@@ -371,7 +371,7 @@ async function initCheckout() {
     onPaymentFailure: createDummyCallHandler("onPaymentFailure", true),
     onBeforeProviderRedirect: createDummyCallHandler(
       "onBeforeProviderRedirect",
-      true
+      true,
     ),
     refetchList: createDummyCallHandler("refetchList"),
     onPaymentDeclined: createDummyCallHandler("onPaymentDeclined", true),
@@ -500,7 +500,7 @@ window.addEventListener("DOMContentLoaded", async () => {
           document.getElementById("loading-message").style = "display: none;";
           wrapper.style = "display: block;";
         }, 1000);
-      }
+      },
     );
   }
   customerDetailsForm.addEventListener("change", updateListData);
@@ -522,7 +522,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       RUB: "₽", // Russian Ruble
     };
     Array.from(
-      document.getElementsByClassName("amount-with-currency-sign")
+      document.getElementsByClassName("amount-with-currency-sign"),
     ).forEach(function (el) {
       el.innerHTML = `${symbols[listRequest.currency]}${listRequest.amount}`;
     });
