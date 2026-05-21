@@ -13,7 +13,7 @@ import type {
   CallbackName,
   CallbackConfig,
 } from "@/features/embeddedCheckout/types/callbacks";
-import { NOTIFICATION_CALLBACKS } from "@/features/embeddedCheckout/types/callbacks";
+import { DEPRECATED_CALLBACKS, NOTIFICATION_CALLBACKS } from "@/features/embeddedCheckout/types/callbacks";
 import ExternalLink from "@/components/ui/ExternalLink";
 
 interface CallbackConfigRowProps {
@@ -33,12 +33,21 @@ const CallbackConfigRow: React.FC<CallbackConfigRowProps> = ({
   onReset,
 }) => {
   const isNotificationOnly = NOTIFICATION_CALLBACKS.includes(callbackName);
+  const isLegacy = config.variant === "legacy";
+  const deprecatedConfigDesc = DEPRECATED_CALLBACKS[callbackName];
 
   return (
-    <div className="border rounded-lg p-3 bg-white shadow-sm">
+    <div className={
+      `border rounded-lg p-3
+      ${
+        Boolean(deprecatedConfigDesc)
+          ? 'bg-gray-50 border-gray-200 rounded-xl overflow-hidden divide-y divide-gray-100'
+          : 'bg-white shadow-sm'
+      }`}>
       {/* Header with callback name and description */}
       <div className="flex items-start gap-3 mb-3">
         <Checkbox
+          disabled={isLegacy}
           checked={config.enabled}
           onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
             onConfigChange("enabled", e.target.checked)
@@ -48,7 +57,16 @@ const CallbackConfigRow: React.FC<CallbackConfigRowProps> = ({
         />
         <div className="flex-1">
           <div className="flex items-center gap-1">
-            <h4 className="font-mono text-sm font-semibold text-gray-900">
+            <span className={
+              `shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded
+              ${
+                isLegacy
+                  ? "bg-gray-100 text-gray-400 border border-gray-200"
+                  : "bg-emerald-50 text-emerald-700"
+              }`}>
+                {isLegacy ? "legacy" : "new"}
+              </span>
+            <h4 className={`font-mono text-sm font-semibold ${isLegacy ? 'text-gray-500' : 'text-gray-900'}`}>
               {callbackName}
             </h4>
             {isNotificationOnly && (
@@ -58,22 +76,22 @@ const CallbackConfigRow: React.FC<CallbackConfigRowProps> = ({
             )}
             <InfoTooltip content={CALLBACK_DESCRIPTIONS[callbackName]} />
             <ExternalLink link={CALLBACK_DOCUMENTATION_LINKS[callbackName]} />
-            <button
+            {!isLegacy && <button
               onClick={onReset}
               className="ml-auto text-xs text-gray-500 hover:text-gray-700 underline"
               type="button"
             >
               Reset
-            </button>
+            </button>}
           </div>
           <p className="text-xs text-gray-600 mt-0.5">
-            {CALLBACK_DESCRIPTIONS[callbackName]}
+            {deprecatedConfigDesc || CALLBACK_DESCRIPTIONS[callbackName]}
           </p>
         </div>
       </div>
 
       {/* Configuration options - only visible when enabled */}
-      {config.enabled && (
+      {config.enabled && !isLegacy && (
         <div className="ml-6 space-y-3">
           {/* Flow control and log level in same row */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

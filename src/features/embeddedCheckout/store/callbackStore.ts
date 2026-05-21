@@ -17,6 +17,7 @@ export const useCallbackStore = create<CallbackStoreState>((set, get) => ({
   hasUnsavedChanges: false,
   isApplying: false,
   error: null,
+  showDeprecated: false,
 
   // Actions
   updateCallbackConfig: (
@@ -42,6 +43,13 @@ export const useCallbackStore = create<CallbackStoreState>((set, get) => ({
       hasUnsavedChanges: true,
       error: null,
     });
+  },
+
+  setShowDeprecated: (show: boolean) => {
+    set((state) => ({
+      ...state,
+      showDeprecated: show,
+    }));
   },
 
   resetCallback: (name: CallbackName) => {
