@@ -35,7 +35,7 @@ const MerchantStoreCartTab: React.FC = () => {
       currency: localCurrency,
     });
     if (!listSessionData) return;
-    const { billingAddress, shippingAddress, sameAddress } =
+    const { billingAddress, shippingAddress, sameAddress, checkoutConfigurationName } =
       useConfigurationStore.getState();
     const updates = buildListSessionUpdates(
       {
@@ -45,7 +45,8 @@ const MerchantStoreCartTab: React.FC = () => {
       billingAddress,
       shippingAddress,
       sameAddress,
-      env
+      env,
+      checkoutConfigurationName
     );
     await updateListSession(
       updates,

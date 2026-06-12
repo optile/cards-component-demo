@@ -16,7 +16,8 @@ export const buildListSessionUpdates = (
   shippingAddress: ShippingAddress,
   sameAddress: boolean,
   env: string,
-  integrationType: INTEGRATION_TYPE = INTEGRATION_TYPE.EMBEDDED
+  checkoutConfigurationName?: string,
+  integrationType: INTEGRATION_TYPE = INTEGRATION_TYPE.EMBEDDED,
 ) => {
   const isHosted = integrationType === INTEGRATION_TYPE.HOSTED;
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
@@ -33,13 +34,17 @@ export const buildListSessionUpdates = (
     amount: product.price * product.quantity,
   }));
 
+  const checkoutRegistrationConfiguration = checkoutConfigurationName !== 'GUEST'
+  ? { checkoutConfigurationName }
+  : {};
+
   const request = {
+    ...checkoutRegistrationConfiguration,
     currency: merchantCart.currency,
     amount: totalAmount,
     country: billingAddress.country,
     division: Divisions[env as keyof typeof Divisions],
     customer: {
-      number: billingAddress.number,
       firstName: billingAddress.firstName,
       lastName: billingAddress.lastName,
       birthday: billingAddress.birthday,
@@ -59,29 +64,29 @@ export const buildListSessionUpdates = (
         },
         shipping: sameAddress
           ? {
-              street: billingAddress.street,
-              houseNumber: billingAddress.houseNumber,
-              zip: billingAddress.zip,
-              city: billingAddress.city,
-              state: billingAddress.state,
-              country: billingAddress.country,
-              name: {
-                firstName: billingAddress.firstName,
-                lastName: billingAddress.lastName,
-              },
-            }
-          : {
-              street: shippingAddress.street,
-              houseNumber: shippingAddress.houseNumber,
-              zip: shippingAddress.zip,
-              city: shippingAddress.city,
-              state: shippingAddress.state,
-              country: shippingAddress.country,
-              name: {
-                firstName: shippingAddress.firstName,
-                lastName: shippingAddress.lastName,
-              },
+            street: billingAddress.street,
+            houseNumber: billingAddress.houseNumber,
+            zip: billingAddress.zip,
+            city: billingAddress.city,
+            state: billingAddress.state,
+            country: billingAddress.country,
+            name: {
+              firstName: billingAddress.firstName,
+              lastName: billingAddress.lastName,
             },
+          }
+          : {
+            street: shippingAddress.street,
+            houseNumber: shippingAddress.houseNumber,
+            zip: shippingAddress.zip,
+            city: shippingAddress.city,
+            state: shippingAddress.state,
+            country: shippingAddress.country,
+            name: {
+              firstName: shippingAddress.firstName,
+              lastName: shippingAddress.lastName,
+            },
+          },
       },
     },
     integration: integrationType,

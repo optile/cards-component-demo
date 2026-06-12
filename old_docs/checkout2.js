@@ -1,5 +1,5 @@
-const env = "checkout.integration";
-const defaultDivision = "58783";
+const env = "integration";
+const defaultDivision = "NON_THREE_DS";
 let isDifferentShippingAddress = false;
 const listRequest = {
   currency: "USD",

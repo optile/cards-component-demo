@@ -8,13 +8,14 @@ import ReviewCartSection from "./ReviewCartSection";
 import ReviewCustomerSection from "./ReviewCustomerSection";
 import ReadyMessage from "./ReadyMessage";
 import ErrorAlert from "./ErrorAlert";
+import RegistrationSetupStep from "./RegistrationSetupStep";
 
 const ReviewConfirmStep: React.FC<StepComponentProps> = ({
   goToPrevious,
   isFirstStep,
   isLastStep,
 }) => {
-  const { env, merchantCart, billingAddress, shippingAddress, sameAddress } =
+  const { env, merchantCart, billingAddress, shippingAddress, sameAddress, checkoutConfigurationName } =
     useHostedConfigurationStore();
 
   const { isLoading, error, initiateHostedPayment, clearError } =
@@ -26,7 +27,8 @@ const ReviewConfirmStep: React.FC<StepComponentProps> = ({
       billingAddress,
       shippingAddress,
       sameAddress,
-      env
+      env,
+      checkoutConfigurationName || 'GUEST'
     );
   };
 

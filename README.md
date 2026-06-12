@@ -50,7 +50,7 @@ Use the header navigation to switch flows or return to the chooser.
 
 * The configuration panel drives the list session payload and SDK initialization. Tabs expose base SDK options (environment, preload list, refetch behaviour), advanced callback wiring, cart items, customer addresses, and UI styling tokens.
 
-* Session data is generated through `CheckoutApiService.generateListSession`, which posts to `https://api.{env}.oscato.com/checkout/session`. The default environment is `sandbox`, with an additional `checkout.integration` division available.
+* Session data is generated through `CheckoutApiService.generateListSession`, which posts to `https://api.{env}.oscato.com/checkout/session`. The default environment is `sandbox`, with an additional `integration` division available.
 * Payment methods are mounted dynamically based on the list response. The event logger at the bottom captures SDK callbacks, charge flow events, and metadata to help validate integration behaviour.
 * Toggle URL sharing to persist both checkout and configuration stores into the location hash, enabling copyable deep links that reproduce the current setup.
 * `DemoCardNumbers` surfaces network-specific test PANs that work with the sandbox to simulate successful charges.

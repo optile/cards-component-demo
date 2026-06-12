@@ -11,6 +11,8 @@ export const usePaymentMethods = (checkout: CheckoutInstance | null) => {
     availableMethods,
     setAvailableMethods,
     isSubmitting,
+    registrationType,
+    setRegistrationType
   } = useCheckoutStore();
   const { componentRefs, handlePayment } = useCheckoutUI(checkout);
 
@@ -28,5 +30,7 @@ export const usePaymentMethods = (checkout: CheckoutInstance | null) => {
     handlePayment,
     availableMethods,
     isSubmitting,
+    registrationType,
+    setRegistrationType
   };
 };

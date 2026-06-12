@@ -10,6 +10,7 @@ import type {
   BillingAddress,
   ShippingAddress,
 } from "../../../types/merchant";
+import type { RegistrationType } from "@/features/embeddedCheckout/constants";
 
 export const useHostedPaymentFlow = () => {
   const [state, setState] = useState<HostedPaymentFlowState>({
@@ -23,7 +24,8 @@ export const useHostedPaymentFlow = () => {
     billingAddress: BillingAddress,
     shippingAddress: ShippingAddress,
     sameAddress: boolean,
-    env: string
+    env: string,
+    checkoutConfigurationName: RegistrationType
   ) => {
     setState({ isLoading: true, error: null, success: false });
 
@@ -35,6 +37,7 @@ export const useHostedPaymentFlow = () => {
         shippingAddress,
         sameAddress,
         env,
+        checkoutConfigurationName,
         INTEGRATION_TYPE.HOSTED
       );
 

@@ -10,6 +10,10 @@ import { usePaymentMethods } from "@/features/embeddedCheckout/hooks/usePaymentM
 import { useConfigurationStore } from "@/features/embeddedCheckout/store/configurationStore";
 import ChargeFlowEventLogger from "../components/ChargeFlowEventLogger";
 import { useCheckoutStore } from "../store/checkoutStore";
+import Icon from "@/components/ui/Icon";
+import Tooltip from "@/components/ui/Tooltip";
+import { registrationOptions, type RegistrationType } from "../constants";
+import styles from "./Checkout.module.css";
 
 const Checkout = () => {
   const { env } = useParams<{ env: string }>();
@@ -17,7 +21,7 @@ const Checkout = () => {
 
   // Validate and set environment from URL params
   useEffect(() => {
-    if (!env || (env !== "sandbox" && env !== "checkout.integration")) {
+    if (!env || (env !== "sandbox" && env !== "integration")) {
       console.error(`Invalid environment: ${env}. Redirecting to environment selection.`);
       navigate("/embedded");
       return;
@@ -29,7 +33,7 @@ const Checkout = () => {
   }, [env, navigate]);
 
   const { listSessionData } = useInitSession();
-  const { version } = useCheckoutStore();
+  const { version, reinitRegistrationSession, loadingCheckoutConfiguration } = useCheckoutStore();
   const { checkout } = useInitCheckout(listSessionData);
   const {
     payButtonType,
@@ -39,12 +43,17 @@ const Checkout = () => {
   } = useConfigurationStore();
   const {
     activeNetwork,
+    registrationType,
     setActiveNetwork,
     componentRefs,
     handlePayment,
     availableMethods,
     isSubmitting,
   } = usePaymentMethods(checkout);
+
+  const handleRegistrationChange = async (registrationType: RegistrationType) => {
+    reinitRegistrationSession(registrationType);
+  }
 
   return (
     <div className="bg-gray-50 min-h-screen font-sans">
@@ -86,6 +95,31 @@ const Checkout = () => {
         <ConfigurationPanel />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="md:col-span-2">
+            <div className="flex gap-1 border-b border-[#e5e5e0]">
+              {Object.values(registrationOptions).map((regOption) => (
+                <button
+                  key={regOption.key}
+                  className={`${styles.tab} ${registrationType === regOption.key ? styles.tabActive : ""}`}
+                  onClick={() => handleRegistrationChange(regOption.key)}
+                >
+                  {regOption?.note ? (
+                    <Tooltip content={regOption.note} childClassName="items-center">
+                      {regOption.title}
+                      <Icon
+                        name="info"
+                        size={14}
+                        className="flex flex-inline ml-1 justify-center"
+                      />
+                    </Tooltip>
+                  ) : (
+                    regOption.title
+                  )}
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center gap-2 cursor-pointer select-none">
+            </div>
+
             <PaymentMethodsSection
               availableMethods={availableMethods}
               activeNetwork={activeNetwork}
@@ -96,9 +130,9 @@ const Checkout = () => {
               primaryTextColor={primaryTextColor}
               handlePayment={handlePayment}
               isSubmitting={isSubmitting}
+              loadingCheckoutConfiguration={loadingCheckoutConfiguration}
             />
-          </div>
-
+            </div>
           <ShoppingCartSection
             products={products}
             currency={currency}

@@ -29,6 +29,7 @@ export const useEmbeddedConfigurationStore =
               // This forces Zustand to detect changes and save to storage
               useCheckoutStore.setState({
                 env: currentCheckoutState.env,
+                registrationType: currentCheckoutState.registrationType,
                 refetchListBeforeCharge:
                   currentCheckoutState.refetchListBeforeCharge,
               });

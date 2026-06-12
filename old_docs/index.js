@@ -80,7 +80,7 @@ window.addEventListener("beforeunload", function () {
   });
 });
 
-// Loads the checkout web script dynamically, using checkout.integration environment if listUrl from checkout.integration is passed
+// Loads the checkout web script dynamically, using integration environment if listUrl from integration is passed
 function loadCheckoutWeb() {
   const head = document.getElementsByTagName("head")[0];
   const js = document.createElement("script");
@@ -381,7 +381,7 @@ async function initPayment() {
 
     // configurations for the Checkout Web SDK
     const configs = {
-      env: ie, // test | live | int-env-name | checkout.integration
+      env: ie, // test | live | int-env-name | integration
       longId: longId,
       preload: ["stripe:card"], // loads cards and afterpay script as soon as page loads so that rendering using dropIn is fast
       // Called whenever there is an error (either server-side or client-side) which prevents payment. componentName indicates
@@ -391,7 +391,7 @@ async function initPayment() {
           "On before error called",
           checkout,
           componentName,
-          errorData
+          errorData,
         );
         switch (componentName) {
           // Cards payment component error - we want to unmount the component and hide payment method
@@ -405,7 +405,7 @@ async function initPayment() {
             showMessage(
               `onBeforeError called in Cards`,
               "background-color: #FF4800; display: flex;",
-              1500
+              1500,
             );
           // Afterpay payment component error - we want to unmount the component and hide payment method
           case "afterpay":
@@ -418,7 +418,7 @@ async function initPayment() {
             showMessage(
               `onBeforeError called in Afterpay`,
               "background-color: #FF4800; display: flex;",
-              1500
+              1500,
             );
           // Klarna payment component error - we want to unmount the component and hide payment method
           case "klarna":
@@ -431,7 +431,7 @@ async function initPayment() {
             showMessage(
               `onBeforeError called in Klarna`,
               "background-color: #FF4800; display: flex;",
-              1500
+              1500,
             );
           // Global error
           case "checkout-web":
@@ -439,7 +439,7 @@ async function initPayment() {
             showMessage(
               `onBeforeError called in ${componentName}`,
               "background-color: #FF4800; display: flex;",
-              100000
+              100000,
             );
         }
       },
@@ -449,7 +449,7 @@ async function initPayment() {
           "On before charge called",
           checkout,
           componentName,
-          errorData
+          errorData,
         );
         const message = document.getElementById("custom-override-message");
         message.innerHTML = "Awaiting onBeforeCharge result...";
@@ -471,7 +471,7 @@ async function initPayment() {
           "On before provider redirect called",
           checkout,
           componentName,
-          redirectData
+          redirectData,
         );
         const message = document.getElementById("custom-override-message");
         message.innerHTML = "Awaiting onBeforeProviderRedirect result...";
@@ -496,7 +496,7 @@ async function initPayment() {
           "On payment success called",
           checkout,
           componentName,
-          redirectData
+          redirectData,
         );
         const message = document.getElementById("custom-override-message");
         message.innerHTML = "onPaymentSuccess was called...";
@@ -519,7 +519,7 @@ async function initPayment() {
           "On payment failure called",
           checkout,
           componentName,
-          redirectData
+          redirectData,
         );
         const message = document.getElementById("custom-override-message");
         message.innerHTML = "onPaymentFailure was called...";
@@ -552,7 +552,7 @@ async function initPayment() {
           showMessage(
             `Payment with cards not possible`,
             "background-color: #FF4800; display: flex;",
-            1500
+            1500,
           );
         }
 
@@ -565,7 +565,7 @@ async function initPayment() {
           showMessage(
             `Payment with Afterpay not possible`,
             "background-color: #FF4800; display: flex;",
-            1500
+            1500,
           );
         }
 
@@ -575,7 +575,7 @@ async function initPayment() {
           showMessage(
             `Payment with Klarna not possible`,
             "background-color: #FF4800; display: flex;",
-            1500
+            1500,
           );
         }
 
@@ -607,7 +607,7 @@ async function initPayment() {
 
             // This is a container for the payoneer-cards component, hidden by default and shown when cards radio is clicked
             const container = document.getElementById(
-              "cards-component-container"
+              "cards-component-container",
             );
 
             // Already drop in cards component so that it renders immediately
@@ -659,7 +659,7 @@ async function initPayment() {
 
             // Placeholder for dropping in the Afterpay payment component
             const container = document.getElementById(
-              "afterpay-component-container"
+              "afterpay-component-container",
             );
 
             // Already drop in cards component so that it renders immediately
@@ -709,7 +709,7 @@ async function initPayment() {
 
             // Placeholder for dropping in the klarna payment component
             const container = document.getElementById(
-              "klarna-component-container"
+              "klarna-component-container",
             );
 
             // Already drop in cards component so that it renders immediately
@@ -878,7 +878,7 @@ function showCardsOptions(boolean) {
 
 function showAfterpayPaymentMethod(boolean) {
   const afterpayPaymentMethod = document.getElementById(
-    "afterpay-payment-method"
+    "afterpay-payment-method",
   );
   if (boolean) {
     afterpayPaymentMethod.classList.remove("hidden");
@@ -891,7 +891,7 @@ function showAfterpayPaymentComponent(boolean) {
   const afterpayComponentContainer =
     document.getElementById("afterpay-container");
   const afterpayPaymentMethod = document.getElementById(
-    "afterpay-payment-method"
+    "afterpay-payment-method",
   );
   if (boolean) {
     afterpayComponentContainer.style = "display: block;";
@@ -928,7 +928,7 @@ function setUpDemoCards() {
   const numbers = document.getElementsByClassName("demo-card-number");
 
   Array.from(numbers).forEach((element) =>
-    element.addEventListener("click", copyToClipboard)
+    element.addEventListener("click", copyToClipboard),
   );
 }
 
@@ -1010,7 +1010,7 @@ function handleStandaloneRedirectClick(method) {
   generateList(amount, country, language, "USD", getDivision()).then(
     (result) => {
       window.location.href = result.url;
-    }
+    },
   );
 }
 
@@ -1214,7 +1214,7 @@ function generateList(
   country,
   language,
   currency = "USD",
-  division = defaultDivision
+  division = defaultDivision,
 ) {
   const listRequest = {
     currency,

@@ -60,7 +60,7 @@ const SelectEnvironment = () => {
               </div>
             </div>
             <Button
-              onClick={() => handleEnvironmentSelect("checkout.integration")}
+              onClick={() => handleEnvironmentSelect("integration")}
               className="w-full"
             >
               Use Integration

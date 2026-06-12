@@ -7,6 +7,7 @@ import type {
   ShippingAddress,
   CartProduct,
 } from "../../../types/merchant";
+import type { RegistrationType } from "../constants";
 
 type PayButtonType = "default" | "custom";
 
@@ -18,6 +19,7 @@ interface ConfigurationState {
   billingAddress: BillingAddress;
   shippingAddress: ShippingAddress;
   sameAddress: boolean;
+  checkoutConfigurationName: RegistrationType;
   setPayButtonType: (type: PayButtonType) => void;
   setPrimaryColor: (color: string) => void;
   setPrimaryTextColor: (color: string) => void;
@@ -58,7 +60,6 @@ export const useConfigurationStore = create<ConfigurationState>()(
         city: "Anytown",
         state: "CA",
         country: "US",
-        number: "777",
         birthday: "1977-09-13",
       },
       shippingAddress: {
@@ -72,9 +73,9 @@ export const useConfigurationStore = create<ConfigurationState>()(
         city: "Anytown",
         state: "CA",
         country: "US",
-        number: "777",
         birthday: "1977-09-13",
       },
+      checkoutConfigurationName: 'GUEST',
       sameAddress: true,
       setPayButtonType: (type) => set({ payButtonType: type }),
       setPrimaryColor: (color) => set({ primaryColor: color }),
@@ -125,6 +126,7 @@ export const useConfigurationStore = create<ConfigurationState>()(
       name: "configuration-storage",
       storage: createJSONStorage(() => hashStorage),
       partialize: (state) => ({
+        checkoutConfigurationName: state.checkoutConfigurationName,
         merchantCart: {
           products: state.merchantCart.products,
           currency: state.merchantCart.currency,
@@ -140,7 +142,6 @@ export const useConfigurationStore = create<ConfigurationState>()(
           city: state.billingAddress.city,
           state: state.billingAddress.state,
           country: state.billingAddress.country,
-          number: state.billingAddress.number,
           birthday: state.billingAddress.birthday,
         },
         shippingAddress: {
@@ -153,7 +154,6 @@ export const useConfigurationStore = create<ConfigurationState>()(
           city: state.shippingAddress.city,
           state: state.shippingAddress.state,
           country: state.shippingAddress.country,
-          number: state.shippingAddress.number,
           birthday: state.shippingAddress.birthday,
         },
         sameAddress: state.sameAddress,
