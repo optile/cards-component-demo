@@ -45,14 +45,14 @@ const MerchantStoreUserDataTab: React.FC = () => {
     const { updateListSession, env, listSessionData } =
       useCheckoutStore.getState();
     if (!listSessionData) return;
-    const { merchantCart, checkoutConfigurationName } = useConfigurationStore.getState();
+    const { merchantCart, registrationType } = useConfigurationStore.getState();
     const updates = buildListSessionUpdates(
       merchantCart,
       localBilling,
       localShipping,
       localSameAddress,
       env,
-      checkoutConfigurationName
+      registrationType
     );
     await updateListSession(
       updates,

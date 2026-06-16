@@ -1,4 +1,4 @@
-import { registrationOptions, Registrations, type RegistrationType } from "@/features/embeddedCheckout/constants/checkout";
+import { registrationOptions, Registrations, type RegistrationType } from "@/constants/registrations";
 
 export interface RegistrationOption {
   value: RegistrationType;

@@ -3,9 +3,9 @@ import type { StepComponentProps } from "@/components/ui/MultiStepper";
 import Button from "@/components/ui/Button";
 import { useHostedConfigurationStore } from "@/features/hostedCheckout/store/hostedConfigurationStore";
 import { createDetailedRegistrationOptions } from "@/utils/registrationTypes";
-import type { RegistrationType } from "@/features/embeddedCheckout/constants";
 import Tooltip from "@/components/ui/Tooltip";
 import Icon from "@/components/ui/Icon";
+import type { RegistrationType } from "@/constants/registrations";
 
 const RegistrationSetupStep: React.FC<StepComponentProps> = ({
   goToNext,
@@ -13,7 +13,7 @@ const RegistrationSetupStep: React.FC<StepComponentProps> = ({
   isFirstStep,
   isLastStep,
 }) => {
-  const { checkoutConfigurationName, setRegistrationType } = useHostedConfigurationStore();
+  const { registrationType, setRegistrationType } = useHostedConfigurationStore();
   const registrations = createDetailedRegistrationOptions();
 
   const handleRegistrationTypeChange = (value: RegistrationType) => {
@@ -41,7 +41,7 @@ const RegistrationSetupStep: React.FC<StepComponentProps> = ({
                 name="env"
                 value={registration.value}
                 className="mr-3"
-                checked={checkoutConfigurationName === registration.value}
+                checked={registrationType === registration.value}
                 onChange={(e) => handleRegistrationTypeChange(e.target.value as RegistrationType)}
               />
 

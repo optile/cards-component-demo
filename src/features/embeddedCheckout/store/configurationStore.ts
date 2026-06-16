@@ -7,7 +7,7 @@ import type {
   ShippingAddress,
   CartProduct,
 } from "../../../types/merchant";
-import type { RegistrationType } from "../constants";
+import type { RegistrationType } from "@/constants/registrations";
 
 type PayButtonType = "default" | "custom";
 
@@ -19,7 +19,8 @@ interface ConfigurationState {
   billingAddress: BillingAddress;
   shippingAddress: ShippingAddress;
   sameAddress: boolean;
-  checkoutConfigurationName: RegistrationType;
+  registrationType: RegistrationType,
+  setRegistrationType?: (registrationType: RegistrationType) => void;
   setPayButtonType: (type: PayButtonType) => void;
   setPrimaryColor: (color: string) => void;
   setPrimaryTextColor: (color: string) => void;
@@ -75,11 +76,12 @@ export const useConfigurationStore = create<ConfigurationState>()(
         country: "US",
         birthday: "1977-09-13",
       },
-      checkoutConfigurationName: 'GUEST',
+      registrationType: 'GUEST',
       sameAddress: true,
       setPayButtonType: (type) => set({ payButtonType: type }),
       setPrimaryColor: (color) => set({ primaryColor: color }),
       setPrimaryTextColor: (color) => set({ primaryTextColor: color }),
+      setRegistrationType: (registrationType: RegistrationType) => set({ registrationType }),
       setMerchantCart: (cart) =>
         set((state) => ({ merchantCart: { ...state.merchantCart, ...cart } })),
       addProduct: (product) =>
@@ -126,7 +128,7 @@ export const useConfigurationStore = create<ConfigurationState>()(
       name: "configuration-storage",
       storage: createJSONStorage(() => hashStorage),
       partialize: (state) => ({
-        checkoutConfigurationName: state.checkoutConfigurationName,
+        registrationType: state.registrationType,
         merchantCart: {
           products: state.merchantCart.products,
           currency: state.merchantCart.currency,

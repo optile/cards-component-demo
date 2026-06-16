@@ -29,7 +29,6 @@ export const useEmbeddedConfigurationStore =
               // This forces Zustand to detect changes and save to storage
               useCheckoutStore.setState({
                 env: currentCheckoutState.env,
-                registrationType: currentCheckoutState.registrationType,
                 refetchListBeforeCharge:
                   currentCheckoutState.refetchListBeforeCharge,
               });
@@ -39,6 +38,7 @@ export const useEmbeddedConfigurationStore =
                 billingAddress: { ...currentConfigState.billingAddress },
                 shippingAddress: { ...currentConfigState.shippingAddress },
                 sameAddress: currentConfigState.sameAddress,
+                registrationType: currentConfigState.registrationType,
               });
             } catch {
               // Silently handle any sync errors

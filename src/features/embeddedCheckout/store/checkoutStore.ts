@@ -23,7 +23,8 @@ import {
   detectLocalServers,
   type ServerStatus,
 } from "@/utils/localServerDetection";
-import { type LocalModeConfig, type RegistrationType } from "@/features/embeddedCheckout/constants/checkout";
+import { type LocalModeConfig } from "@/features/embeddedCheckout/constants/checkout";
+import type { RegistrationType } from "@/constants/registrations";
 
 interface CheckoutState {
   // Session state
@@ -54,7 +55,6 @@ interface CheckoutState {
 
   // Payment methods state
   activeNetwork: string;
-  registrationType: RegistrationType,
   loadingCheckoutConfiguration: boolean,
 
   availableMethods: PaymentMethod[];
@@ -118,7 +118,6 @@ export const useCheckoutStore = create<CheckoutState>()(
       componentListDiff: null,
       hasChangedComponents: false,
 
-      registrationType: "GUEST",
       loadingCheckoutConfiguration: false,
 
       activeNetwork: "",
@@ -154,7 +153,7 @@ export const useCheckoutStore = create<CheckoutState>()(
               configState.shippingAddress,
               configState.sameAddress,
               get().env,
-              configState.checkoutConfigurationName
+              configState.registrationType
             );
             const response = await CheckoutApiService.generateListSession(
               initialRequest,
@@ -261,8 +260,8 @@ export const useCheckoutStore = create<CheckoutState>()(
 
       setActiveNetwork: (network) => set({ activeNetwork: network }),
 
-      reinitRegistrationSession: async (checkoutConfigurationName: RegistrationType) => {
-        set({ registrationType: checkoutConfigurationName, loadingCheckoutConfiguration: true });
+      reinitRegistrationSession: async (registrationType: RegistrationType) => {
+        set({ loadingCheckoutConfiguration: true });
         try {
           const { checkout } = get();
           const configState = useConfigurationStore.getState();
@@ -276,7 +275,7 @@ export const useCheckoutStore = create<CheckoutState>()(
             configState.shippingAddress,
             configState.sameAddress,
             checkoutStore.env,
-            checkoutConfigurationName,
+            registrationType,
           );
 
           const newListSession = await CheckoutApiService.generateListSession(
@@ -287,8 +286,6 @@ export const useCheckoutStore = create<CheckoutState>()(
           set({ listSessionData: newListSession });
 
           await checkout?.updateLongId(newListSession.id);
-
-
         } catch (err) {
           const errorMessage =
             err instanceof Error
@@ -352,7 +349,7 @@ export const useCheckoutStore = create<CheckoutState>()(
                 configState.shippingAddress,
                 configState.sameAddress,
                 partialConfig.env,
-                configState.checkoutConfigurationName,
+                configState.registrationType,
               );
 
               const newListSession =

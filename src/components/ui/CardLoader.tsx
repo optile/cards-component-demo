@@ -11,7 +11,7 @@ const CardLoader: React.FC<CardLoader> = ({
 }) => (
    <div className="relative w-4/5">
       {loading && (
-        <div className="absolute inset-0 bg-white flex flex-col gap-4 p-4 rounded-xl z-10">
+        <div className="absolute inset-0 bg-white flex flex-col gap-4 p-4 rounded-sm z-10">
           <div className="grid grid-cols-4 gap-3">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="flex flex-col gap-2">

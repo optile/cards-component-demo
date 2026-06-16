@@ -12,8 +12,8 @@ import ChargeFlowEventLogger from "../components/ChargeFlowEventLogger";
 import { useCheckoutStore } from "../store/checkoutStore";
 import Icon from "@/components/ui/Icon";
 import Tooltip from "@/components/ui/Tooltip";
-import { registrationOptions, type RegistrationType } from "../constants";
 import styles from "./Checkout.module.css";
+import { registrationOptions, Registrations, type RegistrationType } from "@/constants/registrations";
 
 const Checkout = () => {
   const { env } = useParams<{ env: string }>();
@@ -40,10 +40,11 @@ const Checkout = () => {
     primaryColor,
     primaryTextColor,
     merchantCart: { products, currency },
+    registrationType,
+    setRegistrationType
   } = useConfigurationStore();
   const {
     activeNetwork,
-    registrationType,
     setActiveNetwork,
     componentRefs,
     handlePayment,
@@ -52,7 +53,10 @@ const Checkout = () => {
   } = usePaymentMethods(checkout);
 
   const handleRegistrationChange = async (registrationType: RegistrationType) => {
-    reinitRegistrationSession(registrationType);
+    if (setRegistrationType) {
+      setRegistrationType(registrationType);
+      reinitRegistrationSession(registrationType);
+    }
   }
 
   return (

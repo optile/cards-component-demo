@@ -16,7 +16,7 @@ export const buildListSessionUpdates = (
   shippingAddress: ShippingAddress,
   sameAddress: boolean,
   env: string,
-  checkoutConfigurationName?: string,
+  registrationType?: string,
   integrationType: INTEGRATION_TYPE = INTEGRATION_TYPE.EMBEDDED,
 ) => {
   const isHosted = integrationType === INTEGRATION_TYPE.HOSTED;
@@ -34,9 +34,9 @@ export const buildListSessionUpdates = (
     amount: product.price * product.quantity,
   }));
 
-  const checkoutRegistrationConfiguration = checkoutConfigurationName !== 'GUEST'
-  ? { checkoutConfigurationName }
-  : {};
+  const checkoutRegistrationConfiguration = registrationType !== 'GUEST'
+    ? { checkoutConfigurationName: registrationType }
+    : {};
 
   const request = {
     ...checkoutRegistrationConfiguration,

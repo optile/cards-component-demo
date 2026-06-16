@@ -5,7 +5,7 @@ import type {
   ShippingAddress,
   CartProduct,
 } from "../../../types/merchant";
-import type { RegistrationType } from "@/features/embeddedCheckout/store/checkoutStore";
+import type { RegistrationType } from "@/constants/registrations";
 
 export enum CurrentStep {
   CHOOSE_ENV = "choose-env",
@@ -22,7 +22,7 @@ interface HostedConfigurationStore {
   billingAddress: BillingAddress;
   shippingAddress: ShippingAddress;
   sameAddress: boolean;
-  checkoutConfigurationName?: RegistrationType;
+  registrationType?: RegistrationType;
   setRegistrationType?: (registrationType: RegistrationType) => void;
   setCurrentStep?: (step: CurrentStep) => void;
   setEnv?: (env: string) => void;
@@ -39,7 +39,7 @@ interface HostedConfigurationStore {
 export const useHostedConfigurationStore = create<HostedConfigurationStore>()(
   (set, get) => ({
     currentStep: CurrentStep.CHOOSE_ENV,
-    checkoutConfigurationName: 'GUEST',
+    registrationType: 'GUEST',
     env: "sandbox",
     merchantCart: {
       products: [
@@ -80,7 +80,7 @@ export const useHostedConfigurationStore = create<HostedConfigurationStore>()(
     sameAddress: true,
     setCurrentStep: (step: CurrentStep) => set({ currentStep: step }),
     setEnv: (env: string) => set({ env }),
-    setRegistrationType: (checkoutConfigurationName: RegistrationType) => set({ checkoutConfigurationName }),
+    setRegistrationType: (registrationType: RegistrationType) => set({ registrationType }),
     setMerchantCart: (cart: Partial<MerchantCart>) =>
       set((state) => ({
         merchantCart: { ...state.merchantCart, ...cart },
