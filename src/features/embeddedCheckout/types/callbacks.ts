@@ -1,29 +1,19 @@
-export enum CallbackVariant {
-  STANDARD = "standard",
-  LEGACY = "legacy",
-  NEW = "new"
-};
-
 // Callback configuration for individual callbacks
 export interface CallbackConfig {
   enabled: boolean;
   shouldProceed: boolean;
   customMessage: string;
   logLevel: "info" | "warn" | "error";
-  variant: CallbackVariant
 }
 
 // Configuration for all supported callbacks
 export interface CallbackConfigs {
   onBeforeCharge: CallbackConfig;
-  onBeforeSubmit: CallbackConfig;
   onBeforeError: CallbackConfig;
   onPaymentSuccess: CallbackConfig;
-  onSubmitSuccess: CallbackConfig;
   onPaymentFailure: CallbackConfig;
   onBeforeProviderRedirect: CallbackConfig;
   onPaymentDeclined: CallbackConfig;
-  onSubmitError: CallbackConfig;
   onReady: CallbackConfig;
 }
 
@@ -42,7 +32,6 @@ export type CallbackHandler = (...args: any[]) => boolean | undefined;
 export interface CallbackStoreState {
   // Current callback configurations
   configs: CallbackConfigs;
-  showDeprecated: boolean;
 
   // UI state
   hasUnsavedChanges: boolean;
@@ -54,7 +43,6 @@ export interface CallbackStoreState {
     name: CallbackName,
     config: Partial<CallbackConfig>
   ) => void;
-  setShowDeprecated: (show: boolean) => void;
   resetCallbacks: () => void;
   resetCallback: (name: CallbackName) => void;
   applyCallbacks: () => Promise<void>;
@@ -68,31 +56,36 @@ export const DEFAULT_CALLBACK_CONFIG: CallbackConfig = {
   shouldProceed: false,
   customMessage: "",
   logLevel: "info",
-  variant: CallbackVariant.STANDARD
 };
 
 // Default configurations for all callbacks
 export const DEFAULT_CALLBACK_CONFIGS: CallbackConfigs = {
-  onBeforeCharge: { ...DEFAULT_CALLBACK_CONFIG, variant: CallbackVariant.LEGACY },
-  onBeforeSubmit: { ...DEFAULT_CALLBACK_CONFIG, variant: CallbackVariant.NEW },
+  onBeforeCharge: { ...DEFAULT_CALLBACK_CONFIG },
   onBeforeError: { ...DEFAULT_CALLBACK_CONFIG },
-  onPaymentSuccess: { ...DEFAULT_CALLBACK_CONFIG, variant: CallbackVariant.LEGACY },
-  onSubmitSuccess: { ...DEFAULT_CALLBACK_CONFIG, variant: CallbackVariant.NEW },
-  onPaymentFailure: { ...DEFAULT_CALLBACK_CONFIG, variant: CallbackVariant.LEGACY },
+  onPaymentSuccess: { ...DEFAULT_CALLBACK_CONFIG },
+  onPaymentFailure: { ...DEFAULT_CALLBACK_CONFIG },
   onBeforeProviderRedirect: { ...DEFAULT_CALLBACK_CONFIG },
-  onPaymentDeclined: { ...DEFAULT_CALLBACK_CONFIG, variant: CallbackVariant.LEGACY },
-  onSubmitError: { ...DEFAULT_CALLBACK_CONFIG, variant: CallbackVariant.NEW },
+  onPaymentDeclined: { ...DEFAULT_CALLBACK_CONFIG },
   onReady: { ...DEFAULT_CALLBACK_CONFIG },
 };
 
-///Deprecated — use onSubmitError instead. onPaymentFailure will be removed in a future major version. If both are provided, onSubmitError takes precedence.
-
-export const DEPRECATED_CALLBACKS: Partial<Record<CallbackName, string>> = {
-  onBeforeCharge: "Replaced by onBeforeSubmit. onBeforeSubmit takes precedence, when both callbacks are defined.",
-  onPaymentSuccess: "Replaced by onSubmitSuccess. onSubmitSuccess takes precedence, when both callbacks are defined.",
-  onPaymentFailure: "Replaced by onSubmitError. onSubmitError takes precedence, when both callbacks are defined.",
-  onPaymentDeclined: "Replaced by onSubmitError. onSubmitError takes precedence, when both callbacks are defined."
-}
+// Callback descriptions for UI tooltips and help text
+export const CALLBACK_DESCRIPTIONS: Record<CallbackName, string> = {
+  onBeforeCharge:
+    "Called before a payment charge is processed. Return false to prevent the charge.",
+  onBeforeError:
+    "Called when an error occurs. Return false to prevent default error handling.",
+  onPaymentSuccess:
+    "Called when a payment is successful. Return false to prevent default success handling.",
+  onPaymentFailure:
+    "Called when a payment fails. Return false to prevent default failure handling.",
+  onBeforeProviderRedirect:
+    "Called before redirecting to a payment provider. Return false to prevent redirect.",
+  onPaymentDeclined:
+    "Called when a payment is declined. Return false to prevent default declined handling.",
+  onReady:
+    "Called when the payment component is fully initialized and ready to accept input. Provides component name, available networks, and readiness data.",
+};
 
 // Log level options for UI
 export const LOG_LEVEL_OPTIONS = [
@@ -100,10 +93,3 @@ export const LOG_LEVEL_OPTIONS = [
   { value: "warn", label: "Warning" },
   { value: "error", label: "Error" },
 ] as const;
-
-export const callbackPairs: Partial<Record<CallbackName, CallbackName>> = {
-  onBeforeCharge: 'onBeforeSubmit',
-  onPaymentSuccess: 'onSubmitSuccess',
-  onPaymentFailure: 'onSubmitError',
-  onPaymentDeclined: 'onSubmitError',
-}

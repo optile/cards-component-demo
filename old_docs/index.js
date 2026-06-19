@@ -357,7 +357,7 @@ async function initPayment() {
     function createPaymentListener(paymentComponent) {
       return function (event) {
         event.preventDefault();
-        paymentComponent.submit();
+        paymentComponent.pay();
       };
     }
 

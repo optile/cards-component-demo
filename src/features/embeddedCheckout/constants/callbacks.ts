@@ -4,47 +4,35 @@ import type { CallbackName } from "@/features/embeddedCheckout/types/callbacks";
 export const CALLBACK_DESCRIPTIONS: Record<CallbackName, string> = {
   onBeforeCharge:
     "Called before a payment charge is processed. Return false to prevent the charge.",
-  onBeforeSubmit:
-    "Called before a operation is processed. Return false to prevent the operation.",
   onBeforeError:
     "Called when an error occurs. Return false to prevent default error handling.",
   onPaymentSuccess:
     "Called when a payment is successful. Return false to prevent default success handling.",
-  onSubmitSuccess:
-    "Called when a operation is successful. Return false to prevent default success handling.",
   onPaymentFailure:
     "Called when a payment fails. Return false to prevent default failure handling.",
   onBeforeProviderRedirect:
     "Called before redirecting to a payment provider. Return false to prevent redirect.",
   onPaymentDeclined:
     "Called when a payment is declined. Return false to prevent default declined handling.",
-  onSubmitError:
-    "Called when a operation is declined or failed. Return false to prevent default operation error handling.",
   onReady:
     "Called when the payment component is fully initialized and ready to accept input. Provides component name, available networks, and readiness data.",
 };
 
 export const CALLBACK_DOCUMENTATION_LINKS: Record<CallbackName, string> = {
   onBeforeCharge:
-    "https://checkoutdocs.payoneer.com/checkout-2/docs/callback-reference#onbeforecharge",
-  onBeforeSubmit:
-    "https://checkoutdocs.payoneer.com/checkout-2/docs/callback-reference#onbeforesubmit",
+    "https://checkoutdocs.payoneer.com/checkout-2/docs/advanced-use-cases#onbeforecharge",
   onBeforeError:
-    "https://checkoutdocs.payoneer.com/checkout-2/docs/callback-reference#onbeforeerror",
+    "https://checkoutdocs.payoneer.com/checkout-2/docs/advanced-use-cases#onbeforeerror",
   onPaymentSuccess:
-    "https://checkoutdocs.payoneer.com/checkout-2/docs/callback-reference#onpaymentsuccess",
-  onSubmitSuccess:
-    "https://checkoutdocs.payoneer.com/checkout-2/docs/callback-reference#onsubmitsuccess",
+    "https://checkoutdocs.payoneer.com/checkout-2/docs/advanced-use-cases#onpaymentsuccess",
   onPaymentFailure:
-    "https://checkoutdocs.payoneer.com/checkout-2/docs/callback-reference#onpaymentfailure",
+    "https://checkoutdocs.payoneer.com/checkout-2/docs/advanced-use-cases#onpaymentfailure",
   onBeforeProviderRedirect:
-    "https://checkoutdocs.payoneer.com/checkout-2/docs/callback-reference#onbeforeproviderredirect",
+    "https://checkoutdocs.payoneer.com/checkout-2/docs/advanced-use-cases#onbeforeproviderredirect",
   onPaymentDeclined:
-    "https://checkoutdocs.payoneer.com/checkout-2/docs/callback-reference#onpaymentdeclined",
-  onSubmitError:
-    "https://checkoutdocs.payoneer.com/checkout-2/docs/callback-reference#onsubmiterror",
+    "https://checkoutdocs.payoneer.com/checkout-2/docs/advanced-use-cases#onpaymentdeclined",
   onReady:
-    "https://checkoutdocs.payoneer.com/checkout-2/docs/callback-reference#onready",
+    "https://checkoutdocs.payoneer.com/checkout-2/docs/advanced-use-cases#onready",
 };
 
 // Log level options for UI dropdowns
@@ -62,15 +50,12 @@ export const PROCEED_OPTIONS = [
 
 // Categories for organizing callbacks in UI
 export const CALLBACK_CATEGORIES = {
-  operation: {
-    title: "Operation Flow",
-    description: "Callbacks that control the main operation process",
+  payment: {
+    title: "Payment Flow",
+    description: "Callbacks that control the main payment process",
     callbacks: [
-      "onBeforeSubmit",
       "onBeforeCharge",
-      "onSubmitSuccess",
       "onPaymentSuccess",
-      "onSubmitError",
       "onPaymentFailure",
       "onPaymentDeclined",
     ] as CallbackName[],
@@ -96,14 +81,11 @@ export const CALLBACK_CATEGORIES = {
 // Default custom messages for each callback
 export const DEFAULT_CALLBACK_MESSAGES: Record<CallbackName, string> = {
   onBeforeCharge: "Payment charge is about to be processed",
-  onBeforeSubmit: "Operation is about to be processed",
   onBeforeError: "An error occurred during payment processing",
   onPaymentSuccess: "Payment was processed successfully",
-  onSubmitSuccess: "Operation was processed successfully",
   onPaymentFailure: "Payment processing failed",
   onBeforeProviderRedirect: "Redirecting to payment provider",
   onPaymentDeclined: "Payment was declined",
-  onSubmitError: "Operation processing failed",
   onReady: "Payment component is ready",
 };
 

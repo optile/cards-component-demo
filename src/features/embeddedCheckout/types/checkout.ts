@@ -12,10 +12,10 @@ export interface PaymentMethod {
 export interface DropInComponent {
   mount(element: HTMLElement | null): DropInComponent;
   unmount(): void;
-  submit(): Promise<void>;
-  updateNode(options: { hideSubmitButton: boolean }): void;
+  pay(): Promise<void>;
+  updateNode(options: { hidePaymentButton: boolean }): void;
   element: {
-    hideSubmitButton: (hide: boolean) => void;
+    hidePaymentButton: (hide: boolean) => void;
   };
 }
 
@@ -24,7 +24,7 @@ export interface CheckoutInstance {
   dropInComponents: Record<string, DropInComponent>;
   dropIn(
     methodName: string,
-    options?: { hideSubmitButton: boolean }
+    options?: { hidePaymentButton: boolean }
   ): DropInComponent;
   charge(): void;
   update(config: { env?: string; longId?: string }): Promise<CheckoutInstance>;
@@ -41,14 +41,11 @@ export interface CheckoutInstanceConfig {
   refetchListBeforeCharge?: boolean;
   preload: string[];
   onBeforeCharge: unknown;
-  onBeforeSubmit: unknown;
   onBeforeError: unknown;
   onPaymentSuccess: unknown;
-  onSubmitSuccess: unknown;
   onPaymentFailure: unknown;
   onBeforeProviderRedirect: unknown;
   onPaymentDeclined: unknown;
-  onSubmitError: unknown;
 }
 
 export interface ListSessionRequest {

@@ -54,7 +54,7 @@ const listRequest = {
 function createPaymentListener(paymentComponent) {
   return function (event) {
     event.preventDefault();
-    paymentComponent.submit();
+    paymentComponent.pay();
   };
 }
 

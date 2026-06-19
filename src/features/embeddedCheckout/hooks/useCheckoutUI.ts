@@ -41,7 +41,7 @@ export const useCheckoutUI = (checkout: CheckoutInstance | null) => {
         const container = componentRefs.current[methodName];
         if (method && container) {
           const component = checkout
-            .dropIn(method.name, { hideSubmitButton: false })
+            .dropIn(method.name, { hidePaymentButton: false })
             .mount(container);
           newDropIns.push(component);
         }
@@ -62,7 +62,7 @@ export const useCheckoutUI = (checkout: CheckoutInstance | null) => {
     useCheckoutStore.setState({ isSubmitting: true });
     const activeDropIn = getActiveDropIn();
     if (activeDropIn) {
-      await activeDropIn.submit();
+      await activeDropIn.pay();
     }
     useCheckoutStore.setState({ isSubmitting: false });
   };
@@ -70,7 +70,7 @@ export const useCheckoutUI = (checkout: CheckoutInstance | null) => {
   const updatePayButton = (payButtonType: string) => {
     const isPayButtonHidden = payButtonType === "custom";
     useCheckoutStore.getState().dropIns.forEach((component) => {
-      component.element.hideSubmitButton(isPayButtonHidden);
+      component.element.hidePaymentButton(isPayButtonHidden);
     });
   };
 
