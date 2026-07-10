@@ -37,8 +37,10 @@ async function checkServer(url: string, path: string): Promise<boolean> {
 
     // With no-cors mode, we can't read the response, but if it doesn't throw, server is up
     return true;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (_error) {
     // Server is not running or request failed
+
     return false;
   }
 }

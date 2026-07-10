@@ -26,25 +26,25 @@ export const CALLBACK_DESCRIPTIONS: Record<CallbackName, string> = {
 
 export const CALLBACK_DOCUMENTATION_LINKS: Record<CallbackName, string> = {
   onBeforeCharge:
-    "https://checkoutdocs.payoneer.com/checkout-2/docs/advanced-use-cases#onbeforecharge",
+    "https://checkoutdocs.payoneer.com/checkout-2/docs/callback-reference#onbeforecharge",
   onBeforeSubmit:
-    "https://checkoutdocs.payoneer.com/checkout-2/docs/advanced-use-cases#onbeforesubmit",
+    "https://checkoutdocs.payoneer.com/checkout-2/docs/callback-reference#onbeforesubmit",
   onBeforeError:
-    "https://checkoutdocs.payoneer.com/checkout-2/docs/advanced-use-cases#onbeforeerror",
+    "https://checkoutdocs.payoneer.com/checkout-2/docs/callback-reference#onbeforeerror",
   onPaymentSuccess:
-    "https://checkoutdocs.payoneer.com/checkout-2/docs/advanced-use-cases#onpaymentsuccess",
+    "https://checkoutdocs.payoneer.com/checkout-2/docs/callback-reference#onpaymentsuccess",
   onSubmitSuccess:
-    "https://checkoutdocs.payoneer.com/checkout-2/docs/advanced-use-cases#onsubmitsuccess",
+    "https://checkoutdocs.payoneer.com/checkout-2/docs/callback-reference#onsubmitsuccess",
   onPaymentFailure:
-    "https://checkoutdocs.payoneer.com/checkout-2/docs/advanced-use-cases#onpaymentfailure",
+    "https://checkoutdocs.payoneer.com/checkout-2/docs/callback-reference#onpaymentfailure",
   onBeforeProviderRedirect:
-    "https://checkoutdocs.payoneer.com/checkout-2/docs/advanced-use-cases#onbeforeproviderredirect",
+    "https://checkoutdocs.payoneer.com/checkout-2/docs/callback-reference#onbeforeproviderredirect",
   onPaymentDeclined:
-    "https://checkoutdocs.payoneer.com/checkout-2/docs/advanced-use-cases#onpaymentdeclined",
+    "https://checkoutdocs.payoneer.com/checkout-2/docs/callback-reference#onpaymentdeclined",
   onSubmitError:
-    "https://checkoutdocs.payoneer.com/checkout-2/docs/advanced-use-cases#onsubmiterror",
+    "https://checkoutdocs.payoneer.com/checkout-2/docs/callback-reference#onsubmiterror",
   onReady:
-    "https://checkoutdocs.payoneer.com/checkout-2/docs/advanced-use-cases#onready",
+    "https://checkoutdocs.payoneer.com/checkout-2/docs/callback-reference#onready",
 };
 
 // Log level options for UI dropdowns

@@ -2,7 +2,7 @@ import { create } from "zustand";
 
 export type VisualEvent = {
   id: string;
-  type: "start" | "callback" | "end";
+  type: "start" | "callback" | "end" | "event";
   name?: string;
   phase?: "start" | "end";
   timestamp: number;
