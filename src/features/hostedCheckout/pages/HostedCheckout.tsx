@@ -10,6 +10,7 @@ import {
 } from "@/features/hostedCheckout/store/hostedConfigurationStore";
 import Link from "@/components/ui/Link";
 import { HOSTED_PAYMENT_CONFIG } from "@/features/hostedCheckout/constants/hostedPaymentConfig";
+import RegistrationSetupStep from "../components/RegistrationSetupStep";
 
 const HostedCheckout = () => {
   const { currentStep, setCurrentStep } = useHostedConfigurationStore();
@@ -32,6 +33,11 @@ const HostedCheckout = () => {
         component: ConfigureAddressStep,
       },
       {
+        id: CurrentStep.REGISTRATION_SETUP,
+        name: "Registration Setup",
+        component: RegistrationSetupStep,
+      },
+      {
         id: CurrentStep.REVIEW_CONFIRM,
         name: "Review & Confirm",
         component: ReviewConfirmStep,
@@ -44,6 +50,7 @@ const HostedCheckout = () => {
     CurrentStep.CHOOSE_ENV,
     CurrentStep.CONFIGURE_CART,
     CurrentStep.CONFIGURE_ADDRESS,
+    CurrentStep.REGISTRATION_SETUP,
     CurrentStep.REVIEW_CONFIRM,
   ];
 

@@ -53,12 +53,12 @@ export interface CheckoutInstanceConfig {
 
 export interface ListSessionRequest {
   transactionId?: string;
+  checkoutConfigurationName?: string;
   currency: string;
   amount: number;
   country: string;
   division: string;
   customer: {
-    number: string;
     firstName: string;
     lastName: string;
     birthday: string;

@@ -38,6 +38,7 @@ export const useEmbeddedConfigurationStore =
                 billingAddress: { ...currentConfigState.billingAddress },
                 shippingAddress: { ...currentConfigState.shippingAddress },
                 sameAddress: currentConfigState.sameAddress,
+                registrationType: currentConfigState.registrationType,
               });
             } catch {
               // Silently handle any sync errors

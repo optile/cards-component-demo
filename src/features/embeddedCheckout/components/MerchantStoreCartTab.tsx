@@ -12,6 +12,7 @@ const MerchantStoreCartTab: React.FC = () => {
   const {
     merchantCart: { products, currency },
     setMerchantCart,
+    registrationType
   } = useConfigurationStore();
   const { updateListSession, env, listSessionData } = useCheckoutStore();
   const [localProducts, setLocalProducts] = useState<CartProduct[]>(products);
@@ -45,7 +46,8 @@ const MerchantStoreCartTab: React.FC = () => {
       billingAddress,
       shippingAddress,
       sameAddress,
-      env
+      env,
+      registrationType
     );
     await updateListSession(
       updates,

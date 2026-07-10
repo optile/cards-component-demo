@@ -13,7 +13,6 @@ interface FormAddress {
   city: string;
   state: string;
   country: string;
-  number: string;
   birthday: string;
 }
 
