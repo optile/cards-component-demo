@@ -381,7 +381,7 @@ async function initPayment() {
 
     // configurations for the Checkout Web SDK
     const configs = {
-      env: ie, // test | live | int-env-name | integration
+      env: ie, // test | live | int-env-name | checkout.integration
       longId: longId,
       preload: ["stripe:card"], // loads cards and afterpay script as soon as page loads so that rendering using dropIn is fast
       // Called whenever there is an error (either server-side or client-side) which prevents payment. componentName indicates
