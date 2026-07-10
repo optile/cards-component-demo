@@ -6,12 +6,14 @@ interface TooltipProps {
   content: string;
   children: ReactNode;
   position?: "top" | "bottom" | "left" | "right";
+  childClassName?: string;
 }
 
 const Tooltip: React.FC<TooltipProps> = ({
   content,
   children,
   position = "top",
+  childClassName,
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [, setActualPosition] = useState(position);
@@ -132,7 +134,7 @@ const Tooltip: React.FC<TooltipProps> = ({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <div ref={triggerRef} aria-describedby="" className="inline-flex">
+      <div ref={triggerRef} aria-describedby="" className={`inline-flex ${childClassName}`}>
         {children}
       </div>
       {isVisible && typeof document !== "undefined"

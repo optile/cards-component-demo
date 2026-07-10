@@ -16,7 +16,7 @@ This project demonstrates how to integrate the Payoneer Checkout Web SDK in both
 * Node.js 18.17 or later (Node 20+ recommended for best tooling support).
 
 * npm 9+ (ships with current Node LTS releases).
-* Ability to reach the Payoneer sandbox or integration domains (`*.oscato.com`). Corporate VPN access may be required depending on your network.
+* Ability to reach the Payoneer sandbox or checkout.integration domains (`*.oscato.com`). Corporate VPN access may be required depending on your network.
 
 ### Installation
 
@@ -51,13 +51,13 @@ Use the header navigation to switch flows or return to the chooser.
 * The configuration panel drives the list session payload and SDK initialization. Tabs expose base SDK options (environment, preload list, refetch behaviour), advanced callback wiring, cart items, customer addresses, and UI styling tokens.
 
 * Session data is generated through `CheckoutApiService.generateListSession`, which posts to `https://api.{env}.oscato.com/checkout/session`. The default environment is `sandbox`, with an additional `checkout.integration` division available.
-* Payment methods are mounted dynamically based on the list response. The event logger at the bottom captures SDK callbacks, charge flow events, and metadata to help validate integration behaviour.
+* Payment methods are mounted dynamically based on the list response. The event logger at the bottom captures SDK callbacks, charge flow events, and metadata to help validate checkout.integration behaviour.
 * Toggle URL sharing to persist both checkout and configuration stores into the location hash, enabling copyable deep links that reproduce the current setup.
 * `DemoCardNumbers` surfaces network-specific test PANs that work with the sandbox to simulate successful charges.
 
 ### Hosted Checkout Simulator
 
-* A multi-step wizard backed by `useHostedConfigurationStore` collects the same cart and customer information, tailored for the hosted integration path.
+* A multi-step wizard backed by `useHostedConfigurationStore` collects the same cart and customer information, tailored for the hosted checkout.integration path.
 
 * Upon confirmation, the flow builds a hosted-style list request (including callback URLs derived from the running origin), calls the list session endpoint, and finally redirects to `https://resources.{env}.oscato.com/paymentpage/v6/responsive.html`.
 * Errors encountered while creating the list session or launching the hosted page surface inline with remediation guidance.
@@ -108,7 +108,7 @@ You can test local changes to `checkout-web` and `checkout-web-stripe` in real-t
 * **Auto-detection**: The app checks if local servers are running on ports 8700 and 8991 using health checks
 * **Mixed mode support**: Run just one local server or both - the app independently uses local versions when available and falls back to CDN for the rest
   * Example: Test checkout-web-stripe changes with production checkout-web
-  * Example: Test checkout-web changes with production stripe integration
+  * Example: Test checkout-web changes with production stripe checkout.integration
 * **Vite proxy**: Requests to `/local-checkout-web` and `/local-checkout-web-stripe` are proxied through the dev server to avoid CORS issues
 * **Meta-info rewriting**: Script URLs in meta-info.json files are automatically rewritten to point to local proxy paths
 * **Fetch override**: When local stripe is available, a global fetch override redirects stripe meta-info requests to the local server (works even with CDN checkout-web)

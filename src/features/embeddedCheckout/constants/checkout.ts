@@ -1,5 +1,5 @@
 export const Divisions = {
-  "checkout.integration": "45667",
+  "checkout.integration": "58783",
   sandbox: "17875",
 };
 
