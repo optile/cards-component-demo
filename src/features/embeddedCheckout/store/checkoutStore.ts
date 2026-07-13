@@ -93,6 +93,7 @@ interface CheckoutState {
   activeNetwork: string;
   loadingCheckoutConfiguration: boolean,
 
+  registrationType: RegistrationType,
   availableMethods: PaymentMethod[];
   dropIns: DropInComponent[];
   isSubmitting: boolean;
@@ -156,6 +157,7 @@ export const useCheckoutStore = create<CheckoutState>()(
 
       loadingCheckoutConfiguration: false,
 
+      registrationType: "GUEST",
       activeNetwork: "",
       availableMethods: [],
       dropIns: [],
