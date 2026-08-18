@@ -40,6 +40,10 @@ export const useExpressConfigStore = create<ExpressConfigState>()(
           ...current,
           ...p,
           walletMode: coerce<WalletMode>(p.walletMode, WALLET_MODES, DEFAULT_EXPRESS_CONFIG.walletMode),
+          allowRealRedirect:
+            typeof p.allowRealRedirect === "boolean"
+              ? p.allowRealRedirect
+              : DEFAULT_EXPRESS_CONFIG.allowRealRedirect,
           expressOperationType: coerce<ExpressOperationType>(
             p.expressOperationType, EXPRESS_OPERATION_TYPES, DEFAULT_EXPRESS_CONFIG.expressOperationType),
           expressWallets: {

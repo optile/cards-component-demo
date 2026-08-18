@@ -29,7 +29,7 @@ export function useExpressCheckout(slotRef: RefObject<HTMLDivElement | null>) {
   // inputs (clientId, locale) also force a rebuild here — a harmless extra remount for a demo that
   // buys race-free teardown. Because each rebuild is a fresh instance, there is no cached express
   // drop-in to evict on the happy path.
-  const rebuildKey = [
+  const rebuildKey = JSON.stringify([
     reinitSignature,
     config.country,
     config.clientId,
@@ -37,7 +37,8 @@ export function useExpressCheckout(slotRef: RefObject<HTMLDivElement | null>) {
     currentBookId,
     quantity,
     currency,
-  ].join("|");
+    config.allowRealRedirect,
+  ]);
 
   useEffect(() => {
     if (!book || !amount) return;
@@ -66,15 +67,14 @@ export function useExpressCheckout(slotRef: RefObject<HTMLDivElement | null>) {
           longId,
           onSubmitSuccess: (data) => {
             setOutcome({ kind: "success", data });
-            console.log("[express] submit success", data);
-            // NOTE (verify during Task 10 smoke): the intent is "false ⇒ suppress the real redirect"
-            // so the demo never completes a live charge by default. Confirm the express element reads
-            // the boolean this way; flip if its contract is the inverse.
-            return config.allowRealRedirect ? true : false;
+            console.log("[express] submit success (payload redacted)");
+            // Express wallet callbacks proceed with the backend redirect only when true;
+            // false suppresses it (see checkout-web-stripe expressHostCallbacks.ts).
+            return config.allowRealRedirect;
           },
           onSubmitError: (data) => {
             setOutcome({ kind: "declined", data });
-            console.log("[express] submit error/decline", data);
+            console.log("[express] submit error/decline (payload redacted)");
           },
         });
         if (cancelled) {

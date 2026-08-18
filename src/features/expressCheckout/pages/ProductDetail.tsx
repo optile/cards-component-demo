@@ -37,9 +37,9 @@ export default function ProductDetail() {
 
           <div className="flex items-center gap-3 mb-6">
             <span className="text-sm" style={{ color: "var(--ink-soft)" }}>Quantity</span>
-            <button onClick={() => setQuantity(quantity - 1)} className="w-8 h-8 rounded border" style={{ borderColor: "var(--line)" }}>−</button>
+            <button aria-label="Decrease quantity" onClick={() => setQuantity(quantity - 1)} className="w-8 h-8 rounded border" style={{ borderColor: "var(--line)" }}>−</button>
             <span>{quantity}</span>
-            <button onClick={() => setQuantity(quantity + 1)} className="w-8 h-8 rounded border" style={{ borderColor: "var(--line)" }}>+</button>
+            <button aria-label="Increase quantity" onClick={() => setQuantity(quantity + 1)} className="w-8 h-8 rounded border" style={{ borderColor: "var(--line)" }}>+</button>
           </div>
 
           <div className="rounded-xl p-4 mb-4" style={{ background: "var(--card)", border: "1px solid var(--line)" }}>
