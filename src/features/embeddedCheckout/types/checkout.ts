@@ -22,10 +22,10 @@ export interface DropInComponent {
 export interface CheckoutInstance {
   availableDropInComponents(): PaymentMethod[];
   dropInComponents: Record<string, DropInComponent>;
-  dropIn(
-    methodName: string,
-    options?: { hideSubmitButton: boolean }
-  ): DropInComponent;
+  // Express overload first: returns undefined under walletMode 'inline' / unknown method.
+  dropIn(methodName: "express", options?: ExpressDropInProps): DropInComponent | undefined;
+  dropIn(methodName: string, options?: { hideSubmitButton?: boolean }): DropInComponent;
+  remove(name: string): boolean;
   charge(): void;
   update(config: { env?: string; longId?: string }): Promise<CheckoutInstance>;
   updateLongId(longId: string): Promise<void>;
@@ -33,6 +33,17 @@ export interface CheckoutInstance {
   off(event: string, handler: (data: unknown) => void): void;
   once(event: string, handler: (data: unknown) => void): void;
   destroy(): void;
+}
+
+/** Host-supplied express mount passthrough. All strings (they cross the element attribute seam). */
+export interface ExpressDropInProps {
+  amount?: string;
+  currency?: string;
+  country?: string;
+  clientId?: string;
+  expressUrl?: string;
+  locale?: string;
+  paymentReference?: string;
 }
 
 export interface CheckoutInstanceConfig {
@@ -49,6 +60,10 @@ export interface CheckoutInstanceConfig {
   onBeforeProviderRedirect: unknown;
   onPaymentDeclined: unknown;
   onSubmitError: unknown;
+  // Express (all optional so embedded init, which never sets them, still compiles):
+  walletMode?: "inline" | "express" | "both";
+  expressWallets?: { applePay: "auto" | "always" | "never"; googlePay: "auto" | "always" | "never" };
+  expressOperationType?: "charge" | "preset";
 }
 
 export interface ListSessionRequest {
