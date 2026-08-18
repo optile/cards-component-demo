@@ -18,3 +18,35 @@
     @apply overscroll-contain;
   }
 }
+
+/* Express storefront palette — scoped to the express slice only, so embedded/hosted are unaffected.
+   NOT @theme (which is global in Tailwind 4 and would leak tokens + generate app-wide utilities). */
+[data-flow="express"] {
+  --paper: #f7f2e9;
+  --paper-2: #efe7d8;
+  --card: #fffdf8;
+  --line: #e4d9c5;
+  --ink: #2a2320;
+  --ink-soft: #6b5f55;
+  --ink-faint: #9a8c7e;
+  --accent: #9770ff;
+  --accent-deep: #7e64e5;
+  --spark: #c56b4a;
+  --leaf: #6e7f5b;
+  --gold: #b8894a;
+  /* Tailwind-named so `font-serif` / `font-sans` resolve inside the slice: */
+  --font-serif: "Fraunces", Georgia, serif;
+  --font-sans: "Avenir Next World", system-ui, -apple-system, sans-serif;
+  color: var(--ink);
+  background: var(--paper);
+}
+
+/* Express slot: collapsed keeps content width (ECE needs a measurable box) but ~0 height.
+   NEVER display:none — a 0x0 container makes the ECE fail to mount / render 0-width buttons. */
+.express-slot {
+  overflow: hidden;
+  height: 0;
+}
+.express-slot[data-available="true"] {
+  height: auto;
+}
