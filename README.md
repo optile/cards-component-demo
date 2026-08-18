@@ -136,6 +136,20 @@ You can test local changes to `checkout-web` and `checkout-web-stripe` in real-t
 * Verify checkout-web-stripe is running on port 8991
 * Check Network tab for requests to `/local-checkout-web-stripe/`
 
+## Express Checkout Demo
+
+Open `http://localhost:3000/cards-component-demo/express` to test the Express Checkout flow. Create a `.env` file and set `VITE_EXPRESS_CLIENT_ID` to the public merchant-application token used to initialize the express element. The backend still validates `clientId` server-side, so this value is not a secret. Set the country in the config sheet; it defaults to `US`. The sheet also lets you switch the environment between `checkout.integration` (the default) and `sandbox`.
+
+Wallets refuse to render over plain HTTP. For real-device wallet testing, start the demo with `EXPRESS_HTTPS=true npm run dev`, open `https://localhost:3000/cards-component-demo/express`, and accept the self-signed certificate. Google Pay works on `https://localhost` in Chrome without domain registration. Apple Pay also requires a Stripe-registered HTTPS domain. Front the dev server with a tunnel such as `ngrok http 3000`, then register the tunnel domain with Stripe.
+
+The browser cannot call the OPG host directly from `https://localhost` because of CORS. The `/opg-proxy` development route forwards those requests server-to-server. To target another environment, start the demo with a custom target, for example `OPG_PROXY_TARGET=https://api.sandbox.oscato.com npm run dev`.
+
+Express Checkout works with the existing local development mode. Run checkout-web on port 8700 and checkout-web-stripe on port 8991 as described above.
+
+Use the ⚙ button in the bottom-right corner to change `walletMode`, each Apple Pay and Google Pay setting in `expressWallets` (`auto`, `always`, or `never`), and `expressOperationType`. These settings are applied when the Express Checkout Element is created, so each change remounts the element.
+
+The `'Avenir Next World'` and `'Fraunces'` fonts fall back to system fonts when they are not installed. This affects appearance only.
+
 ## Tech Stack
 
 * React 19 with React Router 7 for routing.
