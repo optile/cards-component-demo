@@ -4,6 +4,11 @@ import ChooseFlow from "@/pages/ChooseFlow";
 import SelectEnvironment from "@/features/embeddedCheckout/pages/SelectEnvironment";
 import Checkout from "@/features/embeddedCheckout/pages/Checkout";
 import HostedCheckout from "@/features/hostedCheckout/pages/HostedCheckout";
+import {
+  Shelf,
+  ProductDetail,
+  ExpressCheckoutPage,
+} from "@/features/expressCheckout";
 import { getWebAutoInstrumentations } from "@opentelemetry/auto-instrumentations-web";
 import { HoneycombWebSDK } from "@honeycombio/opentelemetry-web";
 import { useLayoutEffect } from "react";
@@ -48,6 +53,16 @@ function App() {
             <Route path="/embedded" element={<SelectEnvironment />} />
             <Route path="/embedded/:env" element={<Checkout />} />
             <Route path="/hosted" element={<HostedCheckout />} />
+            <Route path="/express" element={<Shelf />} />
+            <Route path="/express/:env/shelf" element={<Shelf />} />
+            <Route
+              path="/express/:env/book/:id"
+              element={<ProductDetail />}
+            />
+            <Route
+              path="/express/:env/checkout"
+              element={<ExpressCheckoutPage />}
+            />
           </Routes>
         </main>
       </div>
