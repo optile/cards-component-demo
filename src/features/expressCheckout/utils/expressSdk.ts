@@ -119,6 +119,11 @@ export async function initCheckout(params: InitCheckoutParams): Promise<Checkout
   const checkoutConfig: CheckoutInstanceConfig = {
     longId,
     env: config.env,
+    // Express identity is declared once at init (like the card flow's longId), not on the
+    // per-transaction dropIn('express') call. The SDK reads them for the GET /express fetch and
+    // charge-URL stamping.
+    clientId: config.clientId,
+    country: config.country,
     // Warm the card component only when a card drop-in will actually be mounted; dropIn('express')
     // loads its own chain on mount (preloading "express" logs an "unknown method" breadcrumb).
     preload: preloadCards ? ["stripe:cards"] : [],

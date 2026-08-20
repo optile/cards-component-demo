@@ -42,10 +42,10 @@ export interface CheckoutInstance {
  * float rounding at this boundary.
  */
 export interface ExpressDropInProps {
+  // Per-transaction only. Express identity (clientId / country) is declared once at init on
+  // CheckoutInstanceConfig, not on the drop-in call.
   amount?: string;
   currency?: string;
-  country?: string;
-  clientId?: string;
   locale?: string;
   paymentReference?: string;
 }
@@ -53,6 +53,10 @@ export interface ExpressDropInProps {
 export interface CheckoutInstanceConfig {
   longId: string;
   env: string;
+  // Express identity, declared once at init (mirrors the SDK's CheckoutConfigurationSchema). Optional
+  // so the embedded card flow, which never sets them, still builds a valid config.
+  clientId?: string;
+  country?: string;
   refetchListBeforeCharge?: boolean;
   preload: string[];
   // Optional lifecycle callbacks: the embedded flow wires the ones it needs; the express init sets
