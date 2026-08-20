@@ -46,9 +46,19 @@ async function checkServer(url: string, path: string): Promise<boolean> {
 }
 
 /**
- * Detect which local servers are currently running
+ * Detect which local servers are currently running.
+ *
+ * Local SDK mode is a DEV-only convenience for testing the demo against locally-running checkout-web /
+ * checkout-web-stripe dev servers. A deployed build must never probe localhost or resolve SDK URLs to
+ * the `/local-checkout-web*` proxy paths (those 404 on the static host), so short-circuit to
+ * all-unavailable in production. Vite statically replaces `import.meta.env.DEV`, dead-code-eliminating
+ * the probes from production bundles.
  */
 export async function detectLocalServers(): Promise<ServerStatus> {
+  if (!import.meta.env.DEV) {
+    return { checkoutWeb: false, checkoutWebStripe: false };
+  }
+
   const [checkoutWeb, checkoutWebStripe] = await Promise.all([
     checkServer(
       LOCAL_SERVERS.CHECKOUT_WEB.url,
