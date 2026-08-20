@@ -12,6 +12,14 @@ dist
 dist-ssr
 *.local
 
+# Local env overrides (keep secrets and env-specific hosts out of git; commit .env.example instead)
+.env
+.env.*
+!.env.example
+
+# local agent / AI context
+/ai/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

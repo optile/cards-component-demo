@@ -1,0 +1,1280 @@
+/*
+ * PageTurner Bookshop — design system for the Express Checkout demo.
+ *
+ * Ported 1:1 from the supplied `PageTurner Bookshop.html` design file. Every rule is scoped under
+ * `[data-flow="express"]` (via native CSS nesting) so the paper/ink theme and the plain component
+ * class names (.card, .cover, .btn, …) cannot leak into the Embedded/Hosted flows or Tailwind's
+ * global utilities. Keyframes are prefixed `pt-` to avoid colliding with anything global.
+ */
+
+[data-flow="express"] {
+  --paper: #f7f2e9;
+  --paper-2: #efe7d8;
+  --ink: #2a2320;
+  --ink-soft: #6b5f55;
+  --ink-faint: #9a8c7e;
+  --card: #fffdf8;
+  --line: #e4d9c5;
+  --accent: #9770ff; /* Payoneer purple */
+  --accent-deep: #7e64e5;
+  --spark: #c56b4a; /* warm terracotta */
+  --leaf: #6e7f5b; /* muted sage */
+  --gold: #b8894a;
+  --danger: #8e3b5c; /* error/rose — payment-slot error text */
+  --serif: "Fraunces", Georgia, serif;
+  --sans: "Avenir Next World", system-ui, -apple-system, sans-serif;
+  --font-mono:
+    ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Monaco, Consolas,
+    monospace;
+  /* Aliases kept for components that reference the Tailwind-style names. */
+  --font-serif: var(--serif);
+  --font-sans: var(--sans);
+
+  font-family: var(--sans);
+  background: var(--paper);
+  color: var(--ink);
+  line-height: 1.5;
+  position: relative;
+  min-height: 100vh;
+
+  &::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.5;
+    background-image: radial-gradient(
+      rgba(120, 100, 70, 0.05) 1px,
+      transparent 1px
+    );
+    background-size: 22px 22px;
+  }
+
+  & .app {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  /* Header */
+  & .header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: rgba(247, 242, 233, 0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+    padding: 18px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  & .brand {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    cursor: pointer;
+    background: none;
+    border: none;
+  }
+  & .brand-mark {
+    font-family: var(--serif);
+    font-weight: 900;
+    font-size: 26px;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  & .brand-mark em {
+    font-style: italic;
+    color: var(--spark);
+  }
+  & .brand-tag {
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  & .header-right {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  & .cart-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: var(--sans);
+  }
+  & .cart-btn:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(120, 100, 70, 0.1);
+  }
+  & .cart-count {
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    background: var(--spark);
+    color: #fff;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  & .cart-count:empty {
+    display: none;
+  }
+  & .ghost-btn {
+    padding: 10px 16px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    cursor: pointer;
+    font-family: var(--sans);
+    transition: all 0.2s;
+  }
+  & .ghost-btn:hover {
+    color: var(--ink);
+    background: var(--paper-2);
+  }
+
+  /* NOTE: named .pt-main (not .main) so it does NOT inherit the app's global
+     `.main { height:100%; overflow:auto }` scroll-container rule in index.css — that turns the shop
+     into a nested scroll container and locks window scrolling. The shop scrolls the window. */
+  & .pt-main {
+    flex: 1;
+    padding: 48px 40px 80px;
+    max-width: 1240px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  & .view {
+    display: none;
+    animation: pt-fade 0.4s ease;
+  }
+  & .view.active {
+    display: block;
+  }
+
+  /* Hero */
+  & .hero {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 40px;
+    align-items: center;
+    margin-bottom: 56px;
+    padding: 44px;
+    background: linear-gradient(135deg, #2a2320 0%, #3a302a 100%);
+    border-radius: 28px;
+    overflow: hidden;
+    position: relative;
+  }
+  & .hero::after {
+    content: "";
+    position: absolute;
+    right: -80px;
+    top: -80px;
+    width: 320px;
+    height: 320px;
+    background: radial-gradient(
+      circle,
+      rgba(151, 112, 255, 0.35),
+      transparent 70%
+    );
+  }
+  & .hero-eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+  & .hero-title {
+    font-family: var(--serif);
+    font-weight: 900;
+    font-size: 52px;
+    line-height: 1.02;
+    letter-spacing: -0.02em;
+    color: #fbf6ed;
+    margin-bottom: 18px;
+  }
+  & .hero-title em {
+    font-style: italic;
+    color: #f0c89a;
+  }
+  & .hero-sub {
+    font-size: 16px;
+    color: #c9bcaf;
+    max-width: 400px;
+    line-height: 1.6;
+  }
+  & .hero-stack {
+    position: relative;
+    height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  & .hero-book {
+    position: absolute;
+    width: 120px;
+    height: 176px;
+    border-radius: 4px 8px 8px 4px;
+    box-shadow: -6px 8px 24px rgba(0, 0, 0, 0.4);
+    overflow: hidden;
+  }
+  & .hero-book:nth-child(1) {
+    transform: rotate(-12deg) translateX(-70px);
+  }
+  & .hero-book:nth-child(2) {
+    transform: rotate(-2deg) translateX(10px) translateY(-8px);
+    z-index: 2;
+  }
+  & .hero-book:nth-child(3) {
+    transform: rotate(9deg) translateX(88px);
+  }
+
+  & .section-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 28px;
+  }
+  & .section-title {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 34px;
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  & .section-sub {
+    font-size: 14px;
+    color: var(--ink-soft);
+    margin-top: 4px;
+  }
+
+  /* Product grid */
+  & .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 32px 28px;
+  }
+  & .card {
+    cursor: pointer;
+  }
+  & .cover {
+    position: relative;
+    aspect-ratio: 5/7;
+    border-radius: 4px 7px 7px 4px;
+    box-shadow: -4px 6px 18px rgba(90, 70, 50, 0.18);
+    overflow: hidden;
+    transition:
+      transform 0.3s cubic-bezier(0.2, 0.7, 0.3, 1),
+      box-shadow 0.3s;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 20px 18px;
+  }
+  & .cover::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 10px;
+    background: rgba(0, 0, 0, 0.16);
+    box-shadow: inset -2px 0 4px rgba(0, 0, 0, 0.2);
+  }
+  & .cover::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      115deg,
+      rgba(255, 255, 255, 0.14),
+      transparent 45%
+    );
+    pointer-events: none;
+  }
+  & .card:hover .cover {
+    transform: translateY(-6px) rotate(-1deg);
+    box-shadow: -8px 14px 30px rgba(90, 70, 50, 0.28);
+  }
+  & .cover-actions {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 14px;
+    background: linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.5),
+      rgba(0, 0, 0, 0.04) 55%,
+      transparent
+    );
+    opacity: 0;
+    transform: translateY(6px);
+    transition:
+      opacity 0.25s,
+      transform 0.25s;
+  }
+  & .card:hover .cover-actions {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  & .cover-btn {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--sans);
+    pointer-events: auto;
+    transition: all 0.15s;
+  }
+  & .cover-btn:active {
+    transform: scale(0.97);
+  }
+  & .cover-btn-cart {
+    background: var(--paper);
+    color: var(--ink);
+  }
+  & .cover-btn-cart:hover {
+    background: #fff;
+  }
+  & .cover-title {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 19px;
+    line-height: 1.15;
+    color: #fff;
+    letter-spacing: -0.01em;
+    position: relative;
+    padding-left: 8px;
+  }
+  & .cover-author {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.75);
+    position: relative;
+    padding-left: 8px;
+  }
+  /* Real cover image (bundled locally, sourced from Open Library) fills the container above the gradient + fallback title/author,
+     but below the decorative spine/sheen (z-index 2) and hover actions (z-index 3) so the "book" look
+     still reads on real covers. If the image 404s, BookCover renders nothing and the gradient shows. */
+  & .book-cover-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
+    display: block;
+    z-index: 1;
+  }
+  & .cover::before,
+  & .cover::after,
+  & .detail-cover::before,
+  & .cart-cover::before {
+    z-index: 2;
+  }
+  & .card-meta {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-top: 16px;
+    padding: 0 2px;
+  }
+  & .card-title {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--ink);
+    line-height: 1.25;
+  }
+  & .card-author {
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    margin-top: 2px;
+  }
+  & .card-price {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 17px;
+    color: var(--spark);
+    white-space: nowrap;
+  }
+  & .card-rating {
+    font-size: 12px;
+    color: var(--gold);
+    margin-top: 6px;
+  }
+
+  /* Detail */
+  & .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 32px;
+    color: var(--ink-soft);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: var(--sans);
+    transition:
+      gap 0.2s,
+      color 0.2s;
+  }
+  & .back-link:hover {
+    gap: 10px;
+    color: var(--ink);
+  }
+  & .detail {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 56px;
+    align-items: start;
+  }
+  & .detail-cover {
+    aspect-ratio: 5/7;
+    border-radius: 5px 10px 10px 5px;
+    box-shadow: -8px 14px 40px rgba(90, 70, 50, 0.32);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 28px 24px;
+    position: relative;
+  }
+  & .detail-cover::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 14px;
+    background: rgba(0, 0, 0, 0.16);
+  }
+  & .detail-cover .cover-title {
+    font-size: 26px;
+  }
+  & .detail-eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent-deep);
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  & .detail-title {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 40px;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+  }
+  & .detail-author {
+    font-size: 16px;
+    color: var(--ink-soft);
+    margin-bottom: 20px;
+    font-style: italic;
+    font-family: var(--serif);
+  }
+  & .detail-info-row {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+  & .detail-price {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 34px;
+    color: var(--spark);
+  }
+  & .detail-rating {
+    font-size: 13px;
+    color: var(--gold);
+    padding: 6px 12px;
+    background: rgba(184, 137, 74, 0.1);
+    border-radius: 999px;
+  }
+  & .detail-desc {
+    font-size: 16px;
+    color: var(--ink-soft);
+    line-height: 1.7;
+    margin-bottom: 32px;
+    max-width: 520px;
+  }
+  & .qty-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  & .qty-label {
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 600;
+  }
+  & .qty-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 4px;
+  }
+  & .qty-btn {
+    width: 34px;
+    height: 34px;
+    border: none;
+    background: transparent;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    transition: all 0.15s;
+  }
+  & .qty-btn:hover {
+    background: var(--paper-2);
+    color: var(--ink);
+  }
+  & .qty-val {
+    min-width: 36px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 15px;
+  }
+  & .detail-actions {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  & .btn {
+    padding: 14px 26px;
+    border: none;
+    border-radius: 999px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--sans);
+    transition: all 0.2s;
+  }
+  & .btn:active {
+    transform: scale(0.98);
+  }
+  & .btn-primary {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  & .btn-primary:hover {
+    background: #40352e;
+    box-shadow: 0 8px 20px rgba(42, 35, 32, 0.25);
+  }
+  & .btn-accent {
+    background: var(--accent);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  & .btn-accent:hover {
+    background: var(--accent-deep);
+    box-shadow: 0 8px 22px rgba(151, 112, 255, 0.35);
+  }
+  & .btn-outline {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--ink);
+  }
+  & .btn-outline:hover {
+    border-color: var(--ink);
+  }
+  & .express-note {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    padding: 16px 18px;
+    border-radius: 10px;
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    max-width: 520px;
+    line-height: 1.55;
+  }
+  & .express-note strong {
+    color: var(--ink);
+  }
+
+  /* Cart */
+  & .cart-layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 40px;
+    align-items: start;
+  }
+  & .cart-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  & .cart-item {
+    display: flex;
+    gap: 20px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 20px;
+    transition: box-shadow 0.2s;
+  }
+  & .cart-item:hover {
+    box-shadow: 0 6px 20px rgba(90, 70, 50, 0.08);
+  }
+  & .cart-cover {
+    width: 82px;
+    height: 115px;
+    border-radius: 3px 6px 6px 3px;
+    box-shadow: -3px 5px 14px rgba(90, 70, 50, 0.22);
+    flex-shrink: 0;
+    display: flex;
+    align-items: flex-end;
+    padding: 12px 10px;
+    position: relative;
+    overflow: hidden;
+  }
+  & .cart-cover::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 7px;
+    background: rgba(0, 0, 0, 0.16);
+  }
+  & .cart-cover-title {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 12px;
+    color: #fff;
+    line-height: 1.15;
+    position: relative;
+    padding-left: 5px;
+  }
+  & .cart-item-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  & .cart-item-title {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 18px;
+    color: var(--ink);
+  }
+  & .cart-item-author {
+    font-size: 13px;
+    color: var(--ink-faint);
+    font-style: italic;
+    margin-bottom: auto;
+  }
+  & .cart-item-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 16px;
+  }
+  & .cart-qty {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 3px;
+  }
+  & .cart-qty button {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    border-radius: 999px;
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--ink-soft);
+    transition: all 0.15s;
+  }
+  & .cart-qty button:hover {
+    background: var(--paper-2);
+    color: var(--ink);
+  }
+  & .cart-qty span {
+    min-width: 30px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 14px;
+  }
+  & .cart-item-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+  }
+  & .cart-item-price {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--ink);
+  }
+  & .cart-remove {
+    background: none;
+    border: none;
+    color: var(--ink-faint);
+    font-size: 12px;
+    cursor: pointer;
+    font-family: var(--sans);
+    transition: color 0.15s;
+  }
+  & .cart-remove:hover {
+    color: var(--spark);
+  }
+  & .cart-empty {
+    text-align: center;
+    padding: 80px 40px;
+    background: var(--card);
+    border: 1px dashed var(--line);
+    border-radius: 20px;
+  }
+  & .cart-empty-icon {
+    font-size: 44px;
+    margin-bottom: 16px;
+  }
+  & .cart-empty p {
+    font-family: var(--serif);
+    font-size: 20px;
+    color: var(--ink-soft);
+    margin-bottom: 20px;
+  }
+
+  & .summary {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 28px;
+    position: sticky;
+    top: 96px;
+  }
+  & .summary h2 {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 22px;
+    margin-bottom: 20px;
+  }
+  & .summary-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: var(--ink-soft);
+    margin-bottom: 12px;
+  }
+  & .summary-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-top: 1px solid var(--line);
+    padding-top: 16px;
+    margin: 16px 0 22px;
+  }
+  & .summary-total span:first-child {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 18px;
+    color: var(--ink);
+  }
+  & .summary-total span:last-child {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 26px;
+    color: var(--ink);
+  }
+  & .summary-btns {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  & .summary-btns .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  & .summary-note {
+    font-size: 12px;
+    color: var(--ink-faint);
+    text-align: center;
+    margin-top: 14px;
+  }
+
+  /* Checkout page (two-column: details + summary | stacked payment methods) */
+  & .checkout-page {
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+  & .checkout-col {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  & .pay-section {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 26px;
+  }
+  & .pay-section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+  }
+  & .pay-section-title {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 20px;
+    color: var(--ink);
+  }
+  & .pay-badge {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--accent-deep);
+    background: rgba(151, 112, 255, 0.12);
+    padding: 5px 10px;
+    border-radius: 999px;
+  }
+  & .pay-or {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    color: var(--ink-faint);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  & .pay-or::before,
+  & .pay-or::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+
+  & .form-group {
+    margin-bottom: 18px;
+  }
+  & .form-label {
+    display: block;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  & .form-input {
+    width: 100%;
+    padding: 13px 16px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    font-size: 15px;
+    font-family: var(--sans);
+    background: var(--paper);
+    color: var(--ink);
+    transition: all 0.2s;
+  }
+  & .form-input::placeholder {
+    color: var(--ink-faint);
+  }
+  & .form-input:focus {
+    border-color: var(--accent);
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(151, 112, 255, 0.12);
+  }
+  /* Suppress the native outline only for POINTER focus. Keyboard focus keeps the shared
+     `:focus-visible` accent outline (WCAG 2.4.7) instead of relying on the faint 0.12-alpha ring. */
+  & .form-input:focus:not(:focus-visible) {
+    outline: none;
+  }
+  & .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  & .checkout-demo {
+    text-align: center;
+    margin-top: 16px;
+  }
+  & .checkout-demo button {
+    background: none;
+    border: none;
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--ink-faint);
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  & .checkout-demo button:hover {
+    color: var(--spark);
+  }
+
+  /* Result pages */
+  & .result-wrap {
+    max-width: 500px;
+    margin: 40px auto 0;
+    text-align: center;
+  }
+  & .result-icon {
+    width: 76px;
+    height: 76px;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    animation: pt-pop 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+  }
+  & .result-icon-ok {
+    background: var(--leaf);
+    box-shadow: 0 10px 30px rgba(110, 127, 91, 0.35);
+  }
+  & .result-icon-fail {
+    background: var(--spark);
+    box-shadow: 0 10px 30px rgba(197, 107, 74, 0.35);
+  }
+  & .result-eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+  & .result-title {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 34px;
+    letter-spacing: -0.01em;
+    margin-bottom: 12px;
+  }
+  & .result-lead {
+    font-size: 15px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+    max-width: 400px;
+    margin: 0 auto 32px;
+  }
+  & .result-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+  }
+  & .result-help {
+    font-size: 13px;
+    color: var(--ink-faint);
+    margin-top: 20px;
+  }
+  & .receipt {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 24px;
+    text-align: left;
+    margin-bottom: 28px;
+  }
+  & .receipt-head {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: 15px;
+    color: var(--ink);
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  & .receipt-row {
+    display: flex;
+    justify-content: space-between;
+  }
+  & .receipt-items {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px 0;
+  }
+  & .receipt-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: var(--ink-soft);
+  }
+  & .receipt-item span:last-child {
+    font-weight: 600;
+    color: var(--ink);
+  }
+  & .receipt-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-top: 1px solid var(--line);
+    padding-top: 14px;
+  }
+  & .receipt-total span:first-child {
+    font-size: 14px;
+    color: var(--ink-soft);
+  }
+  & .receipt-total span:last-child {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 22px;
+    color: var(--ink);
+  }
+
+  /* Express section reveal. The express block (divider + section) is collapsed by default and slides
+     down only when `wallets:availability` reports an available wallet — so the page never shows an
+     empty express box or a dangling "or pay" divider, and the section is hidden entirely when no
+     wallet is available. Uses grid-rows 0fr→1fr (not display:none / height:0 on the mount node):
+     the content stays laid out at full width and natural height and is merely clipped, so the ECE
+     still mounts in a measurable box and Stripe's wallet detection can run while collapsed. */
+  & .express-reveal {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    transform: translateY(-6px);
+    transition:
+      grid-template-rows 0.45s ease,
+      opacity 0.35s ease,
+      transform 0.45s ease;
+  }
+  & .express-reveal.is-visible {
+    grid-template-rows: 1fr;
+    opacity: 1;
+    transform: translateY(0);
+  }
+  & .express-reveal-inner {
+    overflow: hidden;
+    min-height: 0;
+    /* Restore the column's 20px rhythm between the divider and the express section (they no longer
+       get .checkout-col's gap now that they're nested inside the reveal wrapper). */
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  /* On the book-detail page the wallet element + "or pay instantly" divider would otherwise stretch
+     the full content column; cap them to the same width as the `.express-note` below (520px) so the
+     buy-now block reads as one tidy group. Scoped to `.detail` so the checkout page keeps its full
+     column width. */
+  & .detail .express-reveal-inner {
+    max-width: 520px;
+  }
+
+  & .express-slot {
+    min-height: 0;
+  }
+  /* Our skeleton only covers the pre-mount gap (session + SDK load) before the element attaches. */
+  & .express-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  & .skeleton-bar--wallet {
+    height: 48px;
+    border-radius: 12px;
+  }
+
+  /* Card drop-in renders directly in the pay-section (no decorative placeholder box). The Stripe iframe
+     briefly initialises taller than its final size before resizing down. Reserve a settled height so the
+     skeleton→form handoff doesn't shift the page, and clip that transient taller-than-final reflow ONLY
+     while loading (`is-loading`). Once the form is ready the clip is released, so a taller localized or
+     validation-error state is never permanently cut off. */
+  & .card-slot-wrap {
+    position: relative;
+    min-height: 290px;
+  }
+  & .card-slot-wrap.is-loading {
+    height: 290px;
+    overflow: hidden;
+  }
+  & .card-slot {
+    text-align: left;
+  }
+  /* Shared error line for the express/card payment slots (replaces a duplicated inline #8e3b5c). */
+  & .slot-error {
+    margin-top: 8px;
+    font-size: 14px;
+    color: var(--danger);
+  }
+
+  /* Our skeleton overlays the drop-in slot until the SDK reports the form is ready (`onReady`).
+     It must be fully opaque (matching the pay-section's --card background) so the SDK's own loading
+     skeleton and the form fields underneath never bleed through the gaps between our bars — otherwise
+     you'd see both stacked. Removed on `onReady`, handing straight off to the rendered form. */
+  & .card-skeleton {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: var(--card);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  & .card-skeleton__chips {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  & .card-skeleton__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  & .skeleton-bar {
+    border-radius: 10px;
+    background: linear-gradient(
+      90deg,
+      var(--paper-2) 25%,
+      var(--line) 37%,
+      var(--paper-2) 63%
+    );
+    background-size: 400% 100%;
+    animation: pt-shimmer 1.4s ease infinite;
+  }
+  & .skeleton-bar--chip {
+    height: 42px;
+  }
+  & .skeleton-bar--input {
+    height: 52px;
+  }
+  /* Keyboard focus ring for interactive controls (the design only styled :hover). */
+  & a:focus-visible,
+  & button:focus-visible,
+  & input:focus-visible,
+  & select:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  /* Honor the OS "reduce motion" setting: neutralize the storefront's reveals, fades, pops and
+     shimmer without changing any final layout (durations collapse to ~0 rather than being removed,
+     so state still lands where it should). */
+  @media (prefers-reduced-motion: reduce) {
+    & .skeleton-bar {
+      animation: none;
+    }
+    &,
+    & *,
+    & *::before,
+    & *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+
+  /* Responsive (ported from the design's media queries) */
+  @media (max-width: 900px) {
+    & .cart-layout {
+      grid-template-columns: 1fr;
+    }
+    & .checkout-page {
+      grid-template-columns: 1fr;
+    }
+  }
+  @media (max-width: 760px) {
+    & .detail {
+      grid-template-columns: 1fr;
+      gap: 36px;
+    }
+    /* Stack the hero so its title and the book-stack don't clip on narrow screens. */
+    & .hero {
+      grid-template-columns: 1fr;
+      gap: 28px;
+      padding: 32px;
+    }
+    & .hero-title {
+      font-size: 40px;
+    }
+    & .hero-stack {
+      height: 200px;
+    }
+  }
+  @media (hover: none) {
+    & .cover-actions {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+@keyframes pt-fade {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes pt-pop {
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+@keyframes pt-shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}

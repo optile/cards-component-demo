@@ -22,10 +22,10 @@ export interface DropInComponent {
 export interface CheckoutInstance {
   availableDropInComponents(): PaymentMethod[];
   dropInComponents: Record<string, DropInComponent>;
-  dropIn(
-    methodName: string,
-    options?: { hideSubmitButton: boolean }
-  ): DropInComponent;
+  // Express overload first: returns undefined under walletMode 'inline' / unknown method.
+  dropIn(methodName: "express", options?: ExpressDropInProps): DropInComponent | undefined;
+  dropIn(methodName: string, options?: { hideSubmitButton?: boolean }): DropInComponent;
+  remove(name: string): boolean;
   charge(): void;
   update(config: { env?: string; longId?: string }): Promise<CheckoutInstance>;
   updateLongId(longId: string): Promise<void>;
@@ -35,20 +35,60 @@ export interface CheckoutInstance {
   destroy(): void;
 }
 
+/**
+ * Host-supplied express mount passthrough. All strings (they cross the element attribute seam).
+ * NOTE: `amount` is a major-unit decimal string here (e.g. "16.99"), derived via `Number#toFixed(2)`.
+ * A production integration would ideally pass express money as a minor-unit integer (cents) to avoid
+ * float rounding at this boundary.
+ */
+export interface ExpressDropInProps {
+  amount?: string;
+  currency?: string;
+  country?: string;
+  clientId?: string;
+  locale?: string;
+  paymentReference?: string;
+}
+
 export interface CheckoutInstanceConfig {
   longId: string;
   env: string;
   refetchListBeforeCharge?: boolean;
   preload: string[];
-  onBeforeCharge: unknown;
-  onBeforeSubmit: unknown;
-  onBeforeError: unknown;
-  onPaymentSuccess: unknown;
-  onSubmitSuccess: unknown;
-  onPaymentFailure: unknown;
-  onBeforeProviderRedirect: unknown;
-  onPaymentDeclined: unknown;
-  onSubmitError: unknown;
+  // Optional lifecycle callbacks: the embedded flow wires the ones it needs; the express init sets
+  // only onSubmitSuccess/onSubmitError. All optional so either caller builds a valid config directly.
+  onBeforeCharge?: unknown;
+  onBeforeSubmit?: unknown;
+  onBeforeError?: unknown;
+  onPaymentSuccess?: unknown;
+  onSubmitSuccess?: unknown;
+  onPaymentFailure?: unknown;
+  onBeforeProviderRedirect?: unknown;
+  onPaymentDeclined?: unknown;
+  onSubmitError?: unknown;
+  // Express (all optional so embedded init, which never sets them, still compiles):
+  walletMode?: "inline" | "express" | "both";
+  expressWallets?: { applePay: "auto" | "always" | "never"; googlePay: "auto" | "always" | "never" };
+  expressOperationType?: "charge" | "preset";
+  // Fired as list data resolves so hosts can mount drop-ins once a component becomes available.
+  onComponentListChange?: (
+    checkout: CheckoutInstance,
+    diff: ComponentListDiff & { chargeResponse?: unknown }
+  ) => void;
+  // Fires when a payment component has finished rendering (card: Stripe PaymentElement `ready`).
+  // NOTE: the drop-in element invokes this at runtime as `(componentName, data)` — checkout-web
+  // passes the config callback straight to `element.onReady`, so despite the SDK's public
+  // `OnReadyCallback(checkout, componentName, data)` type, only these two args arrive.
+  onReady?: (componentName: string, data: ReadyEventData) => void;
+}
+
+export interface ReadyEventData {
+  component: string;
+  availableNetworks: string[];
+  selectedNetwork: string | null;
+  formReady: boolean;
+  walletAvailable: { applePay: boolean; googlePay: boolean };
+  timestamp: number;
 }
 
 export interface ListSessionRequest {

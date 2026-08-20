@@ -40,7 +40,7 @@ const CallbackConfigRow: React.FC<CallbackConfigRowProps> = ({
     <div className={
       `border rounded-lg p-3
       ${
-        Boolean(deprecatedConfigDesc)
+        deprecatedConfigDesc
           ? 'bg-gray-50 border-gray-200 rounded-xl overflow-hidden divide-y divide-gray-100'
           : 'bg-white shadow-sm'
       }`}>

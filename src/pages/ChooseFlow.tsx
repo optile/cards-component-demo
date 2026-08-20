@@ -70,6 +70,27 @@ const ChooseFlow = () => {
               Try Hosted Flow →
             </Link>
           </div>
+
+          {/* Express Flow Option */}
+          <div className="border border-purple-200 rounded-lg overflow-hidden hover:shadow-md transition">
+            <div className="bg-purple-50 p-4 border-b border-purple-200">
+              <h3 className="text-lg font-semibold text-purple-900 mb-2">
+                Express Checkout Demo
+              </h3>
+              <p className="text-sm text-purple-800 leading-relaxed">
+                A demo storefront for Apple Pay / Google Pay via the Express
+                Checkout element. Exercise wallets on a product and checkout
+                page, and switch walletMode / wallet visibility / operation type
+                live.
+              </p>
+            </div>
+            <Link
+              to="/express"
+              className="block px-6 py-3 bg-purple-600 text-white text-center hover:bg-purple-700 transition font-medium"
+            >
+              Try Express Flow →
+            </Link>
+          </div>
         </div>
       </div>
     </div>

@@ -6,6 +6,7 @@ const Header = () => {
   const location = useLocation();
   const isEmbedded = location.pathname.includes("/embedded");
   const isHosted = location.pathname.includes("/hosted");
+  const isExpress = location.pathname.includes("/express");
 
   return (
     <header className="bg-black text-white p-4 fixed top-0 z-50 w-full flex justify-between items-center min-h-[60px]">
@@ -13,7 +14,7 @@ const Header = () => {
         <img src={payoneerLogo} alt="Payoneer" className="h-[30px]" />
 
         {/* Flow Switcher Tabs */}
-        {(isEmbedded || isHosted) && (
+        {(isEmbedded || isHosted || isExpress) && (
           <div className="flex gap-2 border border-gray-600 rounded">
             <Link
               to="/embedded"
@@ -34,6 +35,16 @@ const Header = () => {
               }`}
             >
               Hosted
+            </Link>
+            <Link
+              to="/express"
+              className={`px-4 py-1.5 text-sm transition-colors ${
+                isExpress
+                  ? "bg-white text-black"
+                  : "bg-transparent text-white hover:bg-gray-800"
+              }`}
+            >
+              Express
             </Link>
           </div>
         )}

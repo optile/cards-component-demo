@@ -13,7 +13,7 @@ This project demonstrates how to integrate the Payoneer Checkout Web SDK in both
 
 ### Prerequisites
 
-* Node.js 18.17 or later (Node 20+ recommended for best tooling support).
+* Node.js 20.19+ or 22.12+ (required by Vite 8). The optional Express **HTTPS** mode (`EXPRESS_HTTPS=true`, used for real wallet testing) pulls in `vite-plugin-mkcert`, which needs **Node ≥ 22.19** — on older Node you'll see an `EBADENGINE` install warning and should use plain HTTP (no wallets) or upgrade Node.
 
 * npm 9+ (ships with current Node LTS releases).
 * Ability to reach the Payoneer sandbox or integration domains (`*.oscato.com`). Corporate VPN access may be required depending on your network.
@@ -25,7 +25,7 @@ npm install
 npm run dev
 ```
 
-The dev server defaults to `http://localhost:5173`. Because the router is configured with the basename `/cards-component-demo`, open `http://localhost:5173/cards-component-demo/` to use the app locally.
+The dev server runs on `http://localhost:3000` (pinned in `vite.config.ts`). Because the router is configured with the basename `/cards-component-demo`, open `http://localhost:3000/cards-component-demo/` to use the app locally.
 
 ### Available Scripts
 
@@ -64,7 +64,7 @@ Use the header navigation to switch flows or return to the chooser.
 
 ### Observability and Debugging
 
-* `App.tsx` initializes Honeycomb OpenTelemetry instrumentation by default. Update the endpoint or disable the block if you do not need tracing.
+* `App.tsx` can initialize Honeycomb OpenTelemetry, but it is **off by default** — this is a public demo, so it never phones home unless you opt in. To enable tracing, set BOTH `VITE_ENABLE_TELEMETRY=true` and `VITE_TELEMETRY_ENDPOINT=<your collector URL>` in `.env`. No collector URL is baked into the source.
 * The charge flow event logger is sticky at the bottom of the embedded flow and can be expanded to inspect event payloads.
 
 ## Configuration and Environment Notes
@@ -136,11 +136,25 @@ You can test local changes to `checkout-web` and `checkout-web-stripe` in real-t
 * Verify checkout-web-stripe is running on port 8991
 * Check Network tab for requests to `/local-checkout-web-stripe/`
 
+## Express Checkout Demo
+
+Open `http://localhost:3000/cards-component-demo/express` to test the Express Checkout flow. It is the "PageTurner" storefront: a listing, product detail, cart, a unified checkout page (customer details + order summary alongside stacked payment methods — the real Express wallet element plus the real Payoneer card drop-in), and success/failure result views. A default public merchant-application token (the same one used by the `checkout-web-stripe` `express.html` BE integration sample) is baked in, so the flow works out of the box. To use a different token, create a `.env` file and set `VITE_EXPRESS_CLIENT_ID`, or override it live in the config sheet. The backend validates `clientId` server-side, so this value is not a secret. Set the country in the config sheet; it defaults to `US`. The sheet also lets you switch the environment between `checkout.integration` (the default, used for the card LIST), `ramy.integration`, and `sandbox`. The demo is deliberately cross-env: the card form runs on the selected `env`, while the express token lives in ramy. checkout-web derives the express `GET /pci/v1/express` host from `env` and injects the result into the element (the host supplies no URL), so the demo can't hand-pick the express host — instead its dev-only fetch shim reroutes that cross-origin call to `OPG_PROXY_TARGET` (ramy). A real single-env integration needs none of this rerouting. This requires running the local `checkout-web` + `checkout-web-stripe` (see `LOCAL_DEVELOPMENT.md`), since the published CDN builds predate the SDK-owned express fetch and the per-account Stripe cache that lets cards and express run on different accounts.
+
+Wallets refuse to render over plain HTTP, and Google Pay's `canMakePayment()` also refuses over an untrusted certificate — Chrome flags a self-signed cert as "DANGEROUS" and disables the Payment Request API, so the Express element renders no wallet button even though the card form still shows a Google Pay tab. For real-device wallet testing, start the demo with `EXPRESS_HTTPS=true npm run dev` (this enables `vite-plugin-mkcert`, which serves `https://localhost:3000` with a browser-trusted cert; the first run installs a local CA and may prompt for your password), then open `https://localhost:3000/cards-component-demo/express`. Google Pay works on trusted `https://localhost` in Chrome without domain registration. Apple Pay also requires a Stripe-registered HTTPS domain. Front the dev server with a tunnel such as `ngrok http 3000`, then register the tunnel domain with Stripe.
+
+The browser cannot call the OPG host directly from `https://localhost` because of CORS. The `/opg-proxy` development route forwards those requests server-to-server. To target another environment, start the demo with a custom target, for example `OPG_PROXY_TARGET=https://api.sandbox.oscato.com npm run dev`.
+
+Express Checkout works with the existing local development mode. Run checkout-web on port 8700 and checkout-web-stripe on port 8991 as described above.
+
+Use the ⚙ button in the bottom-right corner to change `walletMode`, each Apple Pay and Google Pay setting in `expressWallets` (`auto`, `always`, or `never`), and `expressOperationType` (defaults to `charge`). These settings are applied when the Express Checkout Element is created, so each change remounts the element.
+
+`'Fraunces'` (the storefront serif) is loaded from Google Fonts. `'Avenir Next World'` is a licensed Payoneer brand font that is not bundled here, so the sans falls back to the system stack. This affects appearance only.
+
 ## Tech Stack
 
 * React 19 with React Router 7 for routing.
 * TypeScript throughout the application.
-* Vite 7 for build tooling and local development.
+* Vite 8 for build tooling and local development.
 * Tailwind CSS 4 (Vite plugin) for utility-first styling.
 * Zustand for state management with persistence helpers.
 * Honeycomb OpenTelemetry SDK for client instrumentation.

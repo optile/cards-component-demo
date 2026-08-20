@@ -18,3 +18,6 @@
     @apply overscroll-contain;
   }
 }
+
+/* The PageTurner express storefront design system lives in
+   features/expressCheckout/styles/pageturner.css (scoped under [data-flow="express"]). */
