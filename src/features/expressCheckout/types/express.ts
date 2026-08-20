@@ -1,5 +1,5 @@
-// Enum single-source-of-truth. Mirrors checkout-web zod enums in
-// projects/checkout-web/src/schemas/checkout.configuration.ts (walletMode / ExpressWalletVisibility / expressOperationType).
+// Enum single-source-of-truth. Mirrors the Payoneer Web SDK's checkout configuration enums
+// (walletMode / ExpressWalletVisibility / expressOperationType).
 export const WALLET_MODES = ["inline", "express", "both"] as const;
 export type WalletMode = (typeof WALLET_MODES)[number];
 

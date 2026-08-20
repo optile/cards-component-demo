@@ -87,8 +87,8 @@ export interface InitCheckoutParams {
  * Loads the SDK (local-mode aware) and initialises ONE CheckoutWeb instance that hosts BOTH the
  * express wallet element and the classic card drop-in.
  *
- * Why a single instance: checkout-web-stripe exposes a module-level singleton `getStripeInstance`
- * (see stripe-loader.ts) that binds to the FIRST caller's publishable key + connected account and
+ * Why a single instance: the SDK's Stripe layer exposes a module-level singleton Stripe instance
+ * that binds to the FIRST caller's publishable key + connected account and
  * returns that same Stripe object to everyone after. Running two CheckoutWeb instances (one per
  * component) therefore loads Stripe.js twice and makes the express ECE and the card element fight
  * over that singleton — the ECE ends up on the wrong account and reports no wallet, so Google Pay

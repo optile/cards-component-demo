@@ -60,7 +60,7 @@ export class PayoneerSDKUtils {
       // The Express Checkout Element calls the OPG `GET /pci/v1/express` (and its `.../charge` POST)
       // directly on the api.<env>.oscato.com host, which serves no CORS headers — the browser blocks
       // it from https://localhost. Rewrite those cross-origin OPG express calls to the same-origin
-      // `/opg-proxy` dev route (Vite proxies it to the OPG host), mirroring express.html. Same-origin
+      // `/opg-proxy` dev route (Vite proxies it to the OPG host). Same-origin
       // requests (already proxied) are left untouched. The LIST session (`/checkout/session`) is a
       // different path and is not rewritten.
       try {

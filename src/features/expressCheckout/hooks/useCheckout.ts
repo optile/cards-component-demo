@@ -35,7 +35,7 @@ export function useCheckout(
       setOutcome({ kind: "success", data });
       if (import.meta.env.DEV) console.log("[checkout] submit success (payload redacted)");
       // Express/card wallet callbacks proceed with the backend redirect only when true; false
-      // suppresses it (demo default) — see checkout-web-stripe host callbacks.
+      // suppresses it (demo default).
       return allowRealRedirect;
     },
     onSubmitError: (data) => {

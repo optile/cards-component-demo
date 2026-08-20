@@ -23,7 +23,7 @@ export interface MountExpressOptions {
  *
  * INSTANCE-AGNOSTIC: it never creates or destroys the instance — the caller (useCheckoutSession)
  * owns that lifecycle. This is what lets the checkout page share ONE instance across express + card
- * (required by checkout-web-stripe's per-account Stripe singleton) while the book-detail page uses
+ * (required by the SDK's per-account Stripe singleton) while the book-detail page uses
  * its own instance, with zero duplicated express lifecycle code.
  *
  * The element is displayed as soon as it mounts (Stripe manages its own wallet detection and the

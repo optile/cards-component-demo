@@ -89,7 +89,7 @@ export const useExpressCartStore = create<ExpressCartState>((set, get) => ({
 // Pure cart math (design parity). Kept as functions so components subscribe to `items` and recompute.
 // Demo simplification: money is a JS float here and stringified via `toFixed(2)` at the express seam
 // (see ExpressDropInProps). A production integration should use minor-unit integers (cents) to avoid
-// float rounding — tracked as express story S14.
+// float rounding.
 export const subtotalOf = (items: CartItem[]): number =>
   items.reduce((sum, i) => sum + i.price * i.quantity, 0);
 

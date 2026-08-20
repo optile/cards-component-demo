@@ -123,8 +123,8 @@ async function acquireExpressInstance(
  * effect. Mounts the express element (always) and — when `cardSlotRef` is provided — the classic
  * card form, both on that one instance.
  *
- * A single instance per surface is required, not just tidy: checkout-web-stripe's `getStripeInstance`
- * caches a Stripe instance per (publishableKey + connected account); mounting both drop-ins on one
+ * A single instance per surface is required, not just tidy: the SDK caches a Stripe instance per
+ * (publishableKey + connected account); mounting both drop-ins on one
  * instance keeps them coherent the way a real integration mounts multiple drop-ins. The express
  * mount is factored into the instance-agnostic `mountExpressElement` so the book-detail page can
  * reuse it on its OWN instance without duplicating any of this lifecycle.

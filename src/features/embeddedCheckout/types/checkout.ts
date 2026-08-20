@@ -38,8 +38,8 @@ export interface CheckoutInstance {
 /**
  * Host-supplied express mount passthrough. All strings (they cross the element attribute seam).
  * NOTE: `amount` is a major-unit decimal string here (e.g. "16.99"), derived via `Number#toFixed(2)`.
- * A planned SDK interface change moves express money to a minor-unit integer (cents) to avoid float
- * rounding at this boundary — tracked as story S14 in docs/2026-07-30-express-checkout-jira-tickets.md.
+ * A production integration would ideally pass express money as a minor-unit integer (cents) to avoid
+ * float rounding at this boundary.
  */
 export interface ExpressDropInProps {
   amount?: string;

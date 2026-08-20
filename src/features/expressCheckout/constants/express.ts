@@ -45,9 +45,9 @@ export function reinitSignatureOf(config: ExpressConfig): string {
   ].join("|");
 }
 
-// Public merchant-application token from the checkout-web-stripe express.html BE integration
-// sample (public, not a secret — the backend validates clientId server-side). Baked in so the
-// demo works out of the box; override via VITE_EXPRESS_CLIENT_ID or the config sheet.
+// Public merchant-application token from the Express Checkout integration sample (public, not a
+// secret — the backend validates clientId server-side). Baked in so the demo works out of the box;
+// override via VITE_EXPRESS_CLIENT_ID or the config sheet.
 const DEMO_EXPRESS_CLIENT_ID = "v1.opt-div-app.0c7ce5154758454fb6a8dc49a72c04f4";
 
 export function getDefaultClientId(): string {
@@ -63,7 +63,7 @@ export const DEFAULT_EXPRESS_CONFIG: ExpressConfig = {
   // Cards use this env (has a Divisions entry → LIST resolves). The SDK derives the GET /express host
   // from this same `env`; the demo's fetch shim + vite `/opg-proxy` (OPG_PROXY_TARGET, default ramy)
   // route that call to wherever the express clientId is provisioned. Both surfaces coexist because
-  // checkout-web-stripe caches a Stripe instance per account.
+  // the SDK caches a Stripe instance per account.
   env: "checkout.integration",
   clientId: getDefaultClientId(),
   country: "US",
