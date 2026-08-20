@@ -39,6 +39,13 @@ export class PayoneerSDKUtils {
       return;
     }
 
+    // Dev-only tooling: the `/opg-proxy` route and the local-SDK proxies only exist on the Vite dev
+    // server, so a production build has nothing to rewrite to. Skip installing the global fetch
+    // override entirely there — keeps it off window.fetch and out of the shipped bundle's hot path.
+    if (!import.meta.env.DEV) {
+      return;
+    }
+
     console.log(
       "🔧 Installing dynamic fetch override for local stripe support"
     );
@@ -49,6 +56,30 @@ export class PayoneerSDKUtils {
 
     window.fetch = function (url: RequestInfo | URL, options?: RequestInit) {
       const urlString = typeof url === "string" ? url : url.toString();
+
+      // The Express Checkout Element calls the OPG `GET /pci/v1/express` (and its `.../charge` POST)
+      // directly on the api.<env>.oscato.com host, which serves no CORS headers — the browser blocks
+      // it from https://localhost. Rewrite those cross-origin OPG express calls to the same-origin
+      // `/opg-proxy` dev route (Vite proxies it to the OPG host), mirroring express.html. Same-origin
+      // requests (already proxied) are left untouched. The LIST session (`/checkout/session`) is a
+      // different path and is not rewritten.
+      try {
+        const parsed = new URL(urlString, window.location.origin);
+        // Restrict the rewrite to the OPG host family so the shim can never reroute an arbitrary
+        // cross-origin request. `includes` (not an exact match) is intentional: it catches both the
+        // `GET /pci/v1/express` and its `.../charge` POST, which live under the same base path.
+        if (
+          parsed.hostname.endsWith(".oscato.com") &&
+          parsed.pathname.includes("/pci/v1/express") &&
+          parsed.origin !== window.location.origin
+        ) {
+          const proxied = `${window.location.origin}/opg-proxy${parsed.pathname}${parsed.search}`;
+          console.log("🔀 Routing OPG express call through /opg-proxy:", parsed.href, "→", proxied);
+          return originalFetch(proxied, options);
+        }
+      } catch {
+        // Non-absolute / unparseable URL — fall through to the normal handling below.
+      }
 
       // Dynamically check if we should use local stripe
       const useLocalStripe =

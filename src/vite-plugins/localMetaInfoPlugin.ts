@@ -25,10 +25,15 @@ export function localMetaInfoPlugin(): Plugin {
             );
             const metaInfo = await response.json();
 
-            // Modify the meta-info to use absolute proxied URLs
+            // Modify the meta-info to use absolute proxied URLs. Protocol-relative (`//`) so the
+            // script src inherits the page's protocol — the dev server may run over HTTPS
+            // (EXPRESS_HTTPS=true, required for wallet testing), and a hardcoded `http://` origin
+            // would hit the HTTPS listener on the same port and fail with ERR_EMPTY_RESPONSE.
+            // checkout-web's `isURLAbsolute` treats `//host` as absolute, so the CDN base is not
+            // prepended (ScriptLoader.ts).
             const modifiedMetaInfo = rewriteMetaInfoUrls(
               metaInfo,
-              "http://localhost:3000/local-checkout-web/build"
+              "//localhost:3000/local-checkout-web/build"
             );
 
             res.setHeader("Content-Type", "application/json");
@@ -98,10 +103,11 @@ export function localMetaInfoPlugin(): Plugin {
             );
             const metaInfo = await response.json();
 
-            // Modify the meta-info to use absolute proxied URLs
+            // Protocol-relative (`//`) so the script src inherits the page's protocol — see the
+            // checkout-web meta-info branch above for the full rationale (HTTPS dev server + wallets).
             const modifiedMetaInfo = rewriteMetaInfoUrls(
               metaInfo,
-              "http://localhost:3000/local-checkout-web-stripe"
+              "//localhost:3000/local-checkout-web-stripe"
             );
 
             res.setHeader("Content-Type", "application/json");

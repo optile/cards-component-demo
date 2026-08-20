@@ -35,13 +35,17 @@ export interface CheckoutInstance {
   destroy(): void;
 }
 
-/** Host-supplied express mount passthrough. All strings (they cross the element attribute seam). */
+/**
+ * Host-supplied express mount passthrough. All strings (they cross the element attribute seam).
+ * NOTE: `amount` is a major-unit decimal string here (e.g. "16.99"), derived via `Number#toFixed(2)`.
+ * A planned SDK interface change moves express money to a minor-unit integer (cents) to avoid float
+ * rounding at this boundary — tracked as story S14 in docs/2026-07-30-express-checkout-jira-tickets.md.
+ */
 export interface ExpressDropInProps {
   amount?: string;
   currency?: string;
   country?: string;
   clientId?: string;
-  expressUrl?: string;
   locale?: string;
   paymentReference?: string;
 }
@@ -51,19 +55,40 @@ export interface CheckoutInstanceConfig {
   env: string;
   refetchListBeforeCharge?: boolean;
   preload: string[];
-  onBeforeCharge: unknown;
-  onBeforeSubmit: unknown;
-  onBeforeError: unknown;
-  onPaymentSuccess: unknown;
-  onSubmitSuccess: unknown;
-  onPaymentFailure: unknown;
-  onBeforeProviderRedirect: unknown;
-  onPaymentDeclined: unknown;
-  onSubmitError: unknown;
+  // Optional lifecycle callbacks: the embedded flow wires the ones it needs; the express init sets
+  // only onSubmitSuccess/onSubmitError. All optional so either caller builds a valid config directly.
+  onBeforeCharge?: unknown;
+  onBeforeSubmit?: unknown;
+  onBeforeError?: unknown;
+  onPaymentSuccess?: unknown;
+  onSubmitSuccess?: unknown;
+  onPaymentFailure?: unknown;
+  onBeforeProviderRedirect?: unknown;
+  onPaymentDeclined?: unknown;
+  onSubmitError?: unknown;
   // Express (all optional so embedded init, which never sets them, still compiles):
   walletMode?: "inline" | "express" | "both";
   expressWallets?: { applePay: "auto" | "always" | "never"; googlePay: "auto" | "always" | "never" };
   expressOperationType?: "charge" | "preset";
+  // Fired as list data resolves so hosts can mount drop-ins once a component becomes available.
+  onComponentListChange?: (
+    checkout: CheckoutInstance,
+    diff: ComponentListDiff & { chargeResponse?: unknown }
+  ) => void;
+  // Fires when a payment component has finished rendering (card: Stripe PaymentElement `ready`).
+  // NOTE: the drop-in element invokes this at runtime as `(componentName, data)` — checkout-web
+  // passes the config callback straight to `element.onReady`, so despite the SDK's public
+  // `OnReadyCallback(checkout, componentName, data)` type, only these two args arrive.
+  onReady?: (componentName: string, data: ReadyEventData) => void;
+}
+
+export interface ReadyEventData {
+  component: string;
+  availableNetworks: string[];
+  selectedNetwork: string | null;
+  formReady: boolean;
+  walletAvailable: { applePay: boolean; googlePay: boolean };
+  timestamp: number;
 }
 
 export interface ListSessionRequest {
