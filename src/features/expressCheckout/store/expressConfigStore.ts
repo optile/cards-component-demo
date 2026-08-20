@@ -1,9 +1,11 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import {
+  ENVS,
   WALLET_MODES,
   WALLET_VISIBILITY,
   EXPRESS_OPERATION_TYPES,
+  type EnvName,
   type WalletMode,
   type WalletVisibility,
   type ExpressOperationType,
@@ -12,8 +14,6 @@ import { DEFAULT_EXPRESS_CONFIG, type ExpressConfig } from "@/features/expressCh
 
 interface ExpressConfigState extends ExpressConfig {
   setConfig: (patch: Partial<ExpressConfig>) => void;
-  // Identifies the init config; a change means re-initialise CheckoutWeb.
-  getReinitSignature: () => string;
 }
 
 const coerce = <T extends string>(value: unknown, allowed: readonly T[], fallback: T): T =>
@@ -21,13 +21,9 @@ const coerce = <T extends string>(value: unknown, allowed: readonly T[], fallbac
 
 export const useExpressConfigStore = create<ExpressConfigState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       ...DEFAULT_EXPRESS_CONFIG,
       setConfig: (patch) => set(patch),
-      getReinitSignature: () => {
-        const s = get();
-        return [s.env, s.walletMode, s.expressWallets.applePay, s.expressWallets.googlePay, s.expressOperationType].join("|");
-      },
     }),
     {
       name: "express-config-storage",
@@ -39,6 +35,9 @@ export const useExpressConfigStore = create<ExpressConfigState>()(
         return {
           ...current,
           ...p,
+          // `env` is interpolated into the API host and the SDK <script src>, so never trust the
+          // persisted value verbatim — coerce it back into the known set like the other enums.
+          env: coerce<EnvName>(p.env, ENVS, DEFAULT_EXPRESS_CONFIG.env),
           walletMode: coerce<WalletMode>(p.walletMode, WALLET_MODES, DEFAULT_EXPRESS_CONFIG.walletMode),
           allowRealRedirect:
             typeof p.allowRealRedirect === "boolean"

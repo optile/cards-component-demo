@@ -2,13 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useExpressConfigStore } from "@/features/expressCheckout/store/expressConfigStore";
 import {
+  ENVS,
   WALLET_MODES,
   WALLET_VISIBILITY,
   EXPRESS_OPERATION_TYPES,
-  type WalletVisibility,
 } from "@/features/expressCheckout/types/express";
-
-const ENVS = ["checkout.integration", "sandbox"] as const;
 
 export default function ConfigSheet() {
   const [open, setOpen] = useState(false);
@@ -62,8 +60,7 @@ export default function ConfigSheet() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Open express checkout settings"
-        className="fixed bottom-4 right-4 z-[55] rounded-full w-14 h-14 shadow-lg text-white text-xl"
-        style={{ background: "var(--accent)" }}
+        className="fixed bottom-4 right-4 z-[55] rounded-full w-14 h-14 shadow-lg text-white text-xl bg-black"
       >
         ⚙
       </button>
@@ -118,13 +115,13 @@ export default function ConfigSheet() {
               <Field label="Apple Pay">
                 <Select
                   value={config.expressWallets.applePay} options={WALLET_VISIBILITY}
-                  onChange={(v) => config.setConfig({ expressWallets: { ...config.expressWallets, applePay: v as WalletVisibility } })}
+                  onChange={(v) => config.setConfig({ expressWallets: { ...config.expressWallets, applePay: v } })}
                 />
               </Field>
               <Field label="Google Pay">
                 <Select
                   value={config.expressWallets.googlePay} options={WALLET_VISIBILITY}
-                  onChange={(v) => config.setConfig({ expressWallets: { ...config.expressWallets, googlePay: v as WalletVisibility } })}
+                  onChange={(v) => config.setConfig({ expressWallets: { ...config.expressWallets, googlePay: v } })}
                 />
               </Field>
               <Field label="operationType">
@@ -158,7 +155,13 @@ function Select<T extends string>({ value, options, onChange }: { value: T; opti
   return (
     <select
       className="w-full border rounded px-2 py-1 text-sm bg-white" style={{ borderColor: "var(--line)" }}
-      value={value} onChange={(e) => onChange(e.target.value as T)}
+      value={value}
+      onChange={(e) => {
+        // The <select> only surfaces `options`, but guard anyway so we narrow a real DOM string into
+        // the union instead of blind-casting it.
+        const next = e.target.value;
+        if ((options as readonly string[]).includes(next)) onChange(next as T);
+      }}
     >
       {options.map((o) => (
         <option key={o} value={o}>{o}</option>

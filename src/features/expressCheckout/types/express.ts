@@ -9,6 +9,11 @@ export type WalletVisibility = (typeof WALLET_VISIBILITY)[number];
 export const EXPRESS_OPERATION_TYPES = ["charge", "preset"] as const;
 export type ExpressOperationType = (typeof EXPRESS_OPERATION_TYPES)[number];
 
+// Demo-offered OPG environments (the config sheet's env dropdown). A persisted `env` is coerced back
+// into this set on rehydrate before it is interpolated into the API host / SDK <script src>.
+export const ENVS = ["checkout.integration", "ramy.integration", "sandbox"] as const;
+export type EnvName = (typeof ENVS)[number];
+
 export interface ExpressWalletsConfig {
   applePay: WalletVisibility;
   googlePay: WalletVisibility;
@@ -34,13 +39,19 @@ export function isWalletsAvailability(data: unknown): data is WalletsAvailabilit
 export type OnSubmitSuccess = (payload: unknown) => boolean | void;
 export type OnSubmitError = (payload: unknown) => void;
 
+// Mirrors the PageTurner design catalog record. `c1`/`c2` are the cover gradient stops used as the
+// fallback when the real cover image (a local bundled JPG in `public/covers/{isbn}.jpg`, originally
+// sourced from Open Library) is missing.
 export interface Book {
-  id: string;
+  id: number;
   title: string;
   author: string;
+  genre: string;
   price: number;
   rating: number;
   reviews: number;
-  blurb: string;
-  cover: { spine: string; front: string };
+  c1: string;
+  c2: string;
+  description: string;
+  isbn: string;
 }
