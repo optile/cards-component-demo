@@ -40,10 +40,10 @@ export function mountExpressElement(
 
   instance
     .dropIn(EXPRESS_COMPONENT, {
+      // Express identity (clientId / country) is declared once at init (see initCheckout), not here.
+      // The drop-in call carries only per-transaction data.
       amount,
       currency: CURRENCY,
-      country: config.country,
-      clientId: config.clientId,
       locale: config.locale,
       // OPG `payment.reference` (merchant order ref). The express one-step `/charge` REQUIRES it —
       // a null value is rejected as "payment.shortReference must not be null" (ABORT). A real
