@@ -1075,7 +1075,7 @@
   }
 
   /* Express section reveal. The express block (divider + section) is collapsed by default and slides
-     down only when `wallets:availability` reports an available wallet — so the page never shows an
+     down only when `express:state` reaches `ready` (`expressAvailable = expressStatus === 'ready'`) — so the page never shows an
      empty express box or a dangling "or pay" divider, and the section is hidden entirely when no
      wallet is available. Uses grid-rows 0fr→1fr (not display:none / height:0 on the mount node):
      the content stays laid out at full width and natural height and is merely clipped, so the ECE

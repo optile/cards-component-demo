@@ -6,7 +6,10 @@ import {
   initCheckout,
   type InitCheckoutParams,
 } from "@/features/expressCheckout/utils/expressSdk";
-import { mountExpressElement } from "@/features/expressCheckout/units/expressElement";
+import {
+  mountExpressElement,
+  type ExpressStatus,
+} from "@/features/expressCheckout/units/expressElement";
 import {
   claimExpressSession,
   expressSessionKey,
@@ -21,8 +24,7 @@ import type {
   OnSubmitError,
 } from "@/features/expressCheckout/types/express";
 
-// Stripe card networks are grouped under this component name by the SDK (see checkout-web
-// getAvailableComponents -> createCardComponentItem).
+// Stripe card networks are grouped under this component name by the SDK.
 const CARD_COMPONENT = "cards";
 
 // Safety net: if the card `onReady` never arrives (unexpected SDK/network state), reveal anyway so
@@ -45,8 +47,9 @@ export interface UseCheckoutSessionParams {
 }
 
 export interface CheckoutSessionResult {
-  expressStatus: SlotStatus;
+  expressStatus: ExpressStatus;
   expressError?: string;
+  // Derived from the single express:state signal (`phase === 'ready'`): drives the slide-down reveal.
   expressAvailable: boolean;
   cardStatus: SlotStatus;
   cardError?: string;
@@ -138,9 +141,8 @@ export function useCheckoutSession(
   const amount = items.length > 0 ? total.toFixed(2) : undefined;
   const wantCard = Boolean(cardSlotRef);
 
-  const [expressStatus, setExpressStatus] = useState<SlotStatus>("loading");
+  const [expressStatus, setExpressStatus] = useState<ExpressStatus>("loading");
   const [expressError, setExpressError] = useState<string | undefined>(undefined);
-  const [expressAvailable, setExpressAvailable] = useState(false);
   const [cardStatus, setCardStatus] = useState<SlotStatus>("loading");
   const [cardError, setCardError] = useState<string | undefined>(undefined);
 
@@ -219,7 +221,6 @@ export function useCheckoutSession(
 
     setExpressStatus("loading");
     setExpressError(undefined);
-    setExpressAvailable(false);
     setCardStatus("loading");
     setCardError(undefined);
 
@@ -259,7 +260,8 @@ export function useCheckoutSession(
 
         instance = ci;
 
-        // Mount the express element (subscribes availability + reveals itself). Reused by the PDP.
+        // Mount the express element. A SINGLE express:state subscription drives the slot's whole
+        // lifecycle (loading → ready | unavailable | error). Reused by the PDP.
         cleanupExpress = mountExpressElement(ci, {
           amount,
           config,
@@ -268,9 +270,6 @@ export function useCheckoutSession(
             if (cancelled) return;
             setExpressStatus(status);
             setExpressError(error);
-          },
-          onAvailability: (a) => {
-            if (!cancelled) setExpressAvailable(a.available === true);
           },
         });
 
@@ -302,5 +301,7 @@ export function useCheckoutSession(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionKey]);
 
+  // Availability = the single signal reached its `ready` phase; drives the surrounding reveal.
+  const expressAvailable = expressStatus === "ready";
   return { expressStatus, expressError, expressAvailable, cardStatus, cardError };
 }

@@ -13,7 +13,7 @@ import type { Book } from "@/features/expressCheckout/types/express";
 const QTY_DEBOUNCE_MS = 400;
 
 export interface BuyNowExpressResult {
-  status: "loading" | "ready" | "error";
+  status: "loading" | "ready" | "unavailable" | "error";
   available: boolean;
   error?: string;
 }
