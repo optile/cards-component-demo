@@ -19,20 +19,29 @@ export interface ExpressWalletsConfig {
   googlePay: WalletVisibility;
 }
 
-// Availability payload, mirrors checkout-web/src/types/events.ts 'wallets:availability'.
-export type WalletsAvailability =
-  | { available: true; applePay?: boolean; googlePay?: boolean }
-  | { available: false };
+// Single coherent express lifecycle signal, mirrors the SDK's public `express:state` event.
+// One subscription + one switch drives the slot: reveal on `ready`, keep hidden otherwise.
+export type ExpressState =
+  | { phase: "loading"; component: string }
+  | { phase: "ready"; component: string; wallets: { applePay: boolean; googlePay: boolean } }
+  | { phase: "unavailable"; component: string }
+  | {
+      phase: "error";
+      component: string;
+      errorType: "express_unavailable" | "express_no_wallets";
+      errorMessage?: string;
+    };
 
-// The public event bus (`checkout.on("wallets:availability", h)`) delivers the RAW availability
-// object as the handler payload — NOT a { event, data } envelope. (Verified in checkout-web
-// DropIn.ts: emitPublicEvent(detail.event, detail.data) → publicEvents.emit(name, detail.data).)
-// So the guard must validate the availability object directly.
-export function isWalletsAvailability(data: unknown): data is WalletsAvailability {
+const EXPRESS_PHASES = ["loading", "ready", "unavailable", "error"] as const;
+
+// The public event bus (`checkout.on("express:state", h)`) delivers the RAW state object as the
+// handler payload — NOT a { event, data } envelope — so the guard validates the state object
+// directly.
+export function isExpressState(data: unknown): data is ExpressState {
   return (
     typeof data === "object" &&
     data !== null &&
-    typeof (data as { available?: unknown }).available === "boolean"
+    (EXPRESS_PHASES as readonly string[]).includes((data as { phase?: unknown }).phase as string)
   );
 }
 
