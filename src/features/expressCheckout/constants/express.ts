@@ -45,13 +45,17 @@ export function reinitSignatureOf(config: ExpressConfig): string {
   ].join("|");
 }
 
-// Public merchant-application token from the Express Checkout integration sample (public, not a
-// secret — the backend validates clientId server-side). Baked in so the demo works out of the box;
-// override via VITE_EXPRESS_CLIENT_ID or the config sheet.
-const DEMO_EXPRESS_CLIENT_ID = "v1.opt-div-app.0c7ce5154758454fb6a8dc49a72c04f4";
+// Public merchant-application token per environment (public, not a secret — the backend validates
+// clientId server-side). Baked in so the demo works out of the box; override for every env via
+// VITE_EXPRESS_CLIENT_ID, or per session in the config sheet. The checkout.integration token is the
+// same one used by the checkout-web-stripe express.html BE integration sample.
+const DEMO_EXPRESS_CLIENT_IDS: Record<EnvName, string> = {
+  "checkout.integration": "v1.opt-div-app.41634a3ac45e4eb7b194bce4f36123e7",
+  sandbox: "v1.opt-div-app.1dbc56f2e0e54037b1f2dcfeba9fc901",
+};
 
-export function getDefaultClientId(): string {
-  return import.meta.env.VITE_EXPRESS_CLIENT_ID || DEMO_EXPRESS_CLIENT_ID;
+export function getDefaultClientId(env: EnvName): string {
+  return import.meta.env.VITE_EXPRESS_CLIENT_ID || DEMO_EXPRESS_CLIENT_IDS[env];
 }
 
 // A LIST session left idle past this is likely expired server-side. Shared by the live keep-alive
@@ -64,7 +68,7 @@ export const DEFAULT_EXPRESS_CONFIG: ExpressConfig = {
   // from this same `env`; the demo's fetch shim + vite `/opg-proxy` (OPG_PROXY_TARGET) forward that
   // cross-origin call server-to-server to dodge CORS on https://localhost.
   env: "checkout.integration",
-  clientId: getDefaultClientId(),
+  clientId: getDefaultClientId("checkout.integration"),
   country: "US",
   locale: "en_US",
   walletMode: "both",

@@ -10,7 +10,11 @@ import {
   type WalletVisibility,
   type ExpressOperationType,
 } from "@/features/expressCheckout/types/express";
-import { DEFAULT_EXPRESS_CONFIG, type ExpressConfig } from "@/features/expressCheckout/constants/express";
+import {
+  DEFAULT_EXPRESS_CONFIG,
+  getDefaultClientId,
+  type ExpressConfig,
+} from "@/features/expressCheckout/constants/express";
 
 interface ExpressConfigState extends ExpressConfig {
   setConfig: (patch: Partial<ExpressConfig>) => void;
@@ -23,7 +27,15 @@ export const useExpressConfigStore = create<ExpressConfigState>()(
   persist(
     (set) => ({
       ...DEFAULT_EXPRESS_CONFIG,
-      setConfig: (patch) => set(patch),
+      setConfig: (patch) =>
+        set((state) => {
+          // Each env has its own merchant-application token, so switching env pulls in that env's
+          // default clientId — unless the same change sets clientId explicitly (the user typed one).
+          if (patch.env !== undefined && patch.env !== state.env && patch.clientId === undefined) {
+            return { ...patch, clientId: getDefaultClientId(patch.env) };
+          }
+          return patch;
+        }),
     }),
     {
       name: "express-config-storage",
