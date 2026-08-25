@@ -59,7 +59,9 @@ export interface ExpressDropInProps {
   amount?: string;
   currency?: string;
   locale?: string;
-  paymentReference?: string;
+  // Required OPG payment.reference (order ref / bank-statement descriptor). The SDK rejects a
+  // missing/blank value at dropIn('express') time.
+  paymentReference: string;
 }
 
 export interface CheckoutInstanceConfig {
