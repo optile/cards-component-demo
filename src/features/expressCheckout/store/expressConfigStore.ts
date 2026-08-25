@@ -29,8 +29,9 @@ export const useExpressConfigStore = create<ExpressConfigState>()(
       ...DEFAULT_EXPRESS_CONFIG,
       setConfig: (patch) =>
         set((state) => {
-          // Each env has its own merchant-application token, so switching env pulls in that env's
-          // default clientId — unless the same change sets clientId explicitly (the user typed one).
+          // clientId is derived from env (each env has its own token), so switching env pulls in that
+          // env's default clientId. The guard tolerates an explicit clientId in the same patch, though
+          // the config sheet no longer offers one.
           if (patch.env !== undefined && patch.env !== state.env && patch.clientId === undefined) {
             return { ...patch, clientId: getDefaultClientId(patch.env) };
           }
@@ -44,12 +45,16 @@ export const useExpressConfigStore = create<ExpressConfigState>()(
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<ExpressConfig>;
         const wallets = (p.expressWallets ?? {}) as Partial<ExpressConfig["expressWallets"]>;
+        // `env` is interpolated into the API host and the SDK <script src>, so never trust the
+        // persisted value verbatim — coerce it back into the known set like the other enums.
+        const env = coerce<EnvName>(p.env, ENVS, DEFAULT_EXPRESS_CONFIG.env);
         return {
           ...current,
           ...p,
-          // `env` is interpolated into the API host and the SDK <script src>, so never trust the
-          // persisted value verbatim — coerce it back into the known set like the other enums.
-          env: coerce<EnvName>(p.env, ENVS, DEFAULT_EXPRESS_CONFIG.env),
+          env,
+          // clientId is derived from env (each env has its own token) and is no longer user-editable,
+          // so ignore any persisted value and re-derive it from the resolved env.
+          clientId: getDefaultClientId(env),
           walletMode: coerce<WalletMode>(p.walletMode, WALLET_MODES, DEFAULT_EXPRESS_CONFIG.walletMode),
           allowRealRedirect:
             typeof p.allowRealRedirect === "boolean"

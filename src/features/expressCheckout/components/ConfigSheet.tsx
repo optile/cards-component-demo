@@ -90,13 +90,6 @@ export default function ConfigSheet() {
               <Field label="Environment">
                 <Select value={config.env} options={ENVS} onChange={(v) => config.setConfig({ env: v })} />
               </Field>
-              <Field label="clientId">
-                <input
-                  className="w-full border rounded px-2 py-1 text-sm" style={{ borderColor: "var(--line)" }}
-                  value={config.clientId} onChange={(e) => config.setConfig({ clientId: e.target.value })}
-                  placeholder="v1.opt-div-app…"
-                />
-              </Field>
               <Field label="Country">
                 <input
                   className="w-full border rounded px-2 py-1 text-sm" style={{ borderColor: "var(--line)" }}
