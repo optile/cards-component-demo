@@ -10,7 +10,11 @@ import {
   type WalletVisibility,
   type ExpressOperationType,
 } from "@/features/expressCheckout/types/express";
-import { DEFAULT_EXPRESS_CONFIG, type ExpressConfig } from "@/features/expressCheckout/constants/express";
+import {
+  DEFAULT_EXPRESS_CONFIG,
+  getDefaultClientId,
+  type ExpressConfig,
+} from "@/features/expressCheckout/constants/express";
 
 interface ExpressConfigState extends ExpressConfig {
   setConfig: (patch: Partial<ExpressConfig>) => void;
@@ -23,7 +27,16 @@ export const useExpressConfigStore = create<ExpressConfigState>()(
   persist(
     (set) => ({
       ...DEFAULT_EXPRESS_CONFIG,
-      setConfig: (patch) => set(patch),
+      setConfig: (patch) =>
+        set((state) => {
+          // clientId is derived from env (each env has its own token), so switching env pulls in that
+          // env's default clientId. The guard tolerates an explicit clientId in the same patch, though
+          // the config sheet no longer offers one.
+          if (patch.env !== undefined && patch.env !== state.env && patch.clientId === undefined) {
+            return { ...patch, clientId: getDefaultClientId(patch.env) };
+          }
+          return patch;
+        }),
     }),
     {
       name: "express-config-storage",
@@ -32,12 +45,16 @@ export const useExpressConfigStore = create<ExpressConfigState>()(
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<ExpressConfig>;
         const wallets = (p.expressWallets ?? {}) as Partial<ExpressConfig["expressWallets"]>;
+        // `env` is interpolated into the API host and the SDK <script src>, so never trust the
+        // persisted value verbatim — coerce it back into the known set like the other enums.
+        const env = coerce<EnvName>(p.env, ENVS, DEFAULT_EXPRESS_CONFIG.env);
         return {
           ...current,
           ...p,
-          // `env` is interpolated into the API host and the SDK <script src>, so never trust the
-          // persisted value verbatim — coerce it back into the known set like the other enums.
-          env: coerce<EnvName>(p.env, ENVS, DEFAULT_EXPRESS_CONFIG.env),
+          env,
+          // clientId is derived from env (each env has its own token) and is no longer user-editable,
+          // so ignore any persisted value and re-derive it from the resolved env.
+          clientId: getDefaultClientId(env),
           walletMode: coerce<WalletMode>(p.walletMode, WALLET_MODES, DEFAULT_EXPRESS_CONFIG.walletMode),
           allowRealRedirect:
             typeof p.allowRealRedirect === "boolean"

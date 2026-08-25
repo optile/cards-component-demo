@@ -49,15 +49,26 @@ const entries = new Map<string, PrefetchEntry>();
 /**
  * Stable identity of a would-be express session — mirrors the session-affecting inputs the PDP's
  * rebuild key derives from, so a prefetch and the page's own build resolve to the same string.
+ *
+ * `includeCart` gates the cart-derived inputs (items signature + amount). For an EXPRESS-ONLY surface
+ * (`includeCart: false`) these are excluded, because express keys/wallets/networks are amount-
+ * independent (amount/currency are not inputs to the express fetch): a quantity tick must NOT fragment
+ * the identity or rebuild the instance — it's pushed to the live wallet sheet via `express.update(...)`
+ * instead. A CARD surface (`includeCart: true`) keeps them, since the classic LIST total the shopper
+ * sees is bound to the built session and has no in-place update seam.
  */
 export function expressSessionKey(
   config: ExpressConfig,
   items: CartItem[],
   currency: string,
+  includeCart = true,
 ): string {
   const reinit = reinitSignatureOf(config);
-  const itemsSignature = items.map((i) => `${i.id}x${i.quantity}`).join(",");
-  const amount = items.length > 0 ? totalOf(items).toFixed(2) : undefined;
+  const itemsSignature = includeCart
+    ? items.map((i) => `${i.id}x${i.quantity}`).join(",")
+    : undefined;
+  const amount =
+    includeCart && items.length > 0 ? totalOf(items).toFixed(2) : undefined;
   // `allowRealRedirect` is intentionally excluded: it only affects the submit-time callback (read
   // fresh via callbacksRef), not the built session — so it must not fragment prefetch identity.
   return JSON.stringify([
@@ -113,7 +124,10 @@ export function prefetchExpressSession(
 ): void {
   if (items.length === 0) return;
   evictExpired();
-  const key = expressSessionKey(config, items, currency);
+  // Prefetch is always for an express-only "buy it now" surface, so the identity excludes cart inputs
+  // (amount/items): a hover at qty 1 and a page-open at qty 3 resolve to the SAME key and claim the
+  // same warmed session — the amount difference is reconciled in place via express.update after mount.
+  const key = expressSessionKey(config, items, currency, false);
   if (entries.has(key)) return;
 
   const entry: PrefetchEntry = {

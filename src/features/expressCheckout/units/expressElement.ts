@@ -1,9 +1,24 @@
-import type { CheckoutInstance } from "@/features/embeddedCheckout/types/checkout";
+import type {
+  CheckoutInstance,
+  ExpressDropInComponent,
+} from "@/features/embeddedCheckout/types/checkout";
 import type { ExpressConfig } from "@/features/expressCheckout/constants/express";
 import { CURRENCY } from "@/features/expressCheckout/store/expressCartStore";
 import { isExpressState } from "@/features/expressCheckout/types/express";
 
 const EXPRESS_COMPONENT = "express";
+
+// OPG `payment.reference` is REQUIRED on the express charge (the buyer's order ref / bank-statement
+// descriptor, merchant-owned). A real storefront passes its own order id here; this demo has no order
+// yet at mount time (the receipt id is minted only after approval), so it generates a stable per-mount
+// reference. Uses Web Crypto — never Math.random — for a collision-free value.
+function generateDemoPaymentReference(): string {
+  const uuid =
+    typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+      ? crypto.randomUUID()
+      : `${Date.now()}-${crypto.getRandomValues(new Uint32Array(1))[0]}`;
+  return `PT-${uuid}`;
+}
 
 // Mirrors the SDK's express:state phases; the slot reveals only on `ready`.
 export type ExpressStatus = "loading" | "ready" | "unavailable" | "error";
@@ -13,6 +28,14 @@ export interface MountExpressOptions {
   config: ExpressConfig;
   node: HTMLElement;
   onStatus: (status: ExpressStatus, error?: string) => void;
+}
+
+export interface MountedExpress {
+  // Tears down the express:state subscription and removes the drop-in. Idempotent per mount.
+  cleanup: () => void;
+  // The live express handle (undefined only when the SDK declines to build one — e.g. walletMode
+  // 'inline'). Callers keep it to push post-mount amount/currency changes via `express.update(...)`.
+  express: ExpressDropInComponent | undefined;
 }
 
 /**
@@ -30,7 +53,7 @@ export interface MountExpressOptions {
 export function mountExpressElement(
   instance: CheckoutInstance,
   { amount, config, node, onStatus }: MountExpressOptions,
-): () => void {
+): MountedExpress {
   const handleState = (data: unknown) => {
     if (!isExpressState(data)) return;
     if (data.phase === "error") onStatus("error", data.errorMessage);
@@ -44,20 +67,21 @@ export function mountExpressElement(
     amount,
     currency: CURRENCY,
     locale: config.locale,
-    // No paymentReference: the SDK generates a crypto-strong default when it is omitted. A real
-    // integration passes its own order id here (per-transaction data belongs on the drop-in call,
-    // not the CheckoutWeb init config), e.g.:
-    // paymentReference: order.id, // merchant order ref / bank-statement descriptor, e.g. "order-4711"
+    // Required per-transaction OPG payment.reference. A real integration passes its own order id here
+    // (e.g. `paymentReference: order.id`); the demo generates one since no order exists yet at mount.
+    paymentReference: generateDemoPaymentReference(),
   });
 
-  // The resolved reference (host-supplied or the SDK default) is readable straight off the handle,
-  // synchronously and before the wallet sheet opens — persist it here to reconcile the charge to the
-  // order you create post-approval. e.g.:
+  // The resolved reference is readable straight off the handle, synchronously and before the wallet
+  // sheet opens — persist it here to reconcile the charge to the order you create post-approval. e.g.:
   // savePendingOrderReference(express?.paymentReference);
   express?.mount(node);
 
-  return () => {
-    instance.off("express:state", handleState);
-    instance.remove(EXPRESS_COMPONENT);
+  return {
+    cleanup: () => {
+      instance.off("express:state", handleState);
+      instance.remove(EXPRESS_COMPONENT);
+    },
+    express,
   };
 }

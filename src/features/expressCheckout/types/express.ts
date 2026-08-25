@@ -11,7 +11,7 @@ export type ExpressOperationType = (typeof EXPRESS_OPERATION_TYPES)[number];
 
 // Demo-offered OPG environments (the config sheet's env dropdown). A persisted `env` is coerced back
 // into this set on rehydrate before it is interpolated into the API host / SDK <script src>.
-export const ENVS = ["checkout.integration", "ramy.integration", "sandbox"] as const;
+export const ENVS = ["checkout.integration", "sandbox"] as const;
 export type EnvName = (typeof ENVS)[number];
 
 export interface ExpressWalletsConfig {
