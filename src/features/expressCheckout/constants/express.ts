@@ -61,9 +61,8 @@ export const SESSION_TTL_MS = 15 * 60 * 1000;
 
 export const DEFAULT_EXPRESS_CONFIG: ExpressConfig = {
   // Cards use this env (has a Divisions entry → LIST resolves). The SDK derives the GET /express host
-  // from this same `env`; the demo's fetch shim + vite `/opg-proxy` (OPG_PROXY_TARGET, default ramy)
-  // route that call to wherever the express clientId is provisioned. Both surfaces coexist because
-  // the SDK caches a Stripe instance per account.
+  // from this same `env`; the demo's fetch shim + vite `/opg-proxy` (OPG_PROXY_TARGET) forward that
+  // cross-origin call server-to-server to dodge CORS on https://localhost.
   env: "checkout.integration",
   clientId: getDefaultClientId(),
   country: "US",

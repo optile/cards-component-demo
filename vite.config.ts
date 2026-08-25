@@ -9,11 +9,11 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
   const useHttps = env.EXPRESS_HTTPS === "true";
   // Where the demo's fetch shim reroutes OPG `GET /pci/v1/express` calls (payoneerSdk.ts): the SDK
-  // derives that URL from its `env` (checkout.integration), but the express clientId is provisioned in
-  // `ramy.integration`, so the shim + this proxy send it there. Override when pointing the demo at a
-  // different OPG environment.
+  // derives that URL from its `env` and the browser cannot call the OPG host directly from
+  // https://localhost (no CORS), so the shim + this proxy forward it server-to-server. Override when
+  // pointing the demo at a different OPG environment.
   const opgTarget =
-    env.OPG_PROXY_TARGET || "https://api.ramy.integration.oscato.com";
+    env.OPG_PROXY_TARGET || "https://api.checkout.integration.oscato.com";
 
   return {
     plugins: [
