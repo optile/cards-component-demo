@@ -14,6 +14,49 @@ export type ExpressOperationType = (typeof EXPRESS_OPERATION_TYPES)[number];
 export const ENVS = ["checkout.integration", "sandbox"] as const;
 export type EnvName = (typeof ENVS)[number];
 
+// SDK-supported UI locales — mirrors the translation bundles shipped by the Web SDK
+// (checkout-web-stripe/src/translations, checkout-web/src/translations). `value` is the raw host
+// locale string handed to the SDK (which maps it to Stripe's locale union and selects the matching
+// translation bundle); `label` is the human-readable name shown in the demo's locale picker. Order
+// mirrors the SDK's `translations/index.ts` so the set stays auditable against the source of truth.
+export const LOCALES = [
+  { value: "en", label: "English" },
+  { value: "bg", label: "Bulgarian" },
+  { value: "cs", label: "Czech" },
+  { value: "de", label: "German" },
+  { value: "el", label: "Greek" },
+  { value: "en_GB", label: "English (UK)" },
+  { value: "es_AR", label: "Spanish (Latin America)" },
+  { value: "es", label: "Spanish" },
+  { value: "fr", label: "French" },
+  { value: "hr", label: "Croatian" },
+  { value: "hu", label: "Hungarian" },
+  { value: "id_ID", label: "Indonesian" },
+  { value: "it", label: "Italian" },
+  { value: "ja", label: "Japanese" },
+  { value: "ko", label: "Korean" },
+  { value: "nl", label: "Dutch" },
+  { value: "no", label: "Norwegian" },
+  { value: "pl", label: "Polish" },
+  { value: "pt_BR", label: "Portuguese (Brazil)" },
+  { value: "pt", label: "Portuguese" },
+  { value: "ro", label: "Romanian" },
+  { value: "ru", label: "Russian" },
+  { value: "sk", label: "Slovak" },
+  { value: "sl", label: "Slovenian" },
+  { value: "sr_RS", label: "Serbian (Serbia)" },
+  { value: "sr", label: "Serbian" },
+  { value: "sv", label: "Swedish" },
+  { value: "th", label: "Thai" },
+  { value: "tr", label: "Turkish" },
+  { value: "ur", label: "Urdu" },
+  { value: "vi", label: "Vietnamese" },
+  { value: "zh_TW", label: "Chinese (Traditional)" },
+  { value: "zh", label: "Chinese (Simplified)" },
+] as const;
+export type LocaleValue = (typeof LOCALES)[number]["value"];
+export const LOCALE_VALUES = LOCALES.map((l) => l.value) as readonly LocaleValue[];
+
 export interface ExpressWalletsConfig {
   applePay: WalletVisibility;
   googlePay: WalletVisibility;
@@ -23,7 +66,11 @@ export interface ExpressWalletsConfig {
 // One subscription + one switch drives the slot: reveal on `ready`, keep hidden otherwise.
 export type ExpressState =
   | { phase: "loading"; component: string }
-  | { phase: "ready"; component: string; wallets: { applePay: boolean; googlePay: boolean } }
+  | {
+      phase: "ready";
+      component: string;
+      wallets: { applePay: boolean; googlePay: boolean };
+    }
   | { phase: "unavailable"; component: string }
   | {
       phase: "error";
@@ -41,7 +88,9 @@ export function isExpressState(data: unknown): data is ExpressState {
   return (
     typeof data === "object" &&
     data !== null &&
-    (EXPRESS_PHASES as readonly string[]).includes((data as { phase?: unknown }).phase as string)
+    (EXPRESS_PHASES as readonly string[]).includes(
+      (data as { phase?: unknown }).phase as string,
+    )
   );
 }
 

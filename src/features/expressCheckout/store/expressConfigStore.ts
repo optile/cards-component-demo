@@ -5,10 +5,12 @@ import {
   WALLET_MODES,
   WALLET_VISIBILITY,
   EXPRESS_OPERATION_TYPES,
+  LOCALE_VALUES,
   type EnvName,
   type WalletMode,
   type WalletVisibility,
   type ExpressOperationType,
+  type LocaleValue,
 } from "@/features/expressCheckout/types/express";
 import {
   DEFAULT_EXPRESS_CONFIG,
@@ -56,6 +58,9 @@ export const useExpressConfigStore = create<ExpressConfigState>()(
           // so ignore any persisted value and re-derive it from the resolved env.
           clientId: getDefaultClientId(env),
           walletMode: coerce<WalletMode>(p.walletMode, WALLET_MODES, DEFAULT_EXPRESS_CONFIG.walletMode),
+          // The locale <select> only offers SDK-supported tags, so coerce a stale persisted value
+          // (e.g. a pre-picker `en_US`) back into the set to avoid a controlled-select value mismatch.
+          locale: coerce<LocaleValue>(p.locale, LOCALE_VALUES, DEFAULT_EXPRESS_CONFIG.locale as LocaleValue),
           allowRealRedirect:
             typeof p.allowRealRedirect === "boolean"
               ? p.allowRealRedirect
