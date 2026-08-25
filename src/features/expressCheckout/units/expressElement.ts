@@ -38,19 +38,23 @@ export function mountExpressElement(
   };
   instance.on("express:state", handleState);
 
-  instance
-    .dropIn(EXPRESS_COMPONENT, {
-      // Express identity (clientId / country) is declared once at init (see initCheckout), not here.
-      // The drop-in call carries only per-transaction data.
-      amount,
-      currency: CURRENCY,
-      locale: config.locale,
-      // `payment.reference` (merchant order ref) is REQUIRED by the express one-step `/charge` — a
-      // missing value is rejected by the backend. A real integration passes its own order id; the
-      // demo generates a unique one per mount.
-      paymentReference: `Demo-${crypto.randomUUID()}`,
-    })
-    ?.mount(node);
+  const express = instance.dropIn(EXPRESS_COMPONENT, {
+    // Express identity (clientId / country) is declared once at init (see initCheckout), not here.
+    // The drop-in call carries only per-transaction data.
+    amount,
+    currency: CURRENCY,
+    locale: config.locale,
+    // No paymentReference: the SDK generates a crypto-strong default when it is omitted. A real
+    // integration passes its own order id here (per-transaction data belongs on the drop-in call,
+    // not the CheckoutWeb init config), e.g.:
+    // paymentReference: order.id, // merchant order ref / bank-statement descriptor, e.g. "order-4711"
+  });
+
+  // The resolved reference (host-supplied or the SDK default) is readable straight off the handle,
+  // synchronously and before the wallet sheet opens — persist it here to reconcile the charge to the
+  // order you create post-approval. e.g.:
+  // savePendingOrderReference(express?.paymentReference);
+  express?.mount(node);
 
   return () => {
     instance.off("express:state", handleState);
