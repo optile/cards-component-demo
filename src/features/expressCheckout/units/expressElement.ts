@@ -1,4 +1,7 @@
-import type { CheckoutInstance } from "@/features/embeddedCheckout/types/checkout";
+import type {
+  CheckoutInstance,
+  ExpressDropInComponent,
+} from "@/features/embeddedCheckout/types/checkout";
 import type { ExpressConfig } from "@/features/expressCheckout/constants/express";
 import { CURRENCY } from "@/features/expressCheckout/store/expressCartStore";
 import { isExpressState } from "@/features/expressCheckout/types/express";
@@ -13,6 +16,14 @@ export interface MountExpressOptions {
   config: ExpressConfig;
   node: HTMLElement;
   onStatus: (status: ExpressStatus, error?: string) => void;
+}
+
+export interface MountedExpress {
+  // Tears down the express:state subscription and removes the drop-in. Idempotent per mount.
+  cleanup: () => void;
+  // The live express handle (undefined only when the SDK declines to build one — e.g. walletMode
+  // 'inline'). Callers keep it to push post-mount amount/currency changes via `express.update(...)`.
+  express: ExpressDropInComponent | undefined;
 }
 
 /**
@@ -30,7 +41,7 @@ export interface MountExpressOptions {
 export function mountExpressElement(
   instance: CheckoutInstance,
   { amount, config, node, onStatus }: MountExpressOptions,
-): () => void {
+): MountedExpress {
   const handleState = (data: unknown) => {
     if (!isExpressState(data)) return;
     if (data.phase === "error") onStatus("error", data.errorMessage);
@@ -56,8 +67,11 @@ export function mountExpressElement(
   // savePendingOrderReference(express?.paymentReference);
   express?.mount(node);
 
-  return () => {
-    instance.off("express:state", handleState);
-    instance.remove(EXPRESS_COMPONENT);
+  return {
+    cleanup: () => {
+      instance.off("express:state", handleState);
+      instance.remove(EXPRESS_COMPONENT);
+    },
+    express,
   };
 }

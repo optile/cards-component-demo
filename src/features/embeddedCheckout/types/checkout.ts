@@ -19,11 +19,23 @@ export interface DropInComponent {
   };
 }
 
+/**
+ * Express drop-in handle (`dropIn('express', ...)`). Mirrors the SDK's `ExpressDropIn`: `update` takes
+ * the express reconfigure payload and pushes an amount/currency change to the live wallet sheet in
+ * place (no remount, no GET /express refetch). Each method returns the handle so calls chain.
+ */
+export interface ExpressDropInComponent {
+  mount(element: HTMLElement | null): ExpressDropInComponent;
+  unmount(): ExpressDropInComponent;
+  update(config: { amount?: string; currency?: string }): ExpressDropInComponent;
+  readonly paymentReference?: string;
+}
+
 export interface CheckoutInstance {
   availableDropInComponents(): PaymentMethod[];
   dropInComponents: Record<string, DropInComponent>;
   // Express overload first: returns undefined under walletMode 'inline' / unknown method.
-  dropIn(methodName: "express", options?: ExpressDropInProps): DropInComponent | undefined;
+  dropIn(methodName: "express", options?: ExpressDropInProps): ExpressDropInComponent | undefined;
   dropIn(methodName: string, options?: { hideSubmitButton?: boolean }): DropInComponent;
   remove(name: string): boolean;
   charge(): void;

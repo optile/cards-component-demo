@@ -14,7 +14,10 @@ import {
   claimExpressSession,
   expressSessionKey,
 } from "@/features/expressCheckout/units/expressPrefetch";
-import type { CheckoutInstance } from "@/features/embeddedCheckout/types/checkout";
+import type {
+  CheckoutInstance,
+  ExpressDropInComponent,
+} from "@/features/embeddedCheckout/types/checkout";
 import {
   SESSION_TTL_MS,
   type ExpressConfig,
@@ -141,6 +144,15 @@ export function useCheckoutSession(
   const amount = items.length > 0 ? total.toFixed(2) : undefined;
   const wantCard = Boolean(cardSlotRef);
 
+  // Latest amount, readable synchronously inside the async build. Lets a quantity tick that lands
+  // WHILE the session is still building be reconciled the moment the element mounts (see below), so a
+  // slow build can't leave the wallet sheet showing the amount from when the build started.
+  const amountRef = useRef(amount);
+  amountRef.current = amount;
+  // The live express handle for an express-only surface, kept so a post-mount amount change is pushed
+  // to the wallet sheet in place via express.update(). Null for card surfaces (they rebuild instead).
+  const expressHandleRef = useRef<ExpressDropInComponent | null>(null);
+
   const [expressStatus, setExpressStatus] = useState<ExpressStatus>("loading");
   const [expressError, setExpressError] = useState<string | undefined>(undefined);
   const [cardStatus, setCardStatus] = useState<SlotStatus>("loading");
@@ -163,12 +175,15 @@ export function useCheckoutSession(
   const [staleEpoch, setStaleEpoch] = useState(0);
 
   // `expressSessionKey` is the SINGLE source for the session-affecting identity (env, wallet config,
-  // country, clientId, locale, items, amount, currency) — the same string an express-only surface uses
-  // to claim a hover-prefetched session, so the two can never drift. `allowRealRedirect` is deliberately
-  // excluded (read fresh at submit via callbacksRef, so toggling it must not churn the session).
-  // `wantCard` (card slot on/off) and `staleEpoch` (force a rebuild of an aged kept-alive session)
-  // extend that identity into the full rebuild key.
-  const prefetchKey = expressSessionKey(config, items, currency);
+  // country, clientId, locale, currency — plus items/amount ONLY for a card surface). It's the same
+  // string an express-only surface uses to claim a hover-prefetched session, so the two can never
+  // drift. Passing `wantCard` as `includeCart` is the crux of S8: for an express-only surface the cart
+  // inputs are excluded, so a quantity tick does NOT change the key and therefore does NOT rebuild the
+  // instance — the amount is pushed to the live sheet via express.update() (effect below). A card
+  // surface keeps them, so its LIST total still rebuilds on a cart edit. `allowRealRedirect` is
+  // deliberately excluded (read fresh at submit via callbacksRef). `wantCard` and `staleEpoch` (force a
+  // rebuild of an aged kept-alive session) extend that identity into the full rebuild key.
+  const prefetchKey = expressSessionKey(config, items, currency, wantCard);
   const rebuildKey = JSON.stringify([prefetchKey, wantCard, staleEpoch]);
 
   // The signature the session is CURRENTLY built for. It only advances while the surface is ACTIVE,
@@ -262,7 +277,7 @@ export function useCheckoutSession(
 
         // Mount the express element. A SINGLE express:state subscription drives the slot's whole
         // lifecycle (loading → ready | unavailable | error). Reused by the PDP.
-        cleanupExpress = mountExpressElement(ci, {
+        const mounted = mountExpressElement(ci, {
           amount,
           config,
           node: expressNode,
@@ -272,6 +287,19 @@ export function useCheckoutSession(
             setExpressError(error);
           },
         });
+        cleanupExpress = mounted.cleanup;
+
+        // Keep the handle so an express-only surface can push post-mount amount changes in place.
+        // (Card surfaces rebuild on a cart edit, so no handle is retained there.)
+        if (!wantCard) {
+          expressHandleRef.current = mounted.express ?? null;
+          // Reconcile a quantity tick that landed mid-build: the element mounted with the build-time
+          // amount, so if a newer one has arrived, push it now (amount only; currency is fixed) rather
+          // than wait for the next tick.
+          if (mounted.express && amountRef.current && amountRef.current !== amount) {
+            mounted.express.update({ amount: amountRef.current });
+          }
+        }
 
         // The card component may already be available synchronously right after init.
         if (wantCard) mountCard(ci);
@@ -289,6 +317,8 @@ export function useCheckoutSession(
     return () => {
       cancelled = true;
       if (cardFallback) window.clearTimeout(cardFallback);
+      // The handle dies with this instance; drop it so the update effect can't touch a torn-down sheet.
+      expressHandleRef.current = null;
       // Atomic, ordered teardown (express → card → destroy), so nothing leaks across rebuilds or on
       // unmount. Safe when the async build lost the race (instance stays null): the cancelled guard
       // destroys the orphan in the async block above.
@@ -300,6 +330,17 @@ export function useCheckoutSession(
     // are read fresh inside the effect body.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionKey]);
+
+  // S8 in-place amount update: for an express-only surface a quantity tick no longer rebuilds the
+  // instance (see the key derivation above), so push the new amount straight to the live wallet sheet.
+  // Only `amount` changes here (currency is the fixed CURRENCY constant); the SDK reconciles it via
+  // elements.update({ amount, currency }) internally, re-reading the unchanged currency attribute —
+  // no teardown, no GET /express refetch. On first mount the handle is still null (the build is async),
+  // so this correctly no-ops until an actual post-mount change. Card surfaces rebuild instead.
+  useEffect(() => {
+    if (wantCard || !amount) return;
+    expressHandleRef.current?.update({ amount });
+  }, [amount, wantCard]);
 
   // Availability = the single signal reached its `ready` phase; drives the surrounding reveal.
   const expressAvailable = expressStatus === "ready";
