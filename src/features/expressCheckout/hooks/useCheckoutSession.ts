@@ -177,7 +177,7 @@ export function useCheckoutSession(
   // `expressSessionKey` is the SINGLE source for the session-affecting identity (env, wallet config,
   // country, clientId, locale, currency — plus items/amount ONLY for a card surface). It's the same
   // string an express-only surface uses to claim a hover-prefetched session, so the two can never
-  // drift. Passing `wantCard` as `includeCart` is the crux of S8: for an express-only surface the cart
+  // drift. Passing `wantCard` as `includeCart` is the crux here: for an express-only surface the cart
   // inputs are excluded, so a quantity tick does NOT change the key and therefore does NOT rebuild the
   // instance — the amount is pushed to the live sheet via express.update() (effect below). A card
   // surface keeps them, so its LIST total still rebuilds on a cart edit. `allowRealRedirect` is
@@ -331,7 +331,7 @@ export function useCheckoutSession(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionKey]);
 
-  // S8 in-place amount update: for an express-only surface a quantity tick no longer rebuilds the
+  // In-place amount update: for an express-only surface a quantity tick no longer rebuilds the
   // instance (see the key derivation above), so push the new amount straight to the live wallet sheet.
   // Only `amount` changes here (currency is the fixed CURRENCY constant); the SDK reconciles it via
   // elements.update({ amount, currency }) internally, re-reading the unchanged currency attribute —
