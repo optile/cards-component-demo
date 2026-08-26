@@ -6,6 +6,7 @@ import {
   WALLET_MODES,
   WALLET_VISIBILITY,
   EXPRESS_OPERATION_TYPES,
+  LOCALES,
 } from "@/features/expressCheckout/types/express";
 
 export default function ConfigSheet() {
@@ -90,17 +91,16 @@ export default function ConfigSheet() {
               <Field label="Environment">
                 <Select value={config.env} options={ENVS} onChange={(v) => config.setConfig({ env: v })} />
               </Field>
-              <Field label="Country">
-                <input
-                  className="w-full border rounded px-2 py-1 text-sm" style={{ borderColor: "var(--line)" }}
-                  value={config.country} onChange={(e) => config.setConfig({ country: e.target.value.toUpperCase() })}
-                />
-              </Field>
               <Field label="Locale">
-                <input
-                  className="w-full border rounded px-2 py-1 text-sm" style={{ borderColor: "var(--line)" }}
-                  value={config.locale} onChange={(e) => config.setConfig({ locale: e.target.value })}
-                />
+                <select
+                  className="w-full border rounded px-2 py-1 text-sm bg-white" style={{ borderColor: "var(--line)" }}
+                  value={config.locale}
+                  onChange={(e) => config.setConfig({ locale: e.target.value })}
+                >
+                  {LOCALES.map((l) => (
+                    <option key={l.value} value={l.value}>{`${l.label} (${l.value})`}</option>
+                  ))}
+                </select>
               </Field>
               <Field label="walletMode">
                 <Select value={config.walletMode} options={WALLET_MODES} onChange={(v) => config.setConfig({ walletMode: v })} />

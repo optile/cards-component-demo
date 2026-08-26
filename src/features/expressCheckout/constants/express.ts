@@ -8,15 +8,30 @@ import {
 
 // Hardcoded demo identity feeding buildListSessionUpdates. Synthetic data only (no real PII).
 export const DEMO_BILLING: BillingAddress = {
-  firstName: "Ada", lastName: "Reader", email: "ada.reader@example.test", phone: "",
-  street: "12 Paper Row", houseNumber: "3", zip: "10001", city: "New York",
-  state: "NY", country: "US", birthday: "1990-01-01",
+  firstName: "Ada",
+  lastName: "Reader",
+  email: "ada.reader@example.test",
+  phone: "",
+  street: "12 Paper Row",
+  houseNumber: "3",
+  zip: "10001",
+  city: "New York",
+  state: "NY",
+  country: "US",
+  birthday: "1990-01-01",
 };
 
 export const DEMO_SHIPPING: ShippingAddress = {
-  firstName: "Ada", lastName: "Reader", phone: "",
-  street: "12 Paper Row", houseNumber: "3", zip: "10001", city: "New York",
-  state: "NY", country: "US", birthday: "1990-01-01",
+  firstName: "Ada",
+  lastName: "Reader",
+  phone: "",
+  street: "12 Paper Row",
+  houseNumber: "3",
+  zip: "10001",
+  city: "New York",
+  state: "NY",
+  country: "US",
+  birthday: "1990-01-01",
 };
 
 export interface ExpressConfig {
@@ -70,7 +85,9 @@ export const DEFAULT_EXPRESS_CONFIG: ExpressConfig = {
   env: "checkout.integration",
   clientId: getDefaultClientId("checkout.integration"),
   country: "US",
-  locale: "en_US",
+  // A raw host locale string the SDK maps to Stripe's locale + the matching translation bundle. Kept
+  // to an SDK-supported tag (see `LOCALES`) so the config sheet's locale <select> always has a match.
+  locale: "en",
   walletMode: "both",
   expressWallets: { applePay: "auto", googlePay: "auto" },
   expressOperationType: "charge",
