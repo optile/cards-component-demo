@@ -34,6 +34,24 @@ export const DEMO_SHIPPING: ShippingAddress = {
   birthday: "1990-01-01",
 };
 
+/**
+ * One ECE shipping RATE offered on the `dropIn('express')` call. `amount` is a MAJOR-unit decimal
+ * string in the charge currency (e.g. `'9.99'`, `'0'`) — the SDK converts to Stripe minor units.
+ *
+ * NOTE — this is the THIRD, distinct "shipping" concept in the demo; do not conflate it with:
+ *  (1) the cart line-item shipping fee (`shippingOf` in expressCartStore: $5 flat / free over $50,
+ *      injected as a LIST product line), or
+ *  (2) `DEMO_SHIPPING`, the synthetic LIST-session shipping ADDRESS above.
+ * These ECE rates are what the buyer picks IN the wallet sheet; the ECE total tracks that selection
+ * independently of (1) and (2).
+ */
+export interface DemoShippingRate {
+  id: string;
+  amount: string;
+  displayName: string;
+  deliveryEstimate?: string;
+}
+
 export interface ExpressConfig {
   env: EnvName;
   clientId: string;
@@ -43,6 +61,35 @@ export interface ExpressConfig {
   expressWallets: ExpressWalletsConfig;
   expressOperationType: ExpressOperationType;
   allowRealRedirect: boolean;
+  // ECE shipping. QA-editable: the opt-in toggle + a comma-separated ISO alpha-2 allowlist string
+  // (parsed to an array when assembling the drop-in config). The rate set is a fixed preset below (not
+  // QA-editable), so only the two fields above feed the remount identity (`reinitSignatureOf`).
+  shippingAddressRequired: boolean;
+  allowedShippingCountries: string;
+  shippingRates: DemoShippingRate[];
+}
+
+/**
+ * Fixed multi-rate preset the demo offers when ECE shipping is enabled. A NON-zero first rate would
+ * hide the freeze-rework bugs the SDK guards against, so keep the free "standard" first and a paid rate
+ * after it to exercise the total-tracks-selection path on-device.
+ */
+export const DEMO_EXPRESS_SHIPPING_RATES: DemoShippingRate[] = [
+  { id: "standard", amount: "0", displayName: "Standard", deliveryEstimate: "5-7 business days" },
+  { id: "express", amount: "9.99", displayName: "Express", deliveryEstimate: "2-3 business days" },
+  { id: "overnight", amount: "24.99", displayName: "Overnight", deliveryEstimate: "1 business day" },
+];
+
+/**
+ * Splits the comma-separated ISO-alpha-2 allowlist string into a normalized array (trim, upper-case,
+ * keep only 2-letter codes). Shared by ConfigSheet (checkbox state) and expressElement (drop-in config)
+ * so the two parse paths never drift.
+ */
+export function parseAllowedShippingCountries(value: string): string[] {
+  return value
+    .split(",")
+    .map((code) => code.trim().toUpperCase())
+    .filter((code) => /^[A-Z]{2}$/.test(code));
 }
 
 /**
@@ -57,6 +104,11 @@ export function reinitSignatureOf(config: ExpressConfig): string {
     config.expressWallets.applePay,
     config.expressWallets.googlePay,
     config.expressOperationType,
+    // ECE shipping is a create-time ECE option (rates are not updatable in place), so a change to the
+    // opt-in or the allowlist must remount. Only these two QA-editable fields participate; the rate
+    // preset is fixed, so it never fragments the identity.
+    String(config.shippingAddressRequired),
+    config.allowedShippingCountries,
   ].join("|");
 }
 
@@ -92,4 +144,8 @@ export const DEFAULT_EXPRESS_CONFIG: ExpressConfig = {
   expressWallets: { applePay: "auto", googlePay: "auto" },
   expressOperationType: "charge",
   allowRealRedirect: false,
+  // ECE shipping off by default; a comma-separated allowlist QA can edit; a fixed rate preset.
+  shippingAddressRequired: false,
+  allowedShippingCountries: "US,CA",
+  shippingRates: DEMO_EXPRESS_SHIPPING_RATES,
 };
