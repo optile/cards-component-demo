@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useExpressConfigStore } from "@/features/expressCheckout/store/expressConfigStore";
+import { parseAllowedShippingCountries } from "@/features/expressCheckout/constants/express";
 import {
   ENVS,
   WALLET_MODES,
@@ -8,6 +9,11 @@ import {
   EXPRESS_OPERATION_TYPES,
   LOCALES,
 } from "@/features/expressCheckout/types/express";
+
+// The demo offers a fixed pair of shipping destinations (matching the default allowlist). Kept as a
+// checkbox pair rather than free text so QA can't type a malformed code; the underlying config stays a
+// comma-separated ISO-alpha-2 string (the shape `buildExpressShipping` + `reinitSignatureOf` expect).
+const SHIPPING_COUNTRY_OPTIONS = ["US", "CA"] as const;
 
 export default function ConfigSheet() {
   const [open, setOpen] = useState(false);
@@ -127,6 +133,40 @@ export default function ConfigSheet() {
                 />
                 Allow real redirect on success
               </label>
+
+              <label className="flex items-center gap-2 mt-4 text-sm">
+                <input
+                  type="checkbox" checked={config.shippingAddressRequired}
+                  onChange={(e) => config.setConfig({ shippingAddressRequired: e.target.checked })}
+                />
+                Collect shipping address (ECE rates)
+              </label>
+              {config.shippingAddressRequired && (
+                <Field label="Allowed shipping countries">
+                  <div className="flex gap-4">
+                    {(() => {
+                      const selected = parseAllowedShippingCountries(config.allowedShippingCountries);
+                      return SHIPPING_COUNTRY_OPTIONS.map((code) => (
+                        <label key={code} className="flex items-center gap-2 text-sm">
+                          <input
+                            type="checkbox"
+                            checked={selected.includes(code)}
+                            onChange={(e) => {
+                              const next = e.target.checked
+                                ? [...selected, code]
+                                : selected.filter((c) => c !== code);
+                              // Re-derive from the fixed option order so the string is stable + deduped.
+                              const ordered = SHIPPING_COUNTRY_OPTIONS.filter((c) => next.includes(c));
+                              config.setConfig({ allowedShippingCountries: ordered.join(",") });
+                            }}
+                          />
+                          {code}
+                        </label>
+                      ));
+                    })()}
+                  </div>
+                </Field>
+              )}
             </div>
           </div>,
           document.body

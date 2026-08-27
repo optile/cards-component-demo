@@ -1,12 +1,33 @@
 import type {
   CheckoutInstance,
   ExpressDropInComponent,
+  ExpressDropInProps,
 } from "@/features/embeddedCheckout/types/checkout";
-import type { ExpressConfig } from "@/features/expressCheckout/constants/express";
+import {
+  parseAllowedShippingCountries,
+  type ExpressConfig,
+} from "@/features/expressCheckout/constants/express";
 import { CURRENCY } from "@/features/expressCheckout/store/expressCartStore";
 import { isExpressState } from "@/features/expressCheckout/types/express";
 
 const EXPRESS_COMPONENT = "express";
+
+/**
+ * Assembles the compound `shipping` config for `dropIn('express')` from the demo config, or `undefined`
+ * when shipping is off. The comma-separated ISO-alpha-2 allowlist string is split into a normalized
+ * array (trim/upper-case, keep 2-letter codes); an empty result is omitted (uncapped). The rate preset
+ * is passed verbatim (already the SDK's major-unit shape).
+ */
+function buildExpressShipping(config: ExpressConfig): ExpressDropInProps["shipping"] | undefined {
+  if (!config.shippingAddressRequired) {
+    return undefined;
+  }
+  const allowedCountries = parseAllowedShippingCountries(config.allowedShippingCountries);
+  return {
+    rates: config.shippingRates,
+    ...(allowedCountries.length > 0 ? { allowedCountries } : {}),
+  };
+}
 
 // OPG `payment.reference` is REQUIRED on the express charge (the buyer's order ref / bank-statement
 // descriptor, merchant-owned). A real storefront passes its own order id here; this demo has no order
@@ -61,6 +82,7 @@ export function mountExpressElement(
   };
   instance.on("express:state", handleState);
 
+  const shipping = buildExpressShipping(config);
   const express = instance.dropIn(EXPRESS_COMPONENT, {
     // Express identity (clientId / country) is declared once at init (see initCheckout), not here.
     // The drop-in call carries only per-transaction data.
@@ -70,6 +92,8 @@ export function mountExpressElement(
     // Required per-transaction OPG payment.reference. A real integration passes its own order id here
     // (e.g. `paymentReference: order.id`); the demo generates one since no order exists yet at mount.
     paymentReference: generateDemoPaymentReference(),
+    // ECE shipping: assembled from the QA config; omitted entirely when the opt-in is off.
+    ...(shipping ? { shipping } : {}),
   });
 
   // The resolved reference is readable straight off the handle, synchronously and before the wallet
