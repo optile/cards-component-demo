@@ -167,6 +167,14 @@ export default function ConfigSheet() {
                   </div>
                 </Field>
               )}
+
+              <label className="flex items-center gap-2 mt-4 text-sm">
+                <input
+                  type="checkbox" checked={config.sendProducts}
+                  onChange={(e) => config.setConfig({ sendProducts: e.target.checked })}
+                />
+                Send cart products (charge body)
+              </label>
             </div>
           </div>,
           document.body

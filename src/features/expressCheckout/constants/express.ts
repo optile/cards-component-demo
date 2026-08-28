@@ -46,9 +46,9 @@ export const DEMO_SHIPPING: ShippingAddress = {
  * independently of (1) and (2).
  */
 export interface DemoShippingRate {
-  id: string;
+  code: string;
   amount: string;
-  displayName: string;
+  name: string;
   deliveryEstimate?: string;
 }
 
@@ -67,6 +67,11 @@ export interface ExpressConfig {
   shippingAddressRequired: boolean;
   allowedShippingCountries: string;
   shippingRates: DemoShippingRate[];
+  // Charge-body-only cart products. When on, the demo passes a `products[]` on `dropIn('express')`
+  // (one line per cart item + a shipping-fee line when applicable) that sums to the drop-in `amount`,
+  // replacing the SDK's synthesized `product item` base line. Participates in the remount identity so
+  // toggling it re-pushes (products are set at drop-in time, not via `express.update`).
+  sendProducts: boolean;
 }
 
 /**
@@ -75,9 +80,9 @@ export interface ExpressConfig {
  * after it to exercise the total-tracks-selection path on-device.
  */
 export const DEMO_EXPRESS_SHIPPING_RATES: DemoShippingRate[] = [
-  { id: "standard", amount: "0", displayName: "Standard", deliveryEstimate: "5-7 business days" },
-  { id: "express", amount: "9.99", displayName: "Express", deliveryEstimate: "2-3 business days" },
-  { id: "overnight", amount: "24.99", displayName: "Overnight", deliveryEstimate: "1 business day" },
+  { code: "standard", amount: "0", name: "Standard", deliveryEstimate: "5-7 business days" },
+  { code: "express", amount: "9.99", name: "Express", deliveryEstimate: "2-3 business days" },
+  { code: "overnight", amount: "24.99", name: "Overnight", deliveryEstimate: "1 business day" },
 ];
 
 /**
@@ -109,6 +114,8 @@ export function reinitSignatureOf(config: ExpressConfig): string {
     // preset is fixed, so it never fragments the identity.
     String(config.shippingAddressRequired),
     config.allowedShippingCountries,
+    // Products are pushed at drop-in time (not via express.update), so a toggle must remount to apply.
+    String(config.sendProducts),
   ].join("|");
 }
 
@@ -148,4 +155,6 @@ export const DEFAULT_EXPRESS_CONFIG: ExpressConfig = {
   shippingAddressRequired: false,
   allowedShippingCountries: "US,CA",
   shippingRates: DEMO_EXPRESS_SHIPPING_RATES,
+  // Cart products off by default (opt-in in the config sheet).
+  sendProducts: false,
 };
