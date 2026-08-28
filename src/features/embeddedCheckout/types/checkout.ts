@@ -35,15 +35,18 @@ export interface ExpressDropInComponent {
     products?: NonNullable<ExpressDropInProps["products"]>;
   }): ExpressDropInComponent;
   readonly paymentReference?: string;
+  readonly transactionId?: string;
 }
 
 export interface CheckoutInstance {
   availableDropInComponents(): PaymentMethod[];
   dropInComponents: Record<string, DropInComponent>;
-  // Express overload first: returns undefined under walletMode 'inline' / unknown method.
+  // Express overload first: returns undefined under walletMode 'inline' / unknown method. `options` is
+  // required — `paymentReference` and `transactionId` are mandatory (the SDK rejects a call that omits
+  // them), so the type refuses `dropIn('express')` with no config.
   dropIn(
     methodName: "express",
-    options?: ExpressDropInProps,
+    options: ExpressDropInProps,
   ): ExpressDropInComponent | undefined;
   dropIn(
     methodName: string,
@@ -74,6 +77,9 @@ export interface ExpressDropInProps {
   // Required OPG payment.reference (order ref / bank-statement descriptor). The SDK rejects a
   // missing/blank value at dropIn('express') time.
   paymentReference: string;
+  // Required merchant transactionId (the merchant's own reconciliation key). The SDK rejects a
+  // missing/blank value at dropIn('express') time; mirrors the normal payment-API flow.
+  transactionId: string;
   // ECE shipping: presence of this compound object opts into address collection. `rates` is
   // required (≥1); each amount is a MAJOR-unit decimal string. `allowedCountries` are ISO alpha-2
   // (allowlist-only). Mirrors the SDK's `ExpressDropInConfig.shipping`.

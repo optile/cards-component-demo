@@ -21,11 +21,15 @@ const EXPRESS_COMPONENT = "express";
  * array (trim/upper-case, keep 2-letter codes); an empty result is omitted (uncapped). The rate preset
  * is passed verbatim (already the SDK's major-unit shape).
  */
-function buildExpressShipping(config: ExpressConfig): ExpressDropInProps["shipping"] | undefined {
+function buildExpressShipping(
+  config: ExpressConfig,
+): ExpressDropInProps["shipping"] | undefined {
   if (!config.shippingAddressRequired) {
     return undefined;
   }
-  const allowedCountries = parseAllowedShippingCountries(config.allowedShippingCountries);
+  const allowedCountries = parseAllowedShippingCountries(
+    config.allowedShippingCountries,
+  );
   return {
     rates: config.shippingRates,
     ...(allowedCountries.length > 0 ? { allowedCountries } : {}),
@@ -59,21 +63,37 @@ export function buildExpressProducts(
   const itemsTotal = lines.reduce((sum, line) => sum + Number(line.amount), 0);
   const remainder = Number((Number(amount) - itemsTotal).toFixed(2));
   if (remainder > 0) {
-    lines.push({ code: "shipping-fee", name: "Shipping", amount: remainder.toFixed(2) });
+    lines.push({
+      code: "shipping-fee",
+      name: "Shipping",
+      amount: remainder.toFixed(2),
+    });
   }
   return lines;
+}
+
+// Web Crypto UUID (never Math.random) for a collision-free demo id.
+function demoUuid(): string {
+  return typeof crypto !== "undefined" &&
+    typeof crypto.randomUUID === "function"
+    ? crypto.randomUUID()
+    : `${Date.now()}-${crypto.getRandomValues(new Uint32Array(1))[0]}`;
 }
 
 // OPG `payment.reference` is REQUIRED on the express charge (the buyer's order ref / bank-statement
 // descriptor, merchant-owned). A real storefront passes its own order id here; this demo has no order
 // yet at mount time (the receipt id is minted only after approval), so it generates a stable per-mount
-// reference. Uses Web Crypto — never Math.random — for a collision-free value.
+// reference.
 function generateDemoPaymentReference(): string {
-  const uuid =
-    typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-      ? crypto.randomUUID()
-      : `${Date.now()}-${crypto.getRandomValues(new Uint32Array(1))[0]}`;
-  return `PT-${uuid}`;
+  return `PT-${demoUuid()}`;
+}
+
+// OPG `transactionId` is REQUIRED on the express charge — the merchant's own transaction identifier and
+// the correlation key they use to reconcile the (post-authorization-validated) one-step charge against
+// their order/ERP. A real integration passes the id from its own system; the demo has none, so it mints a
+// stable per-mount id. The SDK enforces its presence at dropIn('express') time.
+function generateDemoTransactionId(): string {
+  return `TX-${demoUuid()}`;
 }
 
 // Mirrors the SDK's express:state phases; the slot reveals only on `ready`.
@@ -130,6 +150,9 @@ export function mountExpressElement(
     // Required per-transaction OPG payment.reference. A real integration passes its own order id here
     // (e.g. `paymentReference: order.id`); the demo generates one since no order exists yet at mount.
     paymentReference: generateDemoPaymentReference(),
+    // Required per-transaction merchant transactionId (reconciliation key). A real integration passes its
+    // own id from its order/ERP system (e.g. `transactionId: order.txnId`); the demo mints one.
+    transactionId: generateDemoTransactionId(),
     // ECE shipping: assembled from the QA config; omitted entirely when the opt-in is off.
     ...(shipping ? { shipping } : {}),
     // Charge-body cart products: omitted unless the QA toggle is on (see buildExpressProducts).
