@@ -30,6 +30,9 @@ export interface ExpressDropInComponent {
   update(config: {
     amount?: string;
     currency?: string;
+    // Charge-body cart re-push (mirrors the SDK's ExpressUpdate.products). Pass together with `amount`
+    // for a dynamic cart so the in-place re-price and the cart stay consistent (Σ products === amount).
+    products?: NonNullable<ExpressDropInProps["products"]>;
   }): ExpressDropInComponent;
   readonly paymentReference?: string;
 }
@@ -76,13 +79,23 @@ export interface ExpressDropInProps {
   // (allowlist-only). Mirrors the SDK's `ExpressDropInConfig.shipping`.
   shipping?: {
     rates: Array<{
-      id: string;
+      code: string;
       amount: string;
-      displayName: string;
+      name: string;
       deliveryEstimate?: string;
     }>;
     allowedCountries?: string[];
   };
+  // Optional merchant cart PRODUCTS (charge-body only; never rendered in the wallet sheet). Each amount
+  // is a MAJOR-unit decimal string and the set must sum exactly to `amount`. Mirrors the SDK's
+  // `ExpressDropInConfig.products`.
+  products?: Array<{
+    code?: string;
+    name: string;
+    amount: string;
+    // Descriptive unit count (default 1); does NOT scale `amount` (the line total).
+    quantity?: number;
+  }>;
 }
 
 export interface CheckoutInstanceConfig {
