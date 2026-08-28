@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { useExpressConfigStore } from "@/features/expressCheckout/store/expressConfigStore";
-import { totalOf, type CartItem } from "@/features/expressCheckout/store/expressCartStore";
+import { subtotalOf, totalOf, type CartItem } from "@/features/expressCheckout/store/expressCartStore";
 import {
   createExpressSession,
   initCheckout,
@@ -151,8 +151,12 @@ export function useCheckoutSession(
 ): CheckoutSessionResult {
   const { items, currency, active, expressSlotRef, cardSlotRef } = params;
   const config = useExpressConfigStore();
-  const total = totalOf(items);
-  const amount = items.length > 0 ? total.toFixed(2) : undefined;
+  // Express base amount = goods SUBTOTAL when ECE shipping rates are enabled — the buyer-selected rate
+  // is then the ONLY shipping, added on top by the SDK. Otherwise use the cart total (subtotal + the
+  // cart's flat/free shipping). This prevents charging shipping twice (the flat cart fee AND a selected
+  // rate), which otherwise surfaces as two shipping lines once products[] are itemized on the wire.
+  const base = config.shippingAddressRequired ? subtotalOf(items) : totalOf(items);
+  const amount = items.length > 0 ? base.toFixed(2) : undefined;
   const wantCard = Boolean(cardSlotRef);
   // The cart-send toggle, pulled out as a primitive so the in-place update effect keys on the toggle
   // itself (not the whole `config` object identity).

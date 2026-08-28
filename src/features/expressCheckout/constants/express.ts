@@ -38,12 +38,11 @@ export const DEMO_SHIPPING: ShippingAddress = {
  * One ECE shipping RATE offered on the `dropIn('express')` call. `amount` is a MAJOR-unit decimal
  * string in the charge currency (e.g. `'9.99'`, `'0'`) — the SDK converts to Stripe minor units.
  *
- * NOTE — this is the THIRD, distinct "shipping" concept in the demo; do not conflate it with:
- *  (1) the cart line-item shipping fee (`shippingOf` in expressCartStore: $5 flat / free over $50,
- *      injected as a LIST product line), or
- *  (2) `DEMO_SHIPPING`, the synthetic LIST-session shipping ADDRESS above.
- * These ECE rates are what the buyer picks IN the wallet sheet; the ECE total tracks that selection
- * independently of (1) and (2).
+ * NOTE — three "shipping" concepts in this demo, don't conflate them: (1) the cart flat/free fee
+ * (`shippingOf`: $5 / free over $50), charged on the card path and on express when ECE rates are OFF;
+ * (2) `DEMO_SHIPPING`, the synthetic LIST shipping ADDRESS above (an address, not a charge); (3) these
+ * ECE rates — when on they REPLACE (1) for the express charge (base drops to the goods subtotal, see
+ * `useCheckoutSession`), so express shipping is charged once. The buyer picks the rate in the sheet.
  */
 export interface DemoShippingRate {
   code: string;
