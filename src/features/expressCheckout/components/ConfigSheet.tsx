@@ -165,6 +165,9 @@ export default function ConfigSheet() {
                       ));
                     })()}
                   </div>
+                  <span className="block text-[11px] mt-1" style={{ color: "var(--ink-soft)" }}>
+                    None selected = all countries allowed
+                  </span>
                 </Field>
               )}
 
