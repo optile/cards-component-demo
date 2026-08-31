@@ -59,7 +59,10 @@ export async function createExpressSession(
   currency: string
 ): Promise<{ longId: string }> {
   const products = items.map((i) => ({ name: i.title, price: i.price, quantity: i.quantity }));
-  // Add shipping as a line item so the LIST session total matches the displayed order total.
+  // Add shipping as a line item so the LIST session total matches the displayed order total. This LIST
+  // total backs the CARD drop-in on this surface; the express double-shipping fix lives entirely in the
+  // express charge amount (`useCheckoutSession` uses the goods subtotal when ECE rates are on) and never
+  // reads this LIST total, so the flat fee stays here unconditionally for card/LIST parity.
   const shippingFee = shippingOf(items);
   if (shippingFee > 0) products.push({ name: "Shipping", price: shippingFee, quantity: 1 });
   const cart: MerchantCart = { products, currency };

@@ -34,6 +34,23 @@ export const DEMO_SHIPPING: ShippingAddress = {
   birthday: "1990-01-01",
 };
 
+/**
+ * One ECE shipping RATE offered on the `dropIn('express')` call. `amount` is a MAJOR-unit decimal
+ * string in the charge currency (e.g. `'9.99'`, `'0'`) — the SDK converts to Stripe minor units.
+ *
+ * NOTE — three "shipping" concepts in this demo, don't conflate them: (1) the cart flat/free fee
+ * (`shippingOf`: $5 / free over $50), charged on the card path and on express when ECE rates are OFF;
+ * (2) `DEMO_SHIPPING`, the synthetic LIST shipping ADDRESS above (an address, not a charge); (3) these
+ * ECE rates — when on they REPLACE (1) for the express charge (base drops to the goods subtotal, see
+ * `useCheckoutSession`), so express shipping is charged once. The buyer picks the rate in the sheet.
+ */
+export interface DemoShippingRate {
+  code: string;
+  amount: string;
+  name: string;
+  deliveryEstimate?: string;
+}
+
 export interface ExpressConfig {
   env: EnvName;
   clientId: string;
@@ -43,6 +60,40 @@ export interface ExpressConfig {
   expressWallets: ExpressWalletsConfig;
   expressOperationType: ExpressOperationType;
   allowRealRedirect: boolean;
+  // ECE shipping. QA-editable: the opt-in toggle + a comma-separated ISO alpha-2 allowlist string
+  // (parsed to an array when assembling the drop-in config). The rate set is a fixed preset below (not
+  // QA-editable), so only the two fields above feed the remount identity (`reinitSignatureOf`).
+  shippingAddressRequired: boolean;
+  allowedShippingCountries: string;
+  shippingRates: DemoShippingRate[];
+  // Charge-body-only cart products. When on, the demo passes a `products[]` on `dropIn('express')`
+  // (one line per cart item + a shipping-fee line when applicable) that sums to the drop-in `amount`,
+  // replacing the SDK's synthesized `product item` base line. Participates in the remount identity so
+  // toggling it re-pushes (products are set at drop-in time, not via `express.update`).
+  sendProducts: boolean;
+}
+
+/**
+ * Fixed multi-rate preset the demo offers when ECE shipping is enabled. A NON-zero first rate would
+ * hide the freeze-rework bugs the SDK guards against, so keep the free "standard" first and a paid rate
+ * after it to exercise the total-tracks-selection path on-device.
+ */
+export const DEMO_EXPRESS_SHIPPING_RATES: DemoShippingRate[] = [
+  { code: "standard", amount: "0", name: "Standard", deliveryEstimate: "5-7 business days" },
+  { code: "express", amount: "9.99", name: "Express", deliveryEstimate: "2-3 business days" },
+  { code: "overnight", amount: "24.99", name: "Overnight", deliveryEstimate: "1 business day" },
+];
+
+/**
+ * Splits the comma-separated ISO-alpha-2 allowlist string into a normalized array (trim, upper-case,
+ * keep only 2-letter codes). Shared by ConfigSheet (checkbox state) and expressElement (drop-in config)
+ * so the two parse paths never drift.
+ */
+export function parseAllowedShippingCountries(value: string): string[] {
+  return value
+    .split(",")
+    .map((code) => code.trim().toUpperCase())
+    .filter((code) => /^[A-Z]{2}$/.test(code));
 }
 
 /**
@@ -57,6 +108,13 @@ export function reinitSignatureOf(config: ExpressConfig): string {
     config.expressWallets.applePay,
     config.expressWallets.googlePay,
     config.expressOperationType,
+    // ECE shipping is a create-time ECE option (rates are not updatable in place), so a change to the
+    // opt-in or the allowlist must remount. Only these two QA-editable fields participate; the rate
+    // preset is fixed, so it never fragments the identity.
+    String(config.shippingAddressRequired),
+    config.allowedShippingCountries,
+    // Products are pushed at drop-in time (not via express.update), so a toggle must remount to apply.
+    String(config.sendProducts),
   ].join("|");
 }
 
@@ -92,4 +150,10 @@ export const DEFAULT_EXPRESS_CONFIG: ExpressConfig = {
   expressWallets: { applePay: "auto", googlePay: "auto" },
   expressOperationType: "charge",
   allowRealRedirect: false,
+  // ECE shipping off by default; a comma-separated allowlist QA can edit; a fixed rate preset.
+  shippingAddressRequired: false,
+  allowedShippingCountries: "US,CA",
+  shippingRates: DEMO_EXPRESS_SHIPPING_RATES,
+  // Cart products off by default (opt-in in the config sheet).
+  sendProducts: false,
 };

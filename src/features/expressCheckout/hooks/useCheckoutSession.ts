@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { useExpressConfigStore } from "@/features/expressCheckout/store/expressConfigStore";
-import { totalOf, type CartItem } from "@/features/expressCheckout/store/expressCartStore";
+import { subtotalOf, totalOf, type CartItem } from "@/features/expressCheckout/store/expressCartStore";
 import {
   createExpressSession,
   initCheckout,
   type InitCheckoutParams,
 } from "@/features/expressCheckout/utils/expressSdk";
 import {
+  buildExpressProducts,
   mountExpressElement,
   type ExpressStatus,
 } from "@/features/expressCheckout/units/expressElement";
@@ -125,6 +126,16 @@ async function acquireExpressInstance(
 }
 
 /**
+ * The in-place `express.update(...)` payload for a post-mount amount change: re-price only, plus the
+ * charge-body `products[]` re-push when the cart is being sent (`buildExpressProducts` returns undefined
+ * when it is off), so the frozen cart still sums to the new amount (Σ products === amount at charge).
+ */
+function inPlaceExpressUpdate(config: ExpressConfig, items: CartItem[], amount: string) {
+  const products = buildExpressProducts(config, items, amount);
+  return products ? { amount, products } : { amount };
+}
+
+/**
  * Owns the SINGLE CheckoutWeb instance for a checkout surface and its LIST session, in ONE atomic
  * effect. Mounts the express element (always) and — when `cardSlotRef` is provided — the classic
  * card form, both on that one instance.
@@ -140,15 +151,32 @@ export function useCheckoutSession(
 ): CheckoutSessionResult {
   const { items, currency, active, expressSlotRef, cardSlotRef } = params;
   const config = useExpressConfigStore();
-  const total = totalOf(items);
-  const amount = items.length > 0 ? total.toFixed(2) : undefined;
+  // Express base amount = goods SUBTOTAL when ECE shipping rates are enabled — the buyer-selected rate
+  // is then the ONLY shipping, added on top by the SDK. Otherwise use the cart total (subtotal + the
+  // cart's flat/free shipping). This prevents charging shipping twice (the flat cart fee AND a selected
+  // rate), which otherwise surfaces as two shipping lines once products[] are itemized on the wire.
+  const base = config.shippingAddressRequired ? subtotalOf(items) : totalOf(items);
+  const amount = items.length > 0 ? base.toFixed(2) : undefined;
   const wantCard = Boolean(cardSlotRef);
+  // The cart-send toggle, pulled out as a primitive so the in-place update effect keys on the toggle
+  // itself (not the whole `config` object identity).
+  const sendProducts = config.sendProducts;
 
   // Latest amount, readable synchronously inside the async build. Lets a quantity tick that lands
   // WHILE the session is still building be reconciled the moment the element mounts (see below), so a
   // slow build can't leave the wallet sheet showing the amount from when the build started.
   const amountRef = useRef(amount);
   amountRef.current = amount;
+  // Latest cart items, readable synchronously in the async build alongside `amountRef`. Lets the
+  // mid-build reconcile rebuild a `products[]` that sums to the LATEST amount (not the build-time one)
+  // when the cart is being sent.
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
+  // Latest config, read the same way — so the in-place update effect can rebuild `products` from the
+  // current config WITHOUT taking the whole `config` object as an effect trigger (only `amount` and the
+  // `sendProducts` toggle should re-fire it).
+  const configRef = useRef(config);
+  configRef.current = config;
   // The live express handle for an express-only surface, kept so a post-mount amount change is pushed
   // to the wallet sheet in place via express.update(). Null for card surfaces (they rebuild instead).
   const expressHandleRef = useRef<ExpressDropInComponent | null>(null);
@@ -183,6 +211,9 @@ export function useCheckoutSession(
   // surface keeps them, so its LIST total still rebuilds on a cart edit. `allowRealRedirect` is
   // deliberately excluded (read fresh at submit via callbacksRef). `wantCard` and `staleEpoch` (force a
   // rebuild of an aged kept-alive session) extend that identity into the full rebuild key.
+  // `sendProducts` is deliberately NOT in the key: the cart now rides the in-place update
+  // (`update({ amount, products })`, effect below), so a quantity tick re-prices and re-pushes a cart
+  // that still sums to the new amount without a remount.
   const prefetchKey = expressSessionKey(config, items, currency, wantCard);
   const rebuildKey = JSON.stringify([prefetchKey, wantCard, staleEpoch]);
 
@@ -280,6 +311,7 @@ export function useCheckoutSession(
         const mounted = mountExpressElement(ci, {
           amount,
           config,
+          items,
           node: expressNode,
           onStatus: (status, error) => {
             if (cancelled) return;
@@ -294,10 +326,13 @@ export function useCheckoutSession(
         if (!wantCard) {
           expressHandleRef.current = mounted.express ?? null;
           // Reconcile a quantity tick that landed mid-build: the element mounted with the build-time
-          // amount, so if a newer one has arrived, push it now (amount only; currency is fixed) rather
-          // than wait for the next tick.
+          // amount, so if a newer one has arrived, push it now (currency is fixed) rather than wait for
+          // the next tick. When the cart is being sent, re-push `products` for the latest amount too, so
+          // the frozen cart still sums to what the sheet now shows.
           if (mounted.express && amountRef.current && amountRef.current !== amount) {
-            mounted.express.update({ amount: amountRef.current });
+            mounted.express.update(
+              inPlaceExpressUpdate(configRef.current, itemsRef.current, amountRef.current),
+            );
           }
         }
 
@@ -333,14 +368,23 @@ export function useCheckoutSession(
 
   // In-place amount update: for an express-only surface a quantity tick no longer rebuilds the
   // instance (see the key derivation above), so push the new amount straight to the live wallet sheet.
-  // Only `amount` changes here (currency is the fixed CURRENCY constant); the SDK reconciles it via
+  // Currency is the fixed CURRENCY constant; the SDK reconciles the amount via
   // elements.update({ amount, currency }) internally, re-reading the unchanged currency attribute —
-  // no teardown, no GET /express refetch. On first mount the handle is still null (the build is async),
-  // so this correctly no-ops until an actual post-mount change. Card surfaces rebuild instead.
+  // no teardown, no GET /express refetch. When the cart is being sent, push `products` in the SAME call
+  // so the re-price and the frozen charge-body cart stay consistent (Σ products === amount at charge) —
+  // this is why `sendProducts` no longer forces a remount. `amount` is the reactive trigger (it tracks
+  // the cart total); `items`/`config` are read fresh. On first mount the handle is still null (the
+  // build is async), so this correctly no-ops until an actual post-mount change. Card surfaces rebuild
+  // instead.
   useEffect(() => {
     if (wantCard || !amount) return;
-    expressHandleRef.current?.update({ amount });
-  }, [amount, wantCard]);
+    // `amount` and the `sendProducts` toggle are the triggers; the cart/config are read via refs so a
+    // fresh `items` array or an unrelated `config` change never re-fires this (or churns a push).
+    const products = sendProducts
+      ? buildExpressProducts(configRef.current, itemsRef.current, amount)
+      : undefined;
+    expressHandleRef.current?.update(products ? { amount, products } : { amount });
+  }, [amount, wantCard, sendProducts]);
 
   // Availability = the single signal reached its `ready` phase; drives the surrounding reveal.
   const expressAvailable = expressStatus === "ready";

@@ -27,16 +27,31 @@ export interface DropInComponent {
 export interface ExpressDropInComponent {
   mount(element: HTMLElement | null): ExpressDropInComponent;
   unmount(): ExpressDropInComponent;
-  update(config: { amount?: string; currency?: string }): ExpressDropInComponent;
+  update(config: {
+    amount?: string;
+    currency?: string;
+    // Charge-body cart re-push (mirrors the SDK's ExpressUpdate.products). Pass together with `amount`
+    // for a dynamic cart so the in-place re-price and the cart stay consistent (Σ products === amount).
+    products?: NonNullable<ExpressDropInProps["products"]>;
+  }): ExpressDropInComponent;
   readonly paymentReference?: string;
+  readonly transactionId?: string;
 }
 
 export interface CheckoutInstance {
   availableDropInComponents(): PaymentMethod[];
   dropInComponents: Record<string, DropInComponent>;
-  // Express overload first: returns undefined under walletMode 'inline' / unknown method.
-  dropIn(methodName: "express", options?: ExpressDropInProps): ExpressDropInComponent | undefined;
-  dropIn(methodName: string, options?: { hideSubmitButton?: boolean }): DropInComponent;
+  // Express overload first: returns undefined under walletMode 'inline' / unknown method. `options` is
+  // required — `paymentReference` and `transactionId` are mandatory (the SDK rejects a call that omits
+  // them), so the type refuses `dropIn('express')` with no config.
+  dropIn(
+    methodName: "express",
+    options: ExpressDropInProps,
+  ): ExpressDropInComponent | undefined;
+  dropIn(
+    methodName: string,
+    options?: { hideSubmitButton?: boolean },
+  ): DropInComponent;
   remove(name: string): boolean;
   charge(): void;
   update(config: { env?: string; longId?: string }): Promise<CheckoutInstance>;
@@ -62,6 +77,31 @@ export interface ExpressDropInProps {
   // Required OPG payment.reference (order ref / bank-statement descriptor). The SDK rejects a
   // missing/blank value at dropIn('express') time.
   paymentReference: string;
+  // Required merchant transactionId (the merchant's own reconciliation key). The SDK rejects a
+  // missing/blank value at dropIn('express') time; mirrors the normal payment-API flow.
+  transactionId: string;
+  // ECE shipping: presence of this compound object opts into address collection. `rates` is
+  // required (≥1); each amount is a MAJOR-unit decimal string. `allowedCountries` are ISO alpha-2
+  // (allowlist-only). Mirrors the SDK's `ExpressDropInConfig.shipping`.
+  shipping?: {
+    rates: Array<{
+      code: string;
+      amount: string;
+      name: string;
+      deliveryEstimate?: string;
+    }>;
+    allowedCountries?: string[];
+  };
+  // Optional merchant cart PRODUCTS (charge-body only; never rendered in the wallet sheet). Each amount
+  // is a MAJOR-unit decimal string and the set must sum exactly to `amount`. Mirrors the SDK's
+  // `ExpressDropInConfig.products`.
+  products?: Array<{
+    code?: string;
+    name: string;
+    amount: string;
+    // Descriptive unit count (default 1); does NOT scale `amount` (the line total).
+    quantity?: number;
+  }>;
 }
 
 export interface CheckoutInstanceConfig {
@@ -86,12 +126,15 @@ export interface CheckoutInstanceConfig {
   onSubmitError?: unknown;
   // Express (all optional so embedded init, which never sets them, still compiles):
   walletMode?: "inline" | "express" | "both";
-  expressWallets?: { applePay: "auto" | "always" | "never"; googlePay: "auto" | "always" | "never" };
+  expressWallets?: {
+    applePay: "auto" | "always" | "never";
+    googlePay: "auto" | "always" | "never";
+  };
   expressOperationType?: "charge" | "preset";
   // Fired as list data resolves so hosts can mount drop-ins once a component becomes available.
   onComponentListChange?: (
     checkout: CheckoutInstance,
-    diff: ComponentListDiff & { chargeResponse?: unknown }
+    diff: ComponentListDiff & { chargeResponse?: unknown },
   ) => void;
   // Fires when a payment component has finished rendering (card: Stripe PaymentElement `ready`).
   // NOTE: the drop-in element invokes this at runtime as `(componentName, data)` — checkout-web
@@ -145,7 +188,7 @@ declare global {
   interface Window {
     Payoneer: {
       CheckoutWeb: (
-        options: CheckoutInstanceConfig
+        options: CheckoutInstanceConfig,
       ) => Promise<CheckoutInstance>;
     };
   }
