@@ -6,29 +6,40 @@ import {
   countOf,
   shippingOf,
 } from "@/features/expressCheckout/store/expressCartStore";
+import { useExpressCheckoutStore } from "@/features/expressCheckout/store/expressCheckoutStore";
 
 export default function Success() {
   const navigate = useNavigate();
   const order = useExpressCartStore((s) => s.lastOrder);
   const fromCart = useExpressCartStore((s) => s.lastOrderFromCart);
   const clear = useExpressCartStore((s) => s.clear);
+  const setFinalExpressOrder = useExpressCheckoutStore((s) => s.setFinalExpressOrder);
+  const setLiveExpressOrder = useExpressCheckoutStore((s) => s.setLiveExpressOrder);
 
-  // Reached only after an order is placed; a direct/refresh visit has none, so send them browsing.
-  // For a CART order, empty the cart now (on the receipt, off the checkout route) so leaving this page
-  // any way — button, header nav, refresh — can't strand the purchased items; a PDP buy-now leaves the
-  // cart alone. Clearing here (not in placeOrder) also avoids the checkout page's empty-cart bounce.
   useEffect(() => {
     if (!order) {
       navigate("/express", { replace: true });
       return;
     }
     if (fromCart) clear();
-  }, [order, fromCart, clear, navigate]);
+    // Clear only the live/final express holders on unmount. The receipt's own snapshot lives in
+    // `lastOrder.expressOverrides` (memory-only, never persisted) and MUST survive here: clearing it on
+    // unmount corrupts the receipt under React StrictMode's mount→cleanup→remount, and breaks re-viewing
+    // the page. It is overwritten by the next placed order.
+    return () => {
+      setFinalExpressOrder(null);
+      setLiveExpressOrder(null);
+    };
+  }, [order, fromCart, clear, navigate, setFinalExpressOrder, setLiveExpressOrder]);
 
   if (!order) return null;
 
+  const eo = order.expressOverrides;
   const count = countOf(order.items);
-  const shipping = shippingOf(order.items);
+  // Prefer express overrides for shipping + total when present (ECE shipping on); fall back to cart math.
+  const shipping = eo?.shippingAmount ?? shippingOf(order.items);
+  const shippingLabel = eo?.shippingLabel;
+  const total = eo ? eo.total : order.total;
 
   const backToBrowsing = () => navigate("/express");
 
@@ -53,6 +64,7 @@ export default function Success() {
         <p className="result-lead">
           We've emailed your receipt and your books are being packed. Here's a peek at your order.
         </p>
+
         <div className="receipt">
           <div className="receipt-row receipt-head">
             <span>Order {order.id}</span>
@@ -71,13 +83,13 @@ export default function Success() {
               </div>
             ))}
             <div className="receipt-item">
-              <span>Shipping</span>
+              <span>Shipping{shippingLabel ? ` (${shippingLabel})` : ""}</span>
               <span>{shipping > 0 ? `$${shipping.toFixed(2)}` : "On us"}</span>
             </div>
           </div>
           <div className="receipt-total">
             <span>Total paid</span>
-            <span>${order.total.toFixed(2)}</span>
+            <span>${total.toFixed(2)}</span>
           </div>
         </div>
         <button type="button" className="btn btn-primary" onClick={backToBrowsing}>

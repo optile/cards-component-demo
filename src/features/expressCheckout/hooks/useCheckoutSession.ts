@@ -27,6 +27,7 @@ import type {
   OnSubmitSuccess,
   OnSubmitError,
 } from "@/features/expressCheckout/types/express";
+import { useExpressCheckoutStore } from "@/features/expressCheckout/store/expressCheckoutStore";
 
 // Stripe card networks are grouped under this component name by the SDK.
 const CARD_COMPONENT = "cards";
@@ -151,6 +152,8 @@ export function useCheckoutSession(
 ): CheckoutSessionResult {
   const { items, currency, active, expressSlotRef, cardSlotRef } = params;
   const config = useExpressConfigStore();
+  const setLiveExpressOrder = useExpressCheckoutStore((s) => s.setLiveExpressOrder);
+  const setFinalExpressOrder = useExpressCheckoutStore((s) => s.setFinalExpressOrder);
   // Express base amount = goods SUBTOTAL when ECE shipping rates are enabled — the buyer-selected rate
   // is then the ONLY shipping, added on top by the SDK. Otherwise use the cart total (subtotal + the
   // cart's flat/free shipping). This prevents charging shipping twice (the flat cart fee AND a selected
@@ -318,6 +321,10 @@ export function useCheckoutSession(
             setExpressStatus(status);
             setExpressError(error);
           },
+          onOrder: (order) => {
+            if (cancelled) return;
+            setLiveExpressOrder(order);
+          },
         });
         cleanupExpress = mounted.cleanup;
 
@@ -352,11 +359,9 @@ export function useCheckoutSession(
     return () => {
       cancelled = true;
       if (cardFallback) window.clearTimeout(cardFallback);
-      // The handle dies with this instance; drop it so the update effect can't touch a torn-down sheet.
       expressHandleRef.current = null;
-      // Atomic, ordered teardown (express → card → destroy), so nothing leaks across rebuilds or on
-      // unmount. Safe when the async build lost the race (instance stays null): the cancelled guard
-      // destroys the orphan in the async block above.
+      setLiveExpressOrder(null);
+      setFinalExpressOrder(null);
       cleanupExpress?.();
       instance?.remove(CARD_COMPONENT);
       instance?.destroy();

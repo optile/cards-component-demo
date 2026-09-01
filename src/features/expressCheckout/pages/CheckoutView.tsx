@@ -11,6 +11,8 @@ import {
   totalOf,
 } from "@/features/expressCheckout/store/expressCartStore";
 import { useExpressCheckoutStore } from "@/features/expressCheckout/store/expressCheckoutStore";
+import { useExpressConfigStore } from "@/features/expressCheckout/store/expressConfigStore";
+import { toExpressOrderOverrides } from "@/features/expressCheckout/utils/toExpressOrderOverrides";
 
 // Demo-only shipping options (matches the design). Not wired to the express session — the actual
 // session country is controlled by the ⚙ config sheet.
@@ -35,9 +37,20 @@ export default function CheckoutView({ active }: Readonly<{ active: boolean }>) 
   const navigate = useNavigate();
   const items = useExpressCartStore((s) => s.items);
   const placeOrder = useExpressCartStore((s) => s.placeOrder);
+  const shippingAddressRequired = useExpressConfigStore((s) => s.shippingAddressRequired);
+  const liveExpressOrder = useExpressCheckoutStore((s) => s.liveExpressOrder);
+
   const subtotal = subtotalOf(items);
-  const shipping = shippingOf(items);
-  const total = totalOf(items);
+  const cartShipping = shippingOf(items);
+  const cartTotal = totalOf(items);
+
+  // When ECE shipping is on and the wallet sheet has sent a provisional order, prefer its shipping +
+  // total over the cart's flat/free shippingOf/totalOf. Display-only: NEVER call express.update here.
+  const hasLiveExpressShipping = shippingAddressRequired && liveExpressOrder?.shippingRate != null;
+  const shipping = hasLiveExpressShipping
+    ? Number(liveExpressOrder.shippingRate!.amount)
+    : cartShipping;
+  const total = hasLiveExpressShipping ? Number(liveExpressOrder.amount) : cartTotal;
 
   // ONE CheckoutWeb instance drives both drop-ins (see useCheckout for why a single instance is
   // required). It mounts the express element and the card form into these two slots.
@@ -56,12 +69,7 @@ export default function CheckoutView({ active }: Readonly<{ active: boolean }>) 
     if (active && items.length === 0) navigate("/express/cart", { replace: true });
   }, [active, items.length, navigate]);
 
-  // Drive the result views from the REAL express SDK callbacks. Subscribe imperatively so we only
-  // react to outcomes raised while mounted; clear any stale outcome first so a prior result doesn't
-  // bounce us off the page.
   useEffect(() => {
-    // Only subscribe while active: payments can only be triggered from the visible surface, and a
-    // hidden instance must never navigate to the result pages.
     if (!active) return;
     useExpressCheckoutStore.getState().setOutcome(null);
     const unsub = useExpressCheckoutStore.subscribe((state, prev) => {
@@ -69,7 +77,9 @@ export default function CheckoutView({ active }: Readonly<{ active: boolean }>) 
       if (!outcome || outcome === prev.lastOutcome) return;
       useExpressCheckoutStore.getState().setOutcome(null);
       if (outcome.kind === "success") {
-        placeOrder();
+        // Read finalExpressOrder (captured by useCheckout BEFORE setOutcome) and merge into order.
+        const eo = useExpressCheckoutStore.getState().finalExpressOrder;
+        placeOrder(eo ? toExpressOrderOverrides(eo) : undefined);
         navigate("/express/success");
       } else {
         navigate("/express/failure");
