@@ -9,10 +9,19 @@ export interface CartItem extends Book {
   quantity: number;
 }
 
+// Commerce-only receipt overrides sourced from the wallet's `final` ExpressOrderDetails. No buyer PII
+// (address/name/email) — the SDK does not expose it; fetch it server-side from the CHARGE if needed.
+export interface ExpressOrderOverrides {
+  total: number;
+  shippingAmount?: number;
+  shippingLabel?: string;
+}
+
 export interface PlacedOrder {
   items: CartItem[];
   total: number;
   id: string;
+  expressOverrides?: ExpressOrderOverrides;
 }
 
 interface ExpressCartState {
@@ -28,13 +37,8 @@ interface ExpressCartState {
   updateQty: (id: number, delta: number) => void;
   removeItem: (id: number) => void;
   clear: () => void;
-  // Snapshots the current cart into `lastOrder` for the receipt (marks it a cart order). Does NOT
-  // clear the cart — the Success page does that on mount so leaving the receipt any way can't strand
-  // the purchased items, and so it happens off the checkout route (no empty-cart bounce).
-  placeOrder: () => PlacedOrder;
-  // Snapshots an ARBITRARY item list into `lastOrder` WITHOUT mutating the cart (PDP "buy it now"),
-  // so a single-book purchase leaves the shopper's cart untouched.
-  placeOrderFor: (items: CartItem[]) => PlacedOrder;
+  placeOrder: (expressOverrides?: ExpressOrderOverrides) => PlacedOrder;
+  placeOrderFor: (items: CartItem[], expressOverrides?: ExpressOrderOverrides) => PlacedOrder;
 }
 
 export const useExpressCartStore = create<ExpressCartState>((set, get) => ({
@@ -66,21 +70,20 @@ export const useExpressCartStore = create<ExpressCartState>((set, get) => ({
 
   clear: () => set({ items: [] }),
 
-  // Snapshot ANY item list into a receipt without touching the cart. Used by the PDP buy-now (which
-  // leaves the cart alone) and reused by placeOrder for the cart flow.
-  placeOrderFor: (items) => {
+  placeOrderFor: (items, expressOverrides?) => {
     const snapshot = items.slice();
     const order: PlacedOrder = {
       items: snapshot,
-      total: totalOf(snapshot),
+      total: expressOverrides?.total ?? totalOf(snapshot),
       id: "#PT-" + String(Math.floor(1000 + Math.random() * 9000)),
+      ...(expressOverrides ? { expressOverrides } : {}),
     };
     set({ lastOrder: order, lastOrderFromCart: false });
     return order;
   },
 
-  placeOrder: () => {
-    const order = get().placeOrderFor(get().items);
+  placeOrder: (expressOverrides?) => {
+    const order = get().placeOrderFor(get().items, expressOverrides);
     set({ lastOrderFromCart: true });
     return order;
   },

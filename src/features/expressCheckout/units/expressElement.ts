@@ -11,7 +11,11 @@ import {
   CURRENCY,
   type CartItem,
 } from "@/features/expressCheckout/store/expressCartStore";
-import { isExpressState } from "@/features/expressCheckout/types/express";
+import {
+  isExpressState,
+  isExpressOrderDetails,
+  type ExpressOrderDetails,
+} from "@/features/expressCheckout/types/express";
 
 const EXPRESS_COMPONENT = "express";
 
@@ -106,6 +110,9 @@ export interface MountExpressOptions {
   items: CartItem[];
   node: HTMLElement;
   onStatus: (status: ExpressStatus, error?: string) => void;
+  // Live express:order snapshot (provisional while the sheet is open, final after charge). Display-only:
+  // callers MUST NOT call express.update from within this callback.
+  onOrder?: (order: ExpressOrderDetails) => void;
 }
 
 export interface MountedExpress {
@@ -130,7 +137,7 @@ export interface MountedExpress {
  */
 export function mountExpressElement(
   instance: CheckoutInstance,
-  { amount, config, items, node, onStatus }: MountExpressOptions,
+  { amount, config, items, node, onStatus, onOrder }: MountExpressOptions,
 ): MountedExpress {
   const handleState = (data: unknown) => {
     if (!isExpressState(data)) return;
@@ -138,6 +145,13 @@ export function mountExpressElement(
     else onStatus(data.phase);
   };
   instance.on("express:state", handleState);
+
+  const handleOrder = onOrder
+    ? (data: unknown) => {
+        if (isExpressOrderDetails(data)) onOrder(data);
+      }
+    : undefined;
+  if (handleOrder) instance.on("express:order", handleOrder);
 
   const shipping = buildExpressShipping(config);
   const products = buildExpressProducts(config, items, amount);
@@ -167,6 +181,7 @@ export function mountExpressElement(
   return {
     cleanup: () => {
       instance.off("express:state", handleState);
+      if (handleOrder) instance.off("express:order", handleOrder);
       instance.remove(EXPRESS_COMPONENT);
     },
     express,

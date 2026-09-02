@@ -8,7 +8,8 @@ import {
 } from "@/features/expressCheckout/store/expressCartStore";
 import { useCheckoutSession } from "@/features/expressCheckout/hooks/useCheckoutSession";
 import { useDebouncedValue } from "@/features/expressCheckout/hooks/useDebouncedValue";
-import type { Book } from "@/features/expressCheckout/types/express";
+import { isExpressOrderDetails, type Book } from "@/features/expressCheckout/types/express";
+import { toExpressOrderOverrides } from "@/features/expressCheckout/utils/toExpressOrderOverrides";
 
 const QTY_DEBOUNCE_MS = 400;
 
@@ -47,11 +48,15 @@ export function useBuyNowExpress(
     currency: CURRENCY,
     active: true,
     expressSlotRef: slotRef,
-    onSubmitSuccess: () => {
-      // Snapshot THIS book as the order; the shopper's cart is left untouched.
-      placeOrderFor(items);
+    onSubmitSuccess: (data) => {
+      const payload = data as Record<string, unknown> | null;
+      const eo = payload?.expressOrder;
+      // Buy-now renders the receipt from the placed order's `expressOverrides` (below), not from the
+      // shared `finalExpressOrder` store (only the checkout-page CheckoutView subscriber reads that),
+      // so we intentionally do not write `finalExpressOrder` here.
+      const overrides = isExpressOrderDetails(eo) ? toExpressOrderOverrides(eo) : undefined;
+      placeOrderFor(items, overrides);
       navigate("/express/success");
-      // Demo default (allowRealRedirect === false) suppresses the real backend redirect.
       return allowRealRedirect;
     },
     onSubmitError: () => navigate("/express/failure"),

@@ -94,6 +94,57 @@ export function isExpressState(data: unknown): data is ExpressState {
   );
 }
 
+/**
+ * Wallet-captured order snapshot for Express Checkout. Structural mirror of the SDK's
+ * `ExpressOrderDetails` (checkout-web/src/types/expressOrder.ts).
+ *
+ * Delivered live on `express:order` (`provisional` while the sheet is open; `final` after a
+ * successful charge) and as `onSubmitSuccess.expressOrder`. Commerce-only — no buyer PII; buyer
+ * details (address, name, email) must be fetched server-side from the CHARGE.
+ */
+export interface ExpressOrderDetails {
+  component: string;
+  status: "provisional" | "final";
+  amount: string;
+  currency: string;
+  shippingRate?: {
+    code: string;
+    name: string;
+    amount: string;
+  };
+}
+
+const EXPRESS_ORDER_STATUSES = ["provisional", "final"] as const;
+
+export function isExpressOrderDetails(data: unknown): data is ExpressOrderDetails {
+  if (typeof data !== "object" || data === null) return false;
+  const o = data as Record<string, unknown>;
+  if (
+    typeof o.component !== "string" ||
+    typeof o.amount !== "string" ||
+    typeof o.currency !== "string" ||
+    !(EXPRESS_ORDER_STATUSES as readonly string[]).includes(o.status as string)
+  ) {
+    return false;
+  }
+  // `shippingRate` is optional, but when present it must be well-formed with a numeric-parseable
+  // amount — otherwise downstream `Number(shippingRate.amount)` would render "$NaN" on the receipt.
+  if (o.shippingRate !== undefined) {
+    const r = o.shippingRate as Record<string, unknown>;
+    if (
+      typeof r !== "object" ||
+      r === null ||
+      typeof r.code !== "string" ||
+      typeof r.name !== "string" ||
+      typeof r.amount !== "string" ||
+      !Number.isFinite(Number(r.amount))
+    ) {
+      return false;
+    }
+  }
+  return Number.isFinite(Number(o.amount));
+}
+
 export type OnSubmitSuccess = (payload: unknown) => boolean | void;
 export type OnSubmitError = (payload: unknown) => void;
 

@@ -6,16 +6,10 @@ import {
   useCheckoutSession,
   type CheckoutSessionResult,
 } from "@/features/expressCheckout/hooks/useCheckoutSession";
+import { isExpressOrderDetails } from "@/features/expressCheckout/types/express";
 
 export type CheckoutSlots = CheckoutSessionResult;
 
-/**
- * Checkout-page composition: ONE CheckoutWeb instance drives BOTH the express element and the card
- * form (see useCheckoutSession for why a single instance is required). This wrapper only injects the
- * checkout page's outcome handling — success/decline are published to the global outcome store, which
- * CheckoutView subscribes to (only while active) to drive the result pages. The instance/session
- * lifecycle, keep-alive TTL guard, express mount and card mount/reveal all live in useCheckoutSession.
- */
 export function useCheckout(
   expressSlotRef: RefObject<HTMLDivElement | null>,
   cardSlotRef: RefObject<HTMLDivElement | null>,
@@ -24,6 +18,7 @@ export function useCheckout(
   const allowRealRedirect = useExpressConfigStore((s) => s.allowRealRedirect);
   const items = useExpressCartStore((s) => s.items);
   const setOutcome = useExpressCheckoutStore((s) => s.setOutcome);
+  const setFinalExpressOrder = useExpressCheckoutStore((s) => s.setFinalExpressOrder);
 
   return useCheckoutSession({
     items,
@@ -32,10 +27,13 @@ export function useCheckout(
     expressSlotRef,
     cardSlotRef,
     onSubmitSuccess: (data) => {
+      // Capture expressOrder BEFORE setOutcome so it's available when the subscriber navigates.
+      // Always set (including null) so a card success after a prior express attempt cannot reuse wallet overrides.
+      const payload = data as Record<string, unknown> | null;
+      const eo = payload?.expressOrder;
+      setFinalExpressOrder(isExpressOrderDetails(eo) ? eo : null);
       setOutcome({ kind: "success", data });
       if (import.meta.env.DEV) console.log("[checkout] submit success (payload redacted)");
-      // Express/card wallet callbacks proceed with the backend redirect only when true; false
-      // suppresses it (demo default).
       return allowRealRedirect;
     },
     onSubmitError: (data) => {
