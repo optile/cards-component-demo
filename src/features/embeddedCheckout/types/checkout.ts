@@ -54,10 +54,13 @@ export type OnReadyHandler = OnReadyCallback;
 /**
  * Init config for `window.Payoneer.CheckoutWeb(...)`, derived verbatim from the SDK.
  *
- * `onReady` is the SDK's `(checkout, componentName, data)` callback: `CheckoutWeb` wraps drop-in
- * callbacks so the merchant handler receives `checkout` as its first argument. (An earlier demo note
- * claimed a 2-arg `(componentName, data)` shape - that was wrong.) The demo's own handlers ignore
- * the arguments, so nothing here depends on the arity.
+ * `onReady` is the SDK's `(checkout, componentName, data)` callback. `CheckoutWeb` wraps every
+ * top-level config callback in its `DROP_IN_CONFIG_KEYS` list (which includes `onReady`): the 2-arg
+ * `(name, data)` function bound to the element internally calls `merchantOnReady(checkout, name,
+ * data)`, so the merchant handler on THIS config receives `checkout` first. (Do not be fooled by the
+ * element layer's 2-arg `TOnReadyCB` - that is the wrapper, not the merchant callback. An earlier
+ * demo note claimed a plain 2-arg `(componentName, data)` shape here - that was wrong.) The demo's
+ * own handlers ignore the arguments, so nothing here depends on the arity.
  */
 export type CheckoutInstanceConfig = CheckoutConfigurationProps;
 
