@@ -1,3 +1,8 @@
+import type {
+  OnSubmitSuccessCallback,
+  OnSubmitErrorCallback,
+} from "@payoneer/checkout-web";
+
 // Enum single-source-of-truth. Mirrors the Payoneer Web SDK's checkout configuration enums
 // (walletMode / ExpressWalletVisibility / expressOperationType).
 export const WALLET_MODES = ["inline", "express", "both"] as const;
@@ -145,8 +150,9 @@ export function isExpressOrderDetails(data: unknown): data is ExpressOrderDetail
   return Number.isFinite(Number(o.amount));
 }
 
-export type OnSubmitSuccess = (payload: unknown) => boolean | void;
-export type OnSubmitError = (payload: unknown) => void;
+// Derived from the SDK's public submit callback contracts (both return `boolean | Promise<boolean>`).
+export type OnSubmitSuccess = OnSubmitSuccessCallback;
+export type OnSubmitError = OnSubmitErrorCallback;
 
 // Mirrors the PageTurner design catalog record. `c1`/`c2` are the cover gradient stops used as the
 // fallback when the real cover image (a local bundled JPG in `public/covers/{isbn}.jpg`, originally

@@ -39,6 +39,7 @@ export function useCheckout(
     onSubmitError: (data) => {
       setOutcome({ kind: "declined", data });
       if (import.meta.env.DEV) console.log("[checkout] submit error/decline (payload redacted)");
+      return false;
     },
   });
 }

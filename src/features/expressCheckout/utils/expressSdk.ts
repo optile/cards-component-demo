@@ -7,7 +7,7 @@ import type {
   CheckoutInstance,
   CheckoutInstanceConfig,
   ComponentListDiff,
-  ReadyEventData,
+  OnReadyHandler,
 } from "@/features/embeddedCheckout/types/checkout";
 import type { MerchantCart } from "@/types/merchant";
 import type { ExpressConfig } from "@/features/expressCheckout/constants/express";
@@ -80,7 +80,7 @@ export interface InitCheckoutParams {
   onSubmitError: OnSubmitError;
   // Card-only signals — omitted for express-only surfaces (e.g. the book-detail buy-now).
   onComponentListChange?: (checkout: CheckoutInstance, diff: ComponentListDiff) => void;
-  onReady?: (componentName: string, data: ReadyEventData) => void;
+  onReady?: OnReadyHandler;
   // Warm the card component. False on express-only surfaces so we don't preload a component we
   // never mount. Defaults to true (the checkout page).
   preloadCards?: boolean;

@@ -264,7 +264,7 @@ export function useCheckoutSession(
         .availableDropInComponents()
         .some((m) => m.name === CARD_COMPONENT);
       if (!hasCard) return;
-      ci.dropIn(CARD_COMPONENT, { hideSubmitButton: false }).mount(cardNode);
+      ci.dropIn(CARD_COMPONENT, { hideSubmitButton: false })?.mount(cardNode);
       cardMounted = true;
     };
 

@@ -40,10 +40,10 @@ export const useCheckoutUI = (checkout: CheckoutInstance | null) => {
         const method = availableMethods.find((m) => m.name === methodName);
         const container = componentRefs.current[methodName];
         if (method && container) {
-          const component = checkout
-            .dropIn(method.name, { hideSubmitButton: false })
-            .mount(container);
-          newDropIns.push(component);
+          const component = checkout.dropIn(method.name, {
+            hideSubmitButton: false,
+          });
+          if (component) newDropIns.push(component.mount(container));
         }
       });
       useCheckoutStore.setState({
