@@ -1,157 +1,76 @@
-export interface NetworkInformation {
-  network: string;
-  logoUrl: string;
-}
-
-export interface PaymentMethod {
-  name: string;
-  label: string;
-  networkInformation: NetworkInformation[];
-}
-
-export interface DropInComponent {
-  mount(element: HTMLElement | null): DropInComponent;
-  unmount(): void;
-  submit(): Promise<void>;
-  updateNode(options: { hideSubmitButton: boolean }): void;
-  element: {
-    hideSubmitButton: (hide: boolean) => void;
-  };
-}
+import type {
+  Checkout,
+  CheckoutConfigurationProps,
+  DropIn,
+  ExpressDropIn,
+  ExpressDropInConfig,
+  OnComponentListChangeCallback,
+  OnReadyCallback,
+  TAvailableDropInComponent,
+  TReadyEventData,
+} from "@payoneer/checkout-web";
 
 /**
- * Express drop-in handle (`dropIn('express', ...)`). Mirrors the SDK's `ExpressDropIn`: `update` takes
- * the express reconfigure payload and pushes an amount/currency change to the live wallet sheet in
- * place (no remount, no GET /express refetch). Each method returns the handle so calls chain.
+ * Demo type surface for the Payoneer Checkout Web SDK.
+ *
+ * The SDK is loaded at runtime from the CDN (a <script> tag → `window.Payoneer`); it is never
+ * bundled. `@payoneer/checkout-web` is therefore a TYPES-ONLY devDependency: every import here is
+ * `import type` (zero runtime, zero bundle impact). The SDK-facing shapes below are ALIASES of the
+ * published public types so the demo compiles against the real contract and cannot silently drift -
+ * do NOT re-declare them by hand. Shapes that are NOT part of the SDK's public API (the demo's own
+ * backend / CDN shapes) are defined locally further down.
  */
-export interface ExpressDropInComponent {
-  mount(element: HTMLElement | null): ExpressDropInComponent;
-  unmount(): ExpressDropInComponent;
-  update(config: {
-    amount?: string;
-    currency?: string;
-    // Charge-body cart re-push (mirrors the SDK's ExpressUpdate.products). Pass together with `amount`
-    // for a dynamic cart so the in-place re-price and the cart stay consistent (Σ products === amount).
-    products?: NonNullable<ExpressDropInProps["products"]>;
-  }): ExpressDropInComponent;
-  readonly paymentReference?: string;
-  readonly transactionId?: string;
-}
 
-export interface CheckoutInstance {
-  availableDropInComponents(): PaymentMethod[];
-  dropInComponents: Record<string, DropInComponent>;
-  // Express overload first: returns undefined under walletMode 'inline' / unknown method. `options` is
-  // required — `paymentReference` and `transactionId` are mandatory (the SDK rejects a call that omits
-  // them), so the type refuses `dropIn('express')` with no config.
-  dropIn(
-    methodName: "express",
-    options: ExpressDropInProps,
-  ): ExpressDropInComponent | undefined;
-  dropIn(
-    methodName: string,
-    options?: { hideSubmitButton?: boolean },
-  ): DropInComponent;
-  remove(name: string): boolean;
-  charge(): void;
-  update(config: { env?: string; longId?: string }): Promise<CheckoutInstance>;
-  updateLongId(longId: string): Promise<void>;
-  on(event: string, handler: (data: unknown) => void): void;
-  off(event: string, handler: (data: unknown) => void): void;
-  once(event: string, handler: (data: unknown) => void): void;
-  destroy(): void;
-}
+// --- SDK-derived aliases (single source of truth = @payoneer/checkout-web) ---
+
+/** The CheckoutWeb instance handle returned by `window.Payoneer.CheckoutWeb(...)`. */
+export type CheckoutInstance = Checkout;
+
+/** A classic (card) drop-in handle. `dropIn(name, ...)` returns this or `undefined`. */
+export type DropInComponent = DropIn;
+
+/** The express drop-in handle (`dropIn('express', ...)`). */
+export type ExpressDropInComponent = ExpressDropIn;
+
+/** Per-transaction express mount config (`paymentReference` / `transactionId` are required). */
+export type ExpressDropInProps = ExpressDropInConfig;
+
+/** One available payment method from `availableDropInComponents()`. */
+export type PaymentMethod = TAvailableDropInComponent;
+
+/** One network entry within a PaymentMethod. */
+export type NetworkInformation =
+  TAvailableDropInComponent["networkInformation"][number];
+
+/** The `onReady` payload (Stripe PaymentElement ready snapshot). */
+export type ReadyEventData = TReadyEventData;
+
+/** The diff passed to `onComponentListChange` (carries an optional `chargeResponse`). */
+export type ComponentListDiff = Parameters<OnComponentListChangeCallback>[1];
+
+/** The `onReady` callback: `(checkout, componentName, data)`. Derived from the SDK (was a 2-arg mirror). */
+export type OnReadyHandler = OnReadyCallback;
 
 /**
- * Host-supplied express mount passthrough. All strings (they cross the element attribute seam).
- * NOTE: `amount` is a major-unit decimal string here (e.g. "16.99"), derived via `Number#toFixed(2)`.
- * A production integration would ideally pass express money as a minor-unit integer (cents) to avoid
- * float rounding at this boundary.
+ * Init config for `window.Payoneer.CheckoutWeb(...)`, derived verbatim from the SDK.
+ *
+ * `onReady` is the SDK's `(checkout, componentName, data)` callback. `CheckoutWeb` wraps every
+ * top-level config callback in its `DROP_IN_CONFIG_KEYS` list (which includes `onReady`): the 2-arg
+ * `(name, data)` function bound to the element internally calls `merchantOnReady(checkout, name,
+ * data)`, so the merchant handler on THIS config receives `checkout` first. (Do not be fooled by the
+ * element layer's 2-arg `TOnReadyCB` - that is the wrapper, not the merchant callback. An earlier
+ * demo note claimed a plain 2-arg `(componentName, data)` shape here - that was wrong.) The demo's
+ * own handlers ignore the arguments, so nothing here depends on the arity.
  */
-export interface ExpressDropInProps {
-  // Per-transaction only. Express identity (clientId / country) is declared once at init on
-  // CheckoutInstanceConfig, not on the drop-in call.
-  amount?: string;
-  currency?: string;
-  locale?: string;
-  // Required OPG payment.reference (order ref / bank-statement descriptor). The SDK rejects a
-  // missing/blank value at dropIn('express') time.
-  paymentReference: string;
-  // Required merchant transactionId (the merchant's own reconciliation key). The SDK rejects a
-  // missing/blank value at dropIn('express') time; mirrors the normal payment-API flow.
-  transactionId: string;
-  // ECE shipping: presence of this compound object opts into address collection. `rates` is
-  // required (≥1); each amount is a MAJOR-unit decimal string. `allowedCountries` are ISO alpha-2
-  // (allowlist-only). Mirrors the SDK's `ExpressDropInConfig.shipping`.
-  shipping?: {
-    rates: Array<{
-      code: string;
-      amount: string;
-      name: string;
-      deliveryEstimate?: string;
-    }>;
-    allowedCountries?: string[];
-  };
-  // Optional merchant cart PRODUCTS (charge-body only; never rendered in the wallet sheet). Each amount
-  // is a MAJOR-unit decimal string and the set must sum exactly to `amount`. Mirrors the SDK's
-  // `ExpressDropInConfig.products`.
-  products?: Array<{
-    code?: string;
-    name: string;
-    amount: string;
-    // Descriptive unit count (default 1); does NOT scale `amount` (the line total).
-    quantity?: number;
-  }>;
-}
+export type CheckoutInstanceConfig = CheckoutConfigurationProps;
 
-export interface CheckoutInstanceConfig {
-  longId: string;
-  env: string;
-  // Express identity, declared once at init (mirrors the SDK's CheckoutConfigurationSchema). Optional
-  // so the embedded card flow, which never sets them, still builds a valid config.
-  clientId?: string;
-  country?: string;
-  refetchListBeforeCharge?: boolean;
-  preload: string[];
-  // Optional lifecycle callbacks: the embedded flow wires the ones it needs; the express init sets
-  // only onSubmitSuccess/onSubmitError. All optional so either caller builds a valid config directly.
-  onBeforeCharge?: unknown;
-  onBeforeSubmit?: unknown;
-  onBeforeError?: unknown;
-  onPaymentSuccess?: unknown;
-  onSubmitSuccess?: unknown;
-  onPaymentFailure?: unknown;
-  onBeforeProviderRedirect?: unknown;
-  onPaymentDeclined?: unknown;
-  onSubmitError?: unknown;
-  // Express (all optional so embedded init, which never sets them, still compiles):
-  walletMode?: "inline" | "express" | "both";
-  expressWallets?: {
-    applePay: "auto" | "always" | "never";
-    googlePay: "auto" | "always" | "never";
-  };
-  expressOperationType?: "charge" | "preset";
-  // Fired as list data resolves so hosts can mount drop-ins once a component becomes available.
-  onComponentListChange?: (
-    checkout: CheckoutInstance,
-    diff: ComponentListDiff & { chargeResponse?: unknown },
-  ) => void;
-  // Fires when a payment component has finished rendering (card: Stripe PaymentElement `ready`).
-  // NOTE: the drop-in element invokes this at runtime as `(componentName, data)` — checkout-web
-  // passes the config callback straight to `element.onReady`, so despite the SDK's public
-  // `OnReadyCallback(checkout, componentName, data)` type, only these two args arrive.
-  onReady?: (componentName: string, data: ReadyEventData) => void;
-}
+// --- Demo-owned shapes (NOT part of the SDK's public API) ---
 
-export interface ReadyEventData {
-  component: string;
-  availableNetworks: string[];
-  selectedNetwork: string | null;
-  formReady: boolean;
-  walletAvailable: { applePay: boolean; googlePay: boolean };
-  timestamp: number;
-}
-
+/**
+ * Request body the DEMO's backend accepts to CREATE a LIST session. This is the demo server's own
+ * contract, not a checkout-web type - the browser SDK never creates sessions, it consumes a `longId`
+ * (the SDK's `ListResult` / `ListDataProps` is the fetched LIST payload, a different shape).
+ */
 export interface ListSessionRequest {
   transactionId?: string;
   checkoutConfigurationName?: string;
@@ -171,6 +90,7 @@ export interface ListSessionRequest {
   }>;
 }
 
+/** Response from the demo backend's create-session endpoint. */
 export interface ListSessionResponse {
   id: string;
   transactionId: string;
@@ -178,29 +98,20 @@ export interface ListSessionResponse {
   [key: string]: unknown;
 }
 
+/**
+ * Demo flow selector (embedded vs hosted). A runtime enum, distinct from the SDK's `IntegrationType`
+ * (`DISPLAY_NATIVE` / `PURE_NATIVE` / …, exported only as a type). Kept local because it is a demo
+ * concept AND a types-only SDK import could not supply a runtime enum value regardless.
+ */
 export enum INTEGRATION_TYPE {
   EMBEDDED = "EMBEDDED",
   HOSTED = "HOSTED",
 }
 
-// Type for the Payoneer global object
-declare global {
-  interface Window {
-    Payoneer: {
-      CheckoutWeb: (
-        options: CheckoutInstanceConfig,
-      ) => Promise<CheckoutInstance>;
-    };
-  }
-}
-
-export interface ComponentListDiff {
-  addedComponents: Set<string>;
-  removedComponents: Set<string>;
-  availableComponents: Set<string>;
-}
-
-export declare const Payoneer: typeof window.Payoneer;
+/**
+ * CDN rehost-manifest shape, read to display the loaded SDK version. This is a deployment artifact,
+ * not the SDK's runtime `MetaInfoProps`.
+ */
 export interface CheckoutWebMetaInfo {
   "checkout-web": CheckoutWebVariant[];
 }
@@ -211,4 +122,15 @@ interface CheckoutWebVariant {
   integrity: string;
   isMinified: boolean;
   isVersioned: boolean;
+}
+
+// The SDK object is attached to `window` by the CDN script at runtime. Its TYPE is derived from the
+// package (the `CheckoutWeb` function signature and its `Promise<Checkout>` return) via a type-only
+// dynamic import, so the global declaration stays in lockstep with the SDK.
+declare global {
+  interface Window {
+    Payoneer: {
+      CheckoutWeb: typeof import("@payoneer/checkout-web").CheckoutWeb;
+    };
+  }
 }

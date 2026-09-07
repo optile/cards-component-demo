@@ -1,3 +1,9 @@
+import type {
+  ExpressOrderDetails,
+  OnSubmitSuccessCallback,
+  OnSubmitErrorCallback,
+} from "@payoneer/checkout-web";
+
 // Enum single-source-of-truth. Mirrors the Payoneer Web SDK's checkout configuration enums
 // (walletMode / ExpressWalletVisibility / expressOperationType).
 export const WALLET_MODES = ["inline", "express", "both"] as const;
@@ -95,24 +101,15 @@ export function isExpressState(data: unknown): data is ExpressState {
 }
 
 /**
- * Wallet-captured order snapshot for Express Checkout. Structural mirror of the SDK's
- * `ExpressOrderDetails` (checkout-web/src/types/expressOrder.ts).
+ * Wallet-captured order snapshot for Express Checkout. DERIVED from the SDK's public
+ * `ExpressOrderDetails` (checkout-web/src/types/expressOrder.ts) - was a structural hand-mirror,
+ * now re-exported so the demo's receipt + `isExpressOrderDetails` guard track the SDK contract.
  *
  * Delivered live on `express:order` (`provisional` while the sheet is open; `final` after a
  * successful charge) and as `onSubmitSuccess.expressOrder`. Commerce-only — no buyer PII; buyer
  * details (address, name, email) must be fetched server-side from the CHARGE.
  */
-export interface ExpressOrderDetails {
-  component: string;
-  status: "provisional" | "final";
-  amount: string;
-  currency: string;
-  shippingRate?: {
-    code: string;
-    name: string;
-    amount: string;
-  };
-}
+export type { ExpressOrderDetails };
 
 const EXPRESS_ORDER_STATUSES = ["provisional", "final"] as const;
 
@@ -145,8 +142,9 @@ export function isExpressOrderDetails(data: unknown): data is ExpressOrderDetail
   return Number.isFinite(Number(o.amount));
 }
 
-export type OnSubmitSuccess = (payload: unknown) => boolean | void;
-export type OnSubmitError = (payload: unknown) => void;
+// Derived from the SDK's public submit callback contracts (both return `boolean | Promise<boolean>`).
+export type OnSubmitSuccess = OnSubmitSuccessCallback;
+export type OnSubmitError = OnSubmitErrorCallback;
 
 // Mirrors the PageTurner design catalog record. `c1`/`c2` are the cover gradient stops used as the
 // fallback when the real cover image (a local bundled JPG in `public/covers/{isbn}.jpg`, originally

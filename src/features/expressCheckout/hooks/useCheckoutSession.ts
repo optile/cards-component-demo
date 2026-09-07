@@ -264,8 +264,13 @@ export function useCheckoutSession(
         .availableDropInComponents()
         .some((m) => m.name === CARD_COMPONENT);
       if (!hasCard) return;
-      ci.dropIn(CARD_COMPONENT, { hideSubmitButton: false }).mount(cardNode);
-      cardMounted = true;
+      // `dropIn` returns `DropIn | undefined`; only mark the card mounted if we actually got a handle,
+      // so a null result stays retryable instead of being silently swallowed by the early-return guard.
+      const cardHandle = ci.dropIn(CARD_COMPONENT, { hideSubmitButton: false });
+      if (cardHandle) {
+        cardHandle.mount(cardNode);
+        cardMounted = true;
+      }
     };
 
     setExpressStatus("loading");

@@ -30,7 +30,7 @@ interface Handlers {
 // visible page, so these are never actually invoked — but kept safe rather than throwing.
 const NOOP_HANDLERS: Handlers = {
   onSubmitSuccess: () => false,
-  onSubmitError: () => {},
+  onSubmitError: () => false,
 };
 
 interface PrefetchEntry {

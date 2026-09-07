@@ -59,7 +59,10 @@ export function useBuyNowExpress(
       navigate("/express/success");
       return allowRealRedirect;
     },
-    onSubmitError: () => navigate("/express/failure"),
+    onSubmitError: () => {
+      navigate("/express/failure");
+      return false;
+    },
   });
 
   return {
