@@ -7,9 +7,11 @@
 import type {
   CheckoutInstance,
   CheckoutInstanceConfig,
+  ComponentListDiff,
   DropInComponent,
   ExpressDropInComponent,
   ExpressDropInProps,
+  NetworkInformation,
   OnReadyHandler,
   PaymentMethod,
   ReadyEventData,
@@ -20,10 +22,20 @@ import type {
   DropIn,
   ExpressDropIn,
   ExpressDropInConfig,
+  OnComponentListChangeCallback,
   OnReadyCallback,
+  OnSubmitErrorCallback,
+  OnSubmitSuccessCallback,
   TAvailableDropInComponent,
   TReadyEventData,
 } from "@payoneer/checkout-web";
+import type {
+  ExpressOperationType,
+  OnSubmitError,
+  OnSubmitSuccess,
+  WalletMode,
+  WalletVisibility,
+} from "@/features/expressCheckout/types/express";
 
 /** Fails to compile unless `T` is exactly `true`. */
 type Expect<T extends true> = T;
@@ -41,6 +53,23 @@ export type _Method = Expect<Equals<PaymentMethod, TAvailableDropInComponent>>;
 export type _Ready = Expect<Equals<ReadyEventData, TReadyEventData>>;
 export type _Config = Expect<Equals<CheckoutInstanceConfig, CheckoutConfigurationProps>>;
 export type _OnReady = Expect<Equals<OnReadyHandler, OnReadyCallback>>;
+export type _NetworkInfo = Expect<
+  Equals<NetworkInformation, TAvailableDropInComponent["networkInformation"][number]>
+>;
+export type _ListDiff = Expect<Equals<ComponentListDiff, Parameters<OnComponentListChangeCallback>[1]>>;
+export type _OnSubmitSuccess = Expect<Equals<OnSubmitSuccess, OnSubmitSuccessCallback>>;
+export type _OnSubmitError = Expect<Equals<OnSubmitError, OnSubmitErrorCallback>>;
+
+// 1b) The demo's runtime `as const` enums (used for the config-sheet dropdowns, so they cannot be
+// type-only aliases) stay in lockstep with the SDK config's accepted values. This is the drift alarm
+// for the express.ts "Mirrors the SDK's enums" constants.
+export type _WalletMode = Expect<Equals<WalletMode, NonNullable<CheckoutInstanceConfig["walletMode"]>>>;
+export type _WalletVisibility = Expect<
+  Equals<WalletVisibility, NonNullable<NonNullable<CheckoutInstanceConfig["expressWallets"]>["applePay"]>>
+>;
+export type _ExpressOperationType = Expect<
+  Equals<ExpressOperationType, NonNullable<CheckoutInstanceConfig["expressOperationType"]>>
+>;
 
 // 2) Pin the express-surface assumptions the demo depends on.
 export type _PaymentReferenceRequired = Expect<

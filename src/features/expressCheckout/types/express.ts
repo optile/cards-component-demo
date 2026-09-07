@@ -1,4 +1,5 @@
 import type {
+  ExpressOrderDetails,
   OnSubmitSuccessCallback,
   OnSubmitErrorCallback,
 } from "@payoneer/checkout-web";
@@ -100,24 +101,15 @@ export function isExpressState(data: unknown): data is ExpressState {
 }
 
 /**
- * Wallet-captured order snapshot for Express Checkout. Structural mirror of the SDK's
- * `ExpressOrderDetails` (checkout-web/src/types/expressOrder.ts).
+ * Wallet-captured order snapshot for Express Checkout. DERIVED from the SDK's public
+ * `ExpressOrderDetails` (checkout-web/src/types/expressOrder.ts) - was a structural hand-mirror,
+ * now re-exported so the demo's receipt + `isExpressOrderDetails` guard track the SDK contract.
  *
  * Delivered live on `express:order` (`provisional` while the sheet is open; `final` after a
  * successful charge) and as `onSubmitSuccess.expressOrder`. Commerce-only — no buyer PII; buyer
  * details (address, name, email) must be fetched server-side from the CHARGE.
  */
-export interface ExpressOrderDetails {
-  component: string;
-  status: "provisional" | "final";
-  amount: string;
-  currency: string;
-  shippingRate?: {
-    code: string;
-    name: string;
-    amount: string;
-  };
-}
+export type { ExpressOrderDetails };
 
 const EXPRESS_ORDER_STATUSES = ["provisional", "final"] as const;
 
