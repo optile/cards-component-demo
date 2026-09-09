@@ -79,11 +79,28 @@ export type _TransactionIdRequired = Expect<
   undefined extends ExpressDropInProps["transactionId"] ? false : true
 >;
 
-type Rate = NonNullable<ExpressDropInProps["shipping"]>["rates"][number];
+// `rates` is OPTIONAL on the shipping surface (dynamic-only enables shipping via the resolver alone), so
+// unwrap it once more before indexing an element type.
+type Rate = NonNullable<NonNullable<ExpressDropInProps["shipping"]>["rates"]>[number];
 type Product = NonNullable<ExpressDropInProps["products"]>[number];
 export type _RateAmountIsString = Expect<Equals<Rate["amount"], string>>;
 export type _ProductAmountIsString = Expect<Equals<Product["amount"], string>>;
 
-// Express identity is declared on the init config (S17 relocation off the drop-in call).
+// Dynamic-only depends on `shipping.rates` being OPTIONAL — the demo omits it when the resolver alone
+// enables shipping. If the SDK ever made `rates` required again this guard would fail the demo build.
+export type _RatesIsOptional = Expect<
+  undefined extends NonNullable<ExpressDropInProps["shipping"]>["rates"] ? true : false
+>;
+
+// The OPT-IN dynamic resolver the QA toggle wires must exist on the SDK's shipping surface and stay a
+// function (the demo depends on being able to pass `shipping.onShippingAddressChange`).
+type ShippingAddressResolver = NonNullable<
+  NonNullable<ExpressDropInProps["shipping"]>["onShippingAddressChange"]
+>;
+export type _ResolverIsFunction = Expect<
+  ShippingAddressResolver extends (...args: never[]) => unknown ? true : false
+>;
+
+// Express identity is declared on the init config (relocated off the drop-in call).
 export type _ConfigHasClientId = Expect<"clientId" extends keyof CheckoutInstanceConfig ? true : false>;
 export type _ConfigHasCountry = Expect<"country" extends keyof CheckoutInstanceConfig ? true : false>;

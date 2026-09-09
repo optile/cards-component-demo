@@ -66,6 +66,17 @@ export interface ExpressConfig {
   shippingAddressRequired: boolean;
   allowedShippingCountries: string;
   shippingRates: DemoShippingRate[];
+  // Dynamic address-driven rates. When on, the demo supplies `shipping.onShippingAddressChange`
+  // so the wallet reprices from the buyer's coarse address instead of only offering the static preset.
+  // Requires `shippingAddressRequired`; ignored otherwise. Pushed at drop-in time, so a toggle remounts.
+  dynamicRates: boolean;
+  // Artificial resolver latency (ms) to exercise the timeout→static-fallback path on-device. 0 = instant.
+  dynamicRatesDelayMs: number;
+  // Dynamic-ONLY: when on (with `dynamicRates`), omit the static rate preset entirely so shipping is
+  // enabled by the resolver alone. Exercises the no-static-fallback path — a resolver failure/empty then
+  // REJECTS the address instead of falling back. Requires `dynamicRates`; ignored otherwise. Pushed at
+  // drop-in time (it changes the create-time rate set), so a toggle remounts.
+  dynamicOnlyOmitRates: boolean;
   // Charge-body-only cart products. When on, the demo passes a `products[]` on `dropIn('express')`
   // (one line per cart item + a shipping-fee line when applicable) that sums to the drop-in `amount`,
   // replacing the SDK's synthesized `product item` base line. Participates in the remount identity so
@@ -113,6 +124,13 @@ export function reinitSignatureOf(config: ExpressConfig): string {
     // preset is fixed, so it never fragments the identity.
     String(config.shippingAddressRequired),
     config.allowedShippingCountries,
+    // The dynamic resolver is pushed at drop-in time (not via express.update), so toggling it — or
+    // changing the artificial delay — must remount to apply. The delay is baked into the resolver
+    // closure at assembly time. Dynamic-only omits the static preset, changing the create-time rate set,
+    // so it must remount too.
+    String(config.dynamicRates),
+    String(config.dynamicRatesDelayMs),
+    String(config.dynamicOnlyOmitRates),
     // Products are pushed at drop-in time (not via express.update), so a toggle must remount to apply.
     String(config.sendProducts),
   ].join("|");
@@ -137,7 +155,7 @@ export function getDefaultClientId(env: EnvName): string {
 export const SESSION_TTL_MS = 15 * 60 * 1000;
 
 export const DEFAULT_EXPRESS_CONFIG: ExpressConfig = {
-  // Cards use this env (has a Divisions entry → LIST resolves). The SDK derives the GET /express host
+  // Cards use this env (it resolves a payment-methods list). The SDK derives the GET /express host
   // from this same `env`; the demo's fetch shim + vite `/opg-proxy` (OPG_PROXY_TARGET) forward that
   // cross-origin call server-to-server to dodge CORS on https://localhost.
   env: "checkout.integration",
@@ -154,6 +172,11 @@ export const DEFAULT_EXPRESS_CONFIG: ExpressConfig = {
   shippingAddressRequired: false,
   allowedShippingCountries: "US,CA",
   shippingRates: DEMO_EXPRESS_SHIPPING_RATES,
+  // Dynamic rates off by default; opt-in in the config sheet. No artificial resolver delay.
+  dynamicRates: false,
+  dynamicRatesDelayMs: 0,
+  // Dynamic-only off by default; opt-in in the config sheet (only meaningful with dynamicRates on).
+  dynamicOnlyOmitRates: false,
   // Cart products off by default (opt-in in the config sheet).
   sendProducts: false,
 };
