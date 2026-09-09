@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useExpressConfigStore } from "@/features/expressCheckout/store/expressConfigStore";
 import { parseAllowedShippingCountries } from "@/features/expressCheckout/constants/express";
+import { useDebouncedValue } from "@/features/expressCheckout/hooks/useDebouncedValue";
+import { resolveLocalMode } from "@/features/expressCheckout/utils/expressSdk";
+import type { LocalModeConfig } from "@/features/embeddedCheckout/constants/checkout";
 import {
   ENVS,
   WALLET_MODES,
@@ -20,6 +23,17 @@ export default function ConfigSheet() {
   const fabRef = useRef<HTMLButtonElement | null>(null);
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const config = useExpressConfigStore();
+
+  // The resolver delay feeds `reinitSignatureOf`, so committing it on every keystroke would remount the
+  // ECE (fresh LIST + Stripe re-init) per digit. Keep the field responsive off local state and only push
+  // the debounced value to the store (mirrors the qty selector's `useDebouncedValue`).
+  const [delayInput, setDelayInput] = useState(config.dynamicRatesDelayMs);
+  const debouncedDelay = useDebouncedValue(delayInput, 400);
+  useEffect(() => {
+    if (debouncedDelay !== config.dynamicRatesDelayMs) {
+      config.setConfig({ dynamicRatesDelayMs: debouncedDelay });
+    }
+  }, [debouncedDelay, config]);
 
   useEffect(() => {
     if (!open) return;
@@ -170,6 +184,47 @@ export default function ConfigSheet() {
                   </span>
                 </Field>
               )}
+              {config.shippingAddressRequired && (
+                <>
+                  <label className="flex items-center gap-2 mt-4 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={config.dynamicRates}
+                      onChange={(e) => config.setConfig({ dynamicRates: e.target.checked })}
+                    />
+                    Dynamic rates from address (onShippingAddressChange)
+                  </label>
+                  {config.dynamicRates && (
+                    <Field label="Resolver delay (ms)">
+                      <input
+                        type="number"
+                        min={0}
+                        max={10000}
+                        step={100}
+                        value={delayInput}
+                        onChange={(e) =>
+                          setDelayInput(Math.max(0, Number(e.target.value) || 0))
+                        }
+                        className="w-full border rounded px-2 py-1 text-sm bg-white"
+                        style={{ borderColor: "var(--line)" }}
+                      />
+                      <span className="block text-[11px] mt-1" style={{ color: "var(--ink-soft)" }}>
+                        Artificial latency to exercise the timeout → static-rate fallback (10s SDK cap)
+                      </span>
+                    </Field>
+                  )}
+                  {config.dynamicRates && (
+                    <label className="flex items-center gap-2 mt-4 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={config.dynamicOnlyOmitRates}
+                        onChange={(e) => config.setConfig({ dynamicOnlyOmitRates: e.target.checked })}
+                      />
+                      Dynamic-only (omit static rates — resolver failure/empty rejects the address)
+                    </label>
+                  )}
+                </>
+              )}
 
               <label className="flex items-center gap-2 mt-4 text-sm">
                 <input
@@ -178,11 +233,74 @@ export default function ConfigSheet() {
                 />
                 Send cart products (charge body)
               </label>
+
+              <LocalDevFooter />
             </div>
           </div>,
           document.body
         )}
     </>
+  );
+}
+
+// Shows whether the express element is running against local dev SDKs and which ones. Reads the SAME
+// memoized `resolveLocalMode` the SDK loader used, so it reflects what's actually loaded (detected once
+// at page load) rather than a fresh probe. Renders only on localhost; a no-op elsewhere.
+function LocalDevFooter() {
+  const [mode, setMode] = useState<LocalModeConfig | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    void resolveLocalMode().then((m) => {
+      if (alive) setMode(m);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const isLocalhost =
+    typeof window !== "undefined" &&
+    (window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1" ||
+      window.location.hostname === "[::1]");
+  if (!isLocalhost || !mode) return null;
+
+  const anyLocal = mode.checkoutWebAvailable || mode.checkoutWebStripeAvailable;
+  return (
+    <div
+      className="mt-6 pt-3 border-t text-[11px]"
+      style={{ borderColor: "var(--line)", color: "var(--ink-soft)" }}
+    >
+      <div className="flex items-center gap-2 mb-1">
+        <span
+          className="inline-block w-2 h-2 rounded-full"
+          style={{ background: anyLocal ? "#22c55e" : "#9ca3af" }}
+        />
+        <span className="font-medium">
+          {anyLocal ? "Local dev mode: ON" : "Local dev mode: OFF (using CDN)"}
+        </span>
+      </div>
+      <LocalServerRow label="checkout-web" port={8700} on={mode.checkoutWebAvailable} />
+      <LocalServerRow label="checkout-web-stripe" port={8991} on={mode.checkoutWebStripeAvailable} />
+      <div className="mt-1" style={{ color: "var(--ink-faint)" }}>
+        Detected at page load. Reload to re-detect if you start a server afterward.
+      </div>
+    </div>
+  );
+}
+
+function LocalServerRow({ label, port, on }: Readonly<{ label: string; port: number; on: boolean }>) {
+  return (
+    <div className="flex items-center gap-2">
+      <span
+        className="inline-block w-2 h-2 rounded-full"
+        style={{ background: on ? "#22c55e" : "#ef4444" }}
+      />
+      <span>
+        {label} (:{port}) {on ? "local" : "CDN"}
+      </span>
+    </div>
   );
 }
 

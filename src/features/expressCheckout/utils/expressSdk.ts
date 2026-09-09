@@ -22,7 +22,7 @@ import type { OnSubmitSuccess, OnSubmitError } from "@/features/expressCheckout/
 // start the local servers after the app.
 let localModePromise: Promise<LocalModeConfig> | null = null;
 
-function resolveLocalMode(): Promise<LocalModeConfig> {
+export function resolveLocalMode(): Promise<LocalModeConfig> {
   localModePromise ??= (async () => {
     const status = await detectLocalServers();
     return {
