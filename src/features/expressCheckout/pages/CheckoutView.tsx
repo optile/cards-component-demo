@@ -165,13 +165,19 @@ export default function CheckoutView({ active }: Readonly<{ active: boolean }>) 
             </div>
             <div className="summary-row">
               <span>Shipping</span>
-              <span>{shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}</span>
+              <span>{shipping === 0 ? "Free*" : `$${shipping.toFixed(2)}`}</span>
             </div>
             <div className="summary-total">
               <span>Total</span>
               <span>${total.toFixed(2)}</span>
             </div>
           </div>
+          {shipping === 0 && (
+            <p className="summary-note" style={{ marginTop: -12 }}>
+              * Free standard shipping over $50 — your final shipping is set by the
+              address you enter at checkout.
+            </p>
+          )}
         </div>
 
         {/* Right: payment methods stacked — classic card first, express below */}
