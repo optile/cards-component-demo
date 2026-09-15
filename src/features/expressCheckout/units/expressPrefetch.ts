@@ -27,7 +27,7 @@ interface Handlers {
 }
 
 // Placeholder until a page claims the entry. A wallet can only submit after the ECE is mounted on a
-// visible page, so these are never actually invoked — but kept safe rather than throwing.
+// visible page, so these are never actually invoked - but kept safe rather than throwing.
 const NOOP_HANDLERS: Handlers = {
   onSubmitSuccess: () => false,
   onSubmitError: () => false,
@@ -47,13 +47,13 @@ interface PrefetchEntry {
 const entries = new Map<string, PrefetchEntry>();
 
 /**
- * Stable identity of a would-be express session — mirrors the session-affecting inputs the PDP's
+ * Stable identity of a would-be express session - mirrors the session-affecting inputs the PDP's
  * rebuild key derives from, so a prefetch and the page's own build resolve to the same string.
  *
  * `includeCart` gates the cart-derived inputs (items signature + amount). For an EXPRESS-ONLY surface
  * (`includeCart: false`) these are excluded, because express keys/wallets/networks are amount-
  * independent (amount/currency are not inputs to the express fetch): a quantity tick must NOT fragment
- * the identity or rebuild the instance — it's pushed to the live wallet sheet via `express.update(...)`
+ * the identity or rebuild the instance - it's pushed to the live wallet sheet via `express.update(...)`
  * instead. A CARD surface (`includeCart: true`) keeps them, since the classic LIST total the shopper
  * sees is bound to the built session and has no in-place update seam.
  */
@@ -70,7 +70,7 @@ export function expressSessionKey(
   const amount =
     includeCart && items.length > 0 ? totalOf(items).toFixed(2) : undefined;
   // `allowRealRedirect` is intentionally excluded: it only affects the submit-time callback (read
-  // fresh via callbacksRef), not the built session — so it must not fragment prefetch identity.
+  // fresh via callbacksRef), not the built session - so it must not fragment prefetch identity.
   return JSON.stringify([
     reinit,
     config.country,
@@ -87,7 +87,7 @@ async function destroyEntry(entry: PrefetchEntry): Promise<void> {
     const { instance } = await entry.promise;
     instance.destroy();
   } catch {
-    // Build failed — nothing to destroy.
+    // Build failed - nothing to destroy.
   }
 }
 
@@ -126,7 +126,7 @@ export function prefetchExpressSession(
   evictExpired();
   // Prefetch is always for an express-only "buy it now" surface, so the identity excludes cart inputs
   // (amount/items): a hover at qty 1 and a page-open at qty 3 resolve to the SAME key and claim the
-  // same warmed session — the amount difference is reconciled in place via express.update after mount.
+  // same warmed session - the amount difference is reconciled in place via express.update after mount.
   const key = expressSessionKey(config, items, currency, false);
   if (entries.has(key)) return;
 
@@ -166,7 +166,7 @@ export interface ClaimedSession {
 
 /**
  * Take ownership of a prefetched session for `key`, if one exists and is still fresh. The caller now
- * OWNS the returned instance and must destroy it. Returns null on miss or stale entry — the caller
+ * OWNS the returned instance and must destroy it. Returns null on miss or stale entry - the caller
  * should then build a session the normal way.
  */
 export function claimExpressSession(key: string): ClaimedSession | null {

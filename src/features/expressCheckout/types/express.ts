@@ -15,12 +15,17 @@ export type WalletVisibility = (typeof WALLET_VISIBILITY)[number];
 export const EXPRESS_OPERATION_TYPES = ["charge", "preset"] as const;
 export type ExpressOperationType = (typeof EXPRESS_OPERATION_TYPES)[number];
 
+// QA outcomes for the express `onBeforeSubmit` pre-charge gate (see buildExpressBeforeSubmit): approve,
+// return false (visible generic failure), or throw a host-authored reason (surfaced on the sheet + logged).
+export const EXPRESS_BEFORE_SUBMIT_OUTCOMES = ["proceed", "decline", "throw"] as const;
+export type ExpressBeforeSubmitOutcome = (typeof EXPRESS_BEFORE_SUBMIT_OUTCOMES)[number];
+
 // Demo-offered gateway environments (the config sheet's env dropdown). A persisted `env` is coerced back
 // into this set on rehydrate before it is interpolated into the API host / SDK <script src>.
 export const ENVS = ["checkout.integration", "sandbox"] as const;
 export type EnvName = (typeof ENVS)[number];
 
-// SDK-supported UI locales — mirrors the translation bundles shipped by the Web SDK
+// SDK-supported UI locales - mirrors the translation bundles shipped by the Web SDK
 // (checkout-web-stripe/src/translations, checkout-web/src/translations). `value` is the raw host
 // locale string handed to the SDK (which maps it to Stripe's locale union and selects the matching
 // translation bundle); `label` is the human-readable name shown in the demo's locale picker. Order
@@ -88,7 +93,7 @@ export type ExpressState =
 const EXPRESS_PHASES = ["loading", "ready", "unavailable", "error"] as const;
 
 // The public event bus (`checkout.on("express:state", h)`) delivers the RAW state object as the
-// handler payload — NOT a { event, data } envelope — so the guard validates the state object
+// handler payload - NOT a { event, data } envelope - so the guard validates the state object
 // directly.
 export function isExpressState(data: unknown): data is ExpressState {
   return (
@@ -106,7 +111,7 @@ export function isExpressState(data: unknown): data is ExpressState {
  * now re-exported so the demo's receipt + `isExpressOrderDetails` guard track the SDK contract.
  *
  * Delivered live on `express:order` (`provisional` while the sheet is open; `final` after a
- * successful charge) and as `onSubmitSuccess.expressOrder`. Commerce-only — no buyer PII; buyer
+ * successful charge) and as `onSubmitSuccess.expressOrder`. Commerce-only - no buyer PII; buyer
  * details (address, name, email) must be fetched server-side from the CHARGE.
  */
 export type { ExpressOrderDetails };
@@ -125,7 +130,7 @@ export function isExpressOrderDetails(data: unknown): data is ExpressOrderDetail
     return false;
   }
   // `shippingRate` is optional, but when present it must be well-formed with a numeric-parseable
-  // amount — otherwise downstream `Number(shippingRate.amount)` would render "$NaN" on the receipt.
+  // amount - otherwise downstream `Number(shippingRate.amount)` would render "$NaN" on the receipt.
   if (o.shippingRate !== undefined) {
     const r = o.shippingRate as Record<string, unknown>;
     if (

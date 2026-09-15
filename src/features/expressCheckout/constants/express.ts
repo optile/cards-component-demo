@@ -1,6 +1,7 @@
 import type { BillingAddress, ShippingAddress } from "@/types/merchant";
 import {
   type EnvName,
+  type ExpressBeforeSubmitOutcome,
   type ExpressOperationType,
   type ExpressWalletsConfig,
   type WalletMode,
@@ -36,12 +37,12 @@ export const DEMO_SHIPPING: ShippingAddress = {
 
 /**
  * One ECE shipping RATE offered on the `dropIn('express')` call. `amount` is a MAJOR-unit decimal
- * string in the charge currency (e.g. `'9.99'`, `'0'`) — the SDK converts to Stripe minor units.
+ * string in the charge currency (e.g. `'9.99'`, `'0'`) - the SDK converts to Stripe minor units.
  *
- * NOTE — three "shipping" concepts in this demo, don't conflate them: (1) the cart flat/free fee
+ * NOTE - three "shipping" concepts in this demo, don't conflate them: (1) the cart flat/free fee
  * (`shippingOf`: $5 / free over $50), charged on the card path and on express when ECE rates are OFF;
  * (2) `DEMO_SHIPPING`, the synthetic LIST shipping ADDRESS above (an address, not a charge); (3) these
- * ECE rates — when on they REPLACE (1) for the express charge (base drops to the goods subtotal, see
+ * ECE rates - when on they REPLACE (1) for the express charge (base drops to the goods subtotal, see
  * `useCheckoutSession`), so express shipping is charged once. The buyer picks the rate in the sheet.
  */
 export interface DemoShippingRate {
@@ -70,10 +71,11 @@ export interface ExpressConfig {
   // so the wallet reprices from the buyer's coarse address instead of only offering the static preset.
   // Requires `shippingAddressRequired`; ignored otherwise. Pushed at drop-in time, so a toggle remounts.
   dynamicRates: boolean;
-  // Artificial resolver latency (ms) to exercise the timeout→static-fallback path on-device. 0 = instant.
+  // Artificial resolver latency (ms) to exercise the timeout->static-fallback path on-device. Ranged
+  // 1-20s in the config sheet to mirror the SDK's resolver-timeout clamp ([1s, 20s]).
   dynamicRatesDelayMs: number;
   // Dynamic-ONLY: when on (with `dynamicRates`), omit the static rate preset entirely so shipping is
-  // enabled by the resolver alone. Exercises the no-static-fallback path — a resolver failure/empty then
+  // enabled by the resolver alone. Exercises the no-static-fallback path - a resolver failure/empty then
   // REJECTS the address instead of falling back. Requires `dynamicRates`; ignored otherwise. Pushed at
   // drop-in time (it changes the create-time rate set), so a toggle remounts.
   dynamicOnlyOmitRates: boolean;
@@ -82,7 +84,32 @@ export interface ExpressConfig {
   // replacing the SDK's synthesized `product item` base line. Participates in the remount identity so
   // toggling it re-pushes (products are set at drop-in time, not via `express.update`).
   sendProducts: boolean;
+  // Resolver-returned products cart. When on (with `dynamicRates`), the `onShippingAddressChange` result
+  // carries its OWN per-cart-item `products` cart for the destination. Under the unified model this drives
+  // BOTH the wallet-sheet breakdown AND the charge cart, so it MUST sum to the (frozen) express base or the
+  // SDK rejects the address. Baked into the resolver closure at drop-in time, so a toggle remounts (in
+  // `reinitSignatureOf`). Requires `dynamicRates`; ignored otherwise.
+  dynamicResolverProducts: boolean;
+  // Express `onBeforeSubmit` pre-charge gate (QA). When on, the demo attaches a top-level `onBeforeSubmit`
+  // that gates ONLY the express component (the shared card drop-in always proceeds). The callback reads
+  // LIVE config, so changing the outcome/delay never remounts (it is NOT part of `reinitSignatureOf`).
+  beforeSubmit: boolean;
+  // What the gate does when on: `proceed` (approve), `decline` (return false -> visible generic failure),
+  // or `throw` (reject with a host-authored reason surfaced on the sheet + logged via onConfirmError).
+  beforeSubmitOutcome: ExpressBeforeSubmitOutcome;
+  // Artificial gate latency (ms) to exercise the async pre-charge hook. Ranged 2-20s in the config sheet;
+  // ≥15s is flagged as a warning zone (a slow gate risks the wallet invalidating the open sheet).
+  beforeSubmitDelayMs: number;
 }
+
+/**
+ * Slider bounds (ms) for the two artificial-latency knobs. Shared by the config sheet (control range) and
+ * the store (clamping persisted/hydrated values back into range). Both ranges top out at the SDK's
+ * resolver-timeout clamp max (20s) and flag 15s+ as a WARNING zone - a request running this long risks the
+ * wallet invalidating the open sheet before the resolver/gate settles.
+ */
+export const RESOLVER_DELAY_RANGE = { min: 1000, max: 20000, step: 500, warnFrom: 15000 } as const;
+export const GATE_DELAY_RANGE = { min: 2000, max: 20000, step: 500, warnFrom: 15000 } as const;
 
 /**
  * Fixed multi-rate preset the demo offers when ECE shipping is enabled. A NON-zero first rate would
@@ -124,19 +151,22 @@ export function reinitSignatureOf(config: ExpressConfig): string {
     // preset is fixed, so it never fragments the identity.
     String(config.shippingAddressRequired),
     config.allowedShippingCountries,
-    // The dynamic resolver is pushed at drop-in time (not via express.update), so toggling it — or
-    // changing the artificial delay — must remount to apply. The delay is baked into the resolver
+    // The dynamic resolver is pushed at drop-in time (not via express.update), so toggling it - or
+    // changing the artificial delay - must remount to apply. The delay is baked into the resolver
     // closure at assembly time. Dynamic-only omits the static preset, changing the create-time rate set,
     // so it must remount too.
     String(config.dynamicRates),
     String(config.dynamicRatesDelayMs),
     String(config.dynamicOnlyOmitRates),
+    // The resolver products cart is baked into the resolver closure at drop-in time, so a toggle must remount.
+    // (The onBeforeSubmit gate fields are NOT here: that callback reads live config, so it never remounts.)
+    String(config.dynamicResolverProducts),
     // Products are pushed at drop-in time (not via express.update), so a toggle must remount to apply.
     String(config.sendProducts),
   ].join("|");
 }
 
-// Public merchant-application token per environment (public, not a secret — the backend validates
+// Public merchant-application token per environment (public, not a secret - the backend validates
 // clientId server-side). Baked in so the demo works out of the box; override for every env via
 // VITE_EXPRESS_CLIENT_ID, or per session in the config sheet. The checkout.integration token is the
 // same one used by the checkout-web-stripe express.html BE integration sample.
@@ -172,11 +202,19 @@ export const DEFAULT_EXPRESS_CONFIG: ExpressConfig = {
   shippingAddressRequired: false,
   allowedShippingCountries: "US,CA",
   shippingRates: DEMO_EXPRESS_SHIPPING_RATES,
-  // Dynamic rates off by default; opt-in in the config sheet. No artificial resolver delay.
+  // Dynamic rates off by default; opt-in in the config sheet. Default resolver latency 2s (within the
+  // 1-20s slider range that mirrors the SDK's resolver-timeout clamp).
   dynamicRates: false,
-  dynamicRatesDelayMs: 0,
+  dynamicRatesDelayMs: 2000,
   // Dynamic-only off by default; opt-in in the config sheet (only meaningful with dynamicRates on).
   dynamicOnlyOmitRates: false,
   // Cart products off by default (opt-in in the config sheet).
   sendProducts: false,
+  // Resolver-returned products cart off by default (opt-in; requires dynamicRates).
+  dynamicResolverProducts: false,
+  // Express onBeforeSubmit gate off by default; opt-in in the config sheet.
+  beforeSubmit: false,
+  beforeSubmitOutcome: "proceed",
+  // Default gate latency 2s (the low end of the 2-20s slider range).
+  beforeSubmitDelayMs: 2000,
 };

@@ -14,11 +14,12 @@ import type { ExpressConfig } from "@/features/expressCheckout/constants/express
 import { DEMO_BILLING, DEMO_SHIPPING } from "@/features/expressCheckout/constants/express";
 import type { CartItem } from "@/features/expressCheckout/store/expressCartStore";
 import { shippingOf } from "@/features/expressCheckout/store/expressCartStore";
+import { buildExpressBeforeSubmit } from "@/features/expressCheckout/units/expressElement";
 import type { OnSubmitSuccess, OnSubmitError } from "@/features/expressCheckout/types/express";
 
 // Local-server detection is environment-static for the life of the tab (the dev servers don't come
-// and go mid-session) yet it fires two HEAD probes. Cache the result so every express build — and the
-// warm-up below — share ONE detection instead of re-probing on each mount. Reload to re-detect if you
+// and go mid-session) yet it fires two HEAD probes. Cache the result so every express build - and the
+// warm-up below - share ONE detection instead of re-probing on each mount. Reload to re-detect if you
 // start the local servers after the app.
 let localModePromise: Promise<LocalModeConfig> | null = null;
 
@@ -35,7 +36,7 @@ export function resolveLocalMode(): Promise<LocalModeConfig> {
 }
 
 // Preload the checkout-web SDK bundle (and install the fetch override) ahead of time so the first
-// express element a shopper opens — book detail or checkout — doesn't pay the script-download cost
+// express element a shopper opens - book detail or checkout - doesn't pay the script-download cost
 // inline. Idempotent: `loadCheckoutWeb` no-ops once the SDK is on `window`, the detection promise is
 // shared, and the warm runs at most once. Fire-and-forget; any load error is surfaced later by the
 // real `initCheckout`. Call it when the storefront mounts.
@@ -47,7 +48,7 @@ export function warmCheckoutWeb(env: string): void {
       const localMode = await resolveLocalMode();
       await PayoneerSDKUtils.loadCheckoutWeb(env, localMode);
     } catch {
-      // Ignore — the actual initCheckout will report any load error when the user opens a page.
+      // Ignore - the actual initCheckout will report any load error when the user opens a page.
     }
   })();
 }
@@ -78,7 +79,7 @@ export interface InitCheckoutParams {
   longId: string;
   onSubmitSuccess: OnSubmitSuccess;
   onSubmitError: OnSubmitError;
-  // Card-only signals — omitted for express-only surfaces (e.g. the book-detail buy-now).
+  // Card-only signals - omitted for express-only surfaces (e.g. the book-detail buy-now).
   onComponentListChange?: (checkout: CheckoutInstance, diff: ComponentListDiff) => void;
   onReady?: OnReadyHandler;
   // Warm the card component. False on express-only surfaces so we don't preload a component we
@@ -94,7 +95,7 @@ export interface InitCheckoutParams {
  * that binds to the FIRST caller's publishable key + connected account and
  * returns that same Stripe object to everyone after. Running two CheckoutWeb instances (one per
  * component) therefore loads Stripe.js twice and makes the express ECE and the card element fight
- * over that singleton — the ECE ends up on the wrong account and reports no wallet, so Google Pay
+ * over that singleton - the ECE ends up on the wrong account and reports no wallet, so Google Pay
  * never renders. One instance = one Stripe.js load = one shared instance for the same session, which
  * is also how a real merchant integration mounts multiple drop-ins.
  *
@@ -139,6 +140,10 @@ export async function initCheckout(params: InitCheckoutParams): Promise<Checkout
     onReady,
     onSubmitSuccess,
     onSubmitError,
+    // Express pre-charge gate (QA): attached unconditionally but a transparent proceed unless the config
+    // sheet enables it. The callback reads live config + gates only the express component, so toggling the
+    // outcome/delay applies on the next confirm without a re-init (it is not in `reinitSignatureOf`).
+    onBeforeSubmit: buildExpressBeforeSubmit(),
   };
 
   return window.Payoneer.CheckoutWeb(checkoutConfig);

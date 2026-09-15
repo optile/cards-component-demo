@@ -10,7 +10,7 @@ export interface CartItem extends Book {
 }
 
 // Commerce-only receipt overrides sourced from the wallet's `final` ExpressOrderDetails. No buyer PII
-// (address/name/email) — the SDK does not expose it; fetch it server-side from the CHARGE if needed.
+// (address/name/email) - the SDK does not expose it; fetch it server-side from the CHARGE if needed.
 export interface ExpressOrderOverrides {
   total: number;
   shippingAmount?: number;
@@ -27,8 +27,8 @@ export interface PlacedOrder {
 interface ExpressCartState {
   items: CartItem[];
   lastOrder: PlacedOrder | null;
-  // True when `lastOrder` came from the cart checkout (→ the cart should be emptied once the receipt
-  // shows), false for a PDP "buy it now" (→ leave the shopper's cart untouched). The Success page
+  // True when `lastOrder` came from the cart checkout (-> the cart should be emptied once the receipt
+  // shows), false for a PDP "buy it now" (-> leave the shopper's cart untouched). The Success page
   // reads this on mount to decide whether to clear; we deliberately DON'T clear inside `placeOrder`,
   // because emptying the cart while still on the checkout route trips its empty-cart bounce and steals
   // the navigation to the success page.

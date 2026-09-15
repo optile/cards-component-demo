@@ -21,6 +21,8 @@
   --leaf: #6e7f5b; /* muted sage */
   --gold: #b8894a;
   --danger: #8e3b5c; /* error/rose — payment-slot error text */
+  --warn: #b45309; /* amber-700: latency-warning text and track */
+  --warn-soft: #f2cf9a; /* amber tint: warning track segment */
   --serif: "Fraunces", Georgia, serif;
   --sans: "Avenir Next World", system-ui, -apple-system, sans-serif;
   --font-mono:
