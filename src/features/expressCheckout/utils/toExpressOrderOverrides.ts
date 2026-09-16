@@ -1,7 +1,7 @@
 import type { ExpressOrderOverrides } from "@/features/expressCheckout/store/expressCartStore";
 import type { ExpressOrderDetails } from "@/features/expressCheckout/types/express";
 
-/** Map a final `ExpressOrderDetails` into cart receipt overrides (commerce-only — no buyer PII). */
+/** Map a final `ExpressOrderDetails` into cart receipt overrides (commerce-only - no buyer PII). */
 export function toExpressOrderOverrides(eo: ExpressOrderDetails): ExpressOrderOverrides {
   return {
     total: Number(eo.amount),

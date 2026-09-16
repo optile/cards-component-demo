@@ -21,12 +21,12 @@ export interface BuyNowExpressResult {
 
 /**
  * Book-detail "Buy it now": mounts the real Express Checkout Element for THIS book × the qty selector
- * on its own CheckoutWeb instance (via useCheckoutSession, express-only — no card, no keep-alive).
+ * on its own CheckoutWeb instance (via useCheckoutSession, express-only - no card, no keep-alive).
  *
  * On wallet success it snapshots just this book into `lastOrder` WITHOUT touching the cart, then
  * navigates to the shared Success page; on decline it navigates to Failure. Amount uses the same
  * shipping rule as checkout (via totalOf inside useCheckoutSession), so the wallet-sheet total matches
- * what checkout would charge. `book` may be undefined (book-not-found) — then items is empty and the
+ * what checkout would charge. `book` may be undefined (book-not-found) - then items is empty and the
  * session never builds, so the hook can be called unconditionally.
  */
 export function useBuyNowExpress(

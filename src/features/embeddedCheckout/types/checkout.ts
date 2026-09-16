@@ -64,6 +64,15 @@ export type OnReadyHandler = OnReadyCallback;
  */
 export type CheckoutInstanceConfig = CheckoutConfigurationProps;
 
+/**
+ * The top-level `onBeforeSubmit` pre-charge gate callback. Runs before the charge for every drop-in on
+ * the instance (express + card); on express it may return the widened object result (proceed + charge
+ * overrides), on card a bare boolean. Derived from the SDK config so the demo tracks the real contract.
+ */
+export type OnBeforeSubmitHandler = NonNullable<
+  CheckoutInstanceConfig["onBeforeSubmit"]
+>;
+
 // --- Demo-owned shapes (NOT part of the SDK's public API) ---
 
 /**

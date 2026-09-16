@@ -2,11 +2,13 @@ import type {
   CheckoutInstance,
   ExpressDropInComponent,
   ExpressDropInProps,
+  OnBeforeSubmitHandler,
 } from "@/features/embeddedCheckout/types/checkout";
 import {
   parseAllowedShippingCountries,
   type ExpressConfig,
 } from "@/features/expressCheckout/constants/express";
+import { useExpressConfigStore } from "@/features/expressCheckout/store/expressConfigStore";
 import {
   CURRENCY,
   countOf,
@@ -27,21 +29,21 @@ type ExpressShippingResolver = NonNullable<ExpressShippingConfig["onShippingAddr
 
 /**
  * Builds the OPT-IN dynamic `onShippingAddressChange` resolver for QA. Prices from BOTH the
- * buyer's COARSE address AND the LIVE cart (read at call time, not captured at mount) — the way a real
+ * buyer's COARSE address AND the LIVE cart (read at call time, not captured at mount) - the way a real
  * integration sizes a rate against its own order:
- *   • address (`country`/`state`) → region base rate: a US buyer gets "regional"/"express" tiers, everyone
+ *   • address (`country`/`state`) -> region base rate: a US buyer gets "regional"/"express" tiers, everyone
  *     else a flat international rate; a known-unserviceable region (US/AK) returns `{ unserviceable: true }`.
- *   • cart item COUNT → a per-extra-item handling surcharge (books carry no weight, so count proxies weight).
- *   • cart SUBTOTAL → a value-based discount tier (bigger orders ship cheaper; floored so it can reach free).
- * An optional artificial delay exercises the SDK's timeout→static-fallback path on-device. It never throws
+ *   • cart item COUNT -> a per-extra-item handling surcharge (books carry no weight, so count proxies weight).
+ *   • cart SUBTOTAL -> a value-based discount tier (bigger orders ship cheaper; floored so it can reach free).
+ * An optional artificial delay exercises the SDK's timeout->static-fallback path on-device. It never throws
  * (a throw is treated as an error and falls back to the static preset). NOTE: the resolver only re-runs on an
  * ADDRESS change, so a cart edit made without touching the address won't re-quote until the next address
- * change (the base amount still updates in place via `express.update`). Not for production — a real
+ * change (the base amount still updates in place via `express.update`). Not for production - a real
  * integration fetches rates from its own backend, keyed by its own order/session reference.
  */
 function buildDynamicRatesResolver(config: ExpressConfig): ExpressShippingResolver {
   const delayMs = Math.max(0, config.dynamicRatesDelayMs);
-  // Resolve now, or after the artificial latency knob — shared by both the reject and the priced arm.
+  // Resolve now, or after the artificial latency knob - shared by both the reject and the priced arm.
   const settle = (
     value: Awaited<ReturnType<ExpressShippingResolver>>,
   ): ReturnType<ExpressShippingResolver> =>
@@ -78,7 +80,69 @@ function buildDynamicRatesResolver(config: ExpressConfig): ExpressShippingResolv
           ]
         : [{ code: "dyn-intl", amount: priced(34.49), name: "Dynamic International", deliveryEstimate: "7-14 business days" }];
 
-    return settle({ rates });
+    // Opt-in: the resolver returns its OWN `products` cart for the destination - one line per cart item, so
+    // it sums to the goods subtotal (the frozen express base when ECE rates are on). Under the unified model
+    // this drives BOTH the wallet-sheet breakdown AND the charge cart, so it MUST reconcile to that base (the
+    // SDK rejects the address otherwise). A real integration would add a destination-tax line here and bump
+    // the returned `amount` to match; this demo keeps the base frozen, so the cart sums to it as-is.
+    const products = config.dynamicResolverProducts
+      ? items.map((item) => ({
+          name: item.quantity > 1 ? `${item.title} x${item.quantity}` : item.title,
+          amount: (item.price * item.quantity).toFixed(2),
+        }))
+      : undefined;
+
+    return settle({ rates, ...(products ? { products } : {}) });
+  };
+}
+
+// The componentName the express gate receives on `onBeforeSubmit` (the ECE tag is `payoneer-express`).
+// Matched as a substring so the QA outcome applies to EXPRESS ONLY - the shared card drop-in never
+// contains "express", so it always proceeds and the gate knob can't block card QA.
+const EXPRESS_GATE_COMPONENT = "express";
+
+/**
+ * Builds the express `onBeforeSubmit` pre-charge gate for QA. STABLE across config edits: it reads the
+ * LIVE config via `getState` at call time, so changing the outcome/delay never remounts (the gate is
+ * attached once at init, not part of `reinitSignatureOf`). Applies ONLY to the express component; the
+ * shared card drop-in on the same instance always proceeds. Exercises the boolean gate contract:
+ * `proceed`, `decline` (false -> visible generic failure), and `throw` (a host-authored reason surfaced on
+ * the sheet, truncated to 128 chars, and logged via onConfirmError).
+ */
+export function buildExpressBeforeSubmit(): OnBeforeSubmitHandler {
+  return ({ componentName }) => {
+    // Global pre-charge hook: only gate express, never the card path sharing this instance.
+    if (!componentName.toLowerCase().includes(EXPRESS_GATE_COMPONENT)) return true;
+    const config = useExpressConfigStore.getState();
+    if (!config.beforeSubmit) return true;
+
+    const delayMs = Math.max(0, config.beforeSubmitDelayMs);
+    // Produce the outcome now, or after the artificial latency knob. A thrown error inside `produce`
+    // rejects the (delayed) promise so the gate's throw path stays intact under a delay.
+    const after = <T>(produce: () => T): T | Promise<T> =>
+      delayMs === 0
+        ? produce()
+        : new Promise<T>((resolve, reject) => {
+            setTimeout(() => {
+              try {
+                resolve(produce());
+              } catch (err) {
+                reject(err);
+              }
+            }, delayMs);
+          });
+
+    switch (config.beforeSubmitOutcome) {
+      case "decline":
+        return after(() => false);
+      case "throw":
+        return after<never>(() => {
+          throw new Error("Item is out of stock (demo onBeforeSubmit gate)");
+        });
+      case "proceed":
+      default:
+        return after(() => true);
+    }
   };
 }
 
@@ -89,7 +153,7 @@ function buildDynamicRatesResolver(config: ExpressConfig): ExpressShippingResolv
  * is passed verbatim (already the SDK's major-unit shape). When the dynamic-rates QA toggle is on, an
  * opt-in `onShippingAddressChange` resolver (see {@link buildDynamicRatesResolver}) is attached; when
  * dynamic-ONLY is also on, the static preset is omitted so the resolver alone enables shipping (no
- * static fallback — a resolver failure/empty then rejects the address).
+ * static fallback - a resolver failure/empty then rejects the address).
  */
 function buildExpressShipping(
   config: ExpressConfig,
@@ -163,10 +227,10 @@ function generateDemoPaymentReference(): string {
   return `PT-${demoUuid()}`;
 }
 
-// `transactionId` is REQUIRED on the express charge — the merchant's own transaction identifier and
-// the correlation key they use to reconcile the (post-authorization-validated) one-step charge against
-// their order/ERP. A real integration passes the id from its own system; the demo has none, so it mints a
-// stable per-mount id. The SDK enforces its presence at dropIn('express') time.
+// `transactionId` is the merchant's own transaction identifier and the correlation key they use to
+// reconcile the (post-authorization-validated) one-step charge against their order/ERP. A real integration
+// passes the id from its own system; the demo has none, so it mints a stable per-mount id. It is optional
+// at mount and enforced at charge time (or supplied late via the onBeforeSubmit gate).
 function generateDemoTransactionId(): string {
   return `TX-${demoUuid()}`;
 }
@@ -189,7 +253,7 @@ export interface MountExpressOptions {
 export interface MountedExpress {
   // Tears down the express:state subscription and removes the drop-in. Idempotent per mount.
   cleanup: () => void;
-  // The live express handle (undefined only when the SDK declines to build one — e.g. walletMode
+  // The live express handle (undefined only when the SDK declines to build one - e.g. walletMode
   // 'inline'). Callers keep it to push post-mount amount/currency changes via `express.update(...)`.
   express: ExpressDropInComponent | undefined;
 }
@@ -197,12 +261,12 @@ export interface MountedExpress {
 /**
  * Mounts the Express Checkout Element on a GIVEN CheckoutWeb instance and returns a cleanup.
  *
- * INSTANCE-AGNOSTIC: it never creates or destroys the instance — the caller (useCheckoutSession)
+ * INSTANCE-AGNOSTIC: it never creates or destroys the instance - the caller (useCheckoutSession)
  * owns that lifecycle. This is what lets the checkout page share ONE instance across express + card
  * (required by the SDK's per-account Stripe singleton) while the book-detail page uses
  * its own instance, with zero duplicated express lifecycle code.
  *
- * The whole slot lifecycle is driven by a SINGLE `express:state` subscription and one switch —
+ * The whole slot lifecycle is driven by a SINGLE `express:state` subscription and one switch -
  * `loading` shows the skeleton, `ready` reveals the element, and `unavailable`/`error` keep it hidden.
  * This single signal is the public host contract; the SDK's lower-level events stay internal to it.
  */
@@ -245,7 +309,7 @@ export function mountExpressElement(
   });
 
   // The resolved reference is readable straight off the handle, synchronously and before the wallet
-  // sheet opens — persist it here to reconcile the charge to the order you create post-approval. e.g.:
+  // sheet opens - persist it here to reconcile the charge to the order you create post-approval. e.g.:
   // savePendingOrderReference(express?.paymentReference);
   express?.mount(node);
 

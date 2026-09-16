@@ -8,7 +8,7 @@ export type ExpressOutcome =
 interface ExpressCheckoutState {
   lastOutcome: ExpressOutcome | null;
   setOutcome: (o: ExpressOutcome | null) => void;
-  // Live express:order snapshot (provisional while the wallet sheet is open). Display-only — NEVER
+  // Live express:order snapshot (provisional while the wallet sheet is open). Display-only - NEVER
   // call express.update from code that reads this. Cleared on teardown / new checkout.
   liveExpressOrder: ExpressOrderDetails | null;
   setLiveExpressOrder: (o: ExpressOrderDetails | null) => void;
