@@ -106,8 +106,13 @@ async function acquireExpressInstance(
     }
   }
 
-  const { longId } = await createExpressSession(config, items, currency);
-  // Stamp session age for the keep-alive TTL guard (fresh session = clock reset).
+  // A CARD surface needs a LIST session (the classic drop-in resolves its methods from the LIST);
+  // an EXPRESS-ONLY surface does not - dropIn('express') resolves without a longId, so skip the
+  // POST /checkout/session round-trip entirely and init the instance with no LIST.
+  const longId = wantCard
+    ? (await createExpressSession(config, items, currency)).longId
+    : undefined;
+  // Stamp build age for the keep-alive TTL guard (fresh build = clock reset).
   if (!isCancelled()) args.stampBuiltAt(Date.now());
   const { onSubmitSuccess, onSubmitError } = args.submitHandlers();
   const instance = await initCheckout({
