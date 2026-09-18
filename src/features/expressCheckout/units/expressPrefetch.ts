@@ -8,17 +8,14 @@ import {
   totalOf,
   type CartItem,
 } from "@/features/expressCheckout/store/expressCartStore";
-import {
-  createExpressSession,
-  initCheckout,
-} from "@/features/expressCheckout/utils/expressSdk";
+import { initCheckout } from "@/features/expressCheckout/utils/expressSdk";
 import type {
   OnSubmitSuccess,
   OnSubmitError,
 } from "@/features/expressCheckout/types/express";
 
 // Cap concurrent prefetches so sweeping the mouse across the whole shelf can't spawn an unbounded
-// number of LIST sessions + instances. Oldest UNCLAIMED entries are evicted (and destroyed) first.
+// number of CheckoutWeb instances. Oldest UNCLAIMED entries are evicted (and destroyed) first.
 const MAX_ENTRIES = 4;
 
 interface Handlers {
@@ -40,8 +37,8 @@ interface PrefetchEntry {
   // that page's navigation without needing a rebuild.
   handlers: Handlers;
   // Resolves with the built (but UNMOUNTED) instance. Rejection is caught by the claimer, which falls
-  // back to a fresh build.
-  promise: Promise<{ longId: string; instance: CheckoutInstance }>;
+  // back to a fresh build. Express-only, so no LIST session (`longId`) is minted.
+  promise: Promise<{ instance: CheckoutInstance }>;
 }
 
 const entries = new Map<string, PrefetchEntry>();
@@ -113,9 +110,10 @@ function enforceCap(): void {
 }
 
 /**
- * Warm a full express session (LIST + CheckoutWeb instance, NOT yet mounted) for these items so the
- * page opened next can skip the network round-trips and mount the ECE immediately. Idempotent per
- * identity; safe to call repeatedly (e.g. on hover/press). Fire-and-forget.
+ * Warm a CheckoutWeb instance (express-only, NOT yet mounted) for these items so the page opened next
+ * can skip the init round-trip and mount the ECE immediately. Express-only surfaces need no LIST
+ * session, so this mints none (no POST /checkout/session). Idempotent per identity; safe to call
+ * repeatedly (e.g. on hover/press). Fire-and-forget.
  */
 export function prefetchExpressSession(
   config: ExpressConfig,
@@ -135,15 +133,15 @@ export function prefetchExpressSession(
     createdAt: Date.now(),
     handlers: { ...NOOP_HANDLERS },
     promise: (async () => {
-      const { longId } = await createExpressSession(config, items, currency);
+      // Express-only: no LIST session. dropIn('express') resolves without a longId, so warm just the
+      // CheckoutWeb instance (no POST /checkout/session).
       const instance = await initCheckout({
         config,
-        longId,
         preloadCards: false,
         onSubmitSuccess: (data) => entry.handlers.onSubmitSuccess(data),
         onSubmitError: (data) => entry.handlers.onSubmitError(data),
       });
-      return { longId, instance };
+      return { instance };
     })(),
   };
   // Drop a failed build so a later hover can retry cleanly.
@@ -157,7 +155,7 @@ export function prefetchExpressSession(
 
 export interface ClaimedSession {
   createdAt: number;
-  promise: Promise<{ longId: string; instance: CheckoutInstance }>;
+  promise: Promise<{ instance: CheckoutInstance }>;
   setHandlers: (
     onSubmitSuccess: OnSubmitSuccess,
     onSubmitError: OnSubmitError,

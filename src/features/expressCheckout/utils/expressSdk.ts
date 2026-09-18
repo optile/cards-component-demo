@@ -76,7 +76,11 @@ export async function createExpressSession(
 
 export interface InitCheckoutParams {
   config: ExpressConfig;
-  longId: string;
+  // Optional: a CARD surface needs a LIST session (the classic drop-in resolves its methods from the
+  // LIST), so it passes a `longId`. An EXPRESS-ONLY surface does not - `dropIn('express')` resolves
+  // from the express component's own method key (no provider/LIST lookup), so it inits without one and
+  // never calls POST /checkout/session.
+  longId?: string;
   onSubmitSuccess: OnSubmitSuccess;
   onSubmitError: OnSubmitError;
   // Card-only signals - omitted for express-only surfaces (e.g. the book-detail buy-now).
@@ -121,6 +125,8 @@ export async function initCheckout(params: InitCheckoutParams): Promise<Checkout
   }
 
   const checkoutConfig: CheckoutInstanceConfig = {
+    // Undefined on an express-only surface (no LIST session); the SDK config treats `longId` as
+    // optional and resolves dropIn('express') without it.
     longId,
     env: config.env,
     // Express identity is declared once at init (like the card flow's longId), not on the
