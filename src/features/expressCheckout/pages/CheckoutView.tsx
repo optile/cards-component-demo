@@ -13,6 +13,10 @@ import {
 import { useExpressCheckoutStore } from "@/features/expressCheckout/store/expressCheckoutStore";
 import { useExpressConfigStore } from "@/features/expressCheckout/store/expressConfigStore";
 import { toExpressOrderOverrides } from "@/features/expressCheckout/utils/toExpressOrderOverrides";
+import {
+  parseChargeRefsFromSubmitPayload,
+  stashExpressSuccess,
+} from "@/features/expressCheckout/utils/chargeRefs";
 
 // Demo-only shipping options (matches the design). Not wired to the express session — the actual
 // session country is controlled by the ⚙ config sheet.
@@ -79,7 +83,12 @@ export default function CheckoutView({ active }: Readonly<{ active: boolean }>) 
       if (outcome.kind === "success") {
         // Read finalExpressOrder (captured by useCheckout BEFORE setOutcome) and merge into order.
         const eo = useExpressCheckoutStore.getState().finalExpressOrder;
-        placeOrder(eo ? toExpressOrderOverrides(eo) : undefined);
+        const order = placeOrder(eo ? toExpressOrderOverrides(eo) : undefined);
+        const chargeRefs =
+          useExpressCheckoutStore.getState().lastChargeRefs ??
+          parseChargeRefsFromSubmitPayload(outcome.data);
+        // Bridge the receipt across a hard returnUrl reload when "Allow real redirect" is on.
+        stashExpressSuccess({ order, chargeRefs });
         navigate("/express/success");
       } else {
         navigate("/express/failure");
