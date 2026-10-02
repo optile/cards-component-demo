@@ -72,11 +72,13 @@ export type _ExpressOperationType = Expect<
 >;
 
 // 2) Pin the express-surface assumptions the demo depends on.
-export type _PaymentReferenceRequired = Expect<
-  undefined extends ExpressDropInProps["paymentReference"] ? false : true
+// The order ids are optional at mount (the SDK enforces them at charge time, so a host may supply them
+// late via `onBeforeSubmit`). The demo still mints both at mount; the guard fails if they become required.
+export type _PaymentReferenceOptional = Expect<
+  undefined extends ExpressDropInProps["paymentReference"] ? true : false
 >;
-export type _TransactionIdRequired = Expect<
-  undefined extends ExpressDropInProps["transactionId"] ? false : true
+export type _TransactionIdOptional = Expect<
+  undefined extends ExpressDropInProps["transactionId"] ? true : false
 >;
 
 // `rates` is OPTIONAL on the shipping surface (dynamic-only enables shipping via the resolver alone), so

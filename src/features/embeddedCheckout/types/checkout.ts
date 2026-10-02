@@ -32,7 +32,7 @@ export type DropInComponent = DropIn;
 /** The express drop-in handle (`dropIn('express', ...)`). */
 export type ExpressDropInComponent = ExpressDropIn;
 
-/** Per-transaction express mount config (`paymentReference` / `transactionId` are required). */
+/** Per-transaction express mount config (`paymentReference` / `transactionId` are optional at mount, enforced at charge). */
 export type ExpressDropInProps = ExpressDropInConfig;
 
 /** One available payment method from `availableDropInComponents()`. */
