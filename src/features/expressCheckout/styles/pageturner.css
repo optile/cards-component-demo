@@ -1075,6 +1075,40 @@
     font-size: 22px;
     color: var(--ink);
   }
+  /* QA / e2e: charge identifiers from returnUrl query params or onSubmitSuccess. */
+  & .receipt-charge-refs {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--line);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  & .receipt-charge-refs-title {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--ink-faint);
+    margin-bottom: 4px;
+  }
+  & .receipt-charge-ref {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  & .receipt-charge-ref code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink);
+    word-break: break-all;
+    text-align: right;
+    user-select: all;
+  }
 
   /* Express section reveal. The express block (divider + section) is collapsed by default and slides
      down only when `express:state` reaches `ready` (`expressAvailable = expressStatus === 'ready'`) — so the page never shows an
