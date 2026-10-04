@@ -12,6 +12,7 @@ import { useDebouncedValue } from "@/features/expressCheckout/hooks/useDebounced
 import { isExpressOrderDetails, type Book } from "@/features/expressCheckout/types/express";
 import { toExpressOrderOverrides } from "@/features/expressCheckout/utils/toExpressOrderOverrides";
 import {
+  hasFollowableRedirect,
   parseChargeRefsFromSubmitPayload,
   stashExpressSuccess,
 } from "@/features/expressCheckout/utils/chargeRefs";
@@ -64,8 +65,9 @@ export function useBuyNowExpress(
       const chargeRefs = parseChargeRefsFromSubmitPayload(data);
       setChargeRefs(chargeRefs);
       const order = placeOrderFor(items, overrides);
-      // Bridge the receipt across a hard returnUrl reload when "Allow real redirect" is on.
-      stashExpressSuccess({ order, chargeRefs });
+      // Bridge the receipt across the hard returnUrl reload; only stash when the SDK will navigate,
+      // or the unclaimed stash would decorate a later receipt.
+      if (allowRealRedirect && hasFollowableRedirect(data)) stashExpressSuccess({ order, chargeRefs });
       navigate("/express/success");
       return allowRealRedirect;
     },

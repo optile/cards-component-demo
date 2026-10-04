@@ -1,9 +1,10 @@
 import type { PlacedOrder } from "@/features/expressCheckout/store/expressCartStore";
 
 /**
- * Charge identifiers surfaced on the express Success page for QA / e2e follow-up.
+ * Charge or preset identifiers surfaced on the express Success page for QA / e2e follow-up.
  * Sourced from the BE returnUrl query string (real redirect) or from onSubmitSuccess
- * `data.redirect.parameters` / identification fields (soft-nav).
+ * `data.redirect.parameters` / identification fields / `data.links.self` (soft-nav). `operationType`
+ * and `presetId` only come from the payload: a returnUrl must not be able to relabel a receipt.
  */
 export interface ExpressChargeRefs {
   longId?: string;
@@ -15,9 +16,13 @@ export interface ExpressChargeRefs {
   interactionCode?: string;
   interactionReason?: string;
   resultCode?: string;
+  /** `CHARGE` | `PRESET` from the onSubmitSuccess payload; `PRESET` means no money moved yet. */
+  operationType?: string;
+  /** Last path segment of the preset's `data.links.self`; the merchant server completes the preset by it. */
+  presetId?: string;
 }
 
-const CHARGE_REF_KEYS = [
+const URL_REF_KEYS = [
   "longId",
   "shortId",
   "transactionId",
@@ -27,6 +32,12 @@ const CHARGE_REF_KEYS = [
   "interactionCode",
   "interactionReason",
   "resultCode",
+] as const satisfies ReadonlyArray<keyof ExpressChargeRefs>;
+
+const CHARGE_REF_KEYS = [
+  ...URL_REF_KEYS,
+  "operationType",
+  "presetId",
 ] as const satisfies ReadonlyArray<keyof ExpressChargeRefs>;
 
 type ChargeRefKey = (typeof CHARGE_REF_KEYS)[number];
@@ -44,15 +55,55 @@ export function hasChargeRefs(refs: ExpressChargeRefs | null | undefined): boole
   return Boolean(refs.longId?.trim() || refs.transactionId?.trim());
 }
 
+const ID_KEYS = ["longId", "transactionId"] as const satisfies ReadonlyArray<ChargeRefKey>;
+
+/**
+ * False when the stash and the returnUrl both carry an id and they differ, i.e. the stash belongs
+ * to another attempt and must not decorate this receipt.
+ */
+export function stashMatchesUrlRefs(
+  stashRefs: ExpressChargeRefs,
+  urlRefs: ExpressChargeRefs,
+): boolean {
+  return ID_KEYS.every(
+    (key) => !urlRefs[key] || !stashRefs[key] || stashRefs[key] === urlRefs[key],
+  );
+}
+
+/** True when the SDK will navigate away for this payload if the callback allows it (a `GET` `redirect.url`). */
+export function hasFollowableRedirect(payload: unknown): boolean {
+  const root = payload && typeof payload === "object" ? (payload as Record<string, unknown>) : null;
+  const data =
+    root?.data && typeof root.data === "object" ? (root.data as Record<string, unknown>) : root;
+  const redirect =
+    data?.redirect && typeof data.redirect === "object"
+      ? (data.redirect as { url?: unknown; method?: unknown })
+      : null;
+  return Boolean(pickTrimmed(redirect?.url)) && redirect?.method === "GET";
+}
+
+function lastPathSegment(value: unknown): string | undefined {
+  const link = pickTrimmed(value);
+  if (!link) return undefined;
+  try {
+    return pickTrimmed(new URL(link, "https://placeholder.invalid").pathname.split("/").pop());
+  } catch {
+    return undefined;
+  }
+}
+
 function pickTrimmed(value: unknown): string | undefined {
   if (typeof value !== "string") return undefined;
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : undefined;
 }
 
-function fromRecord(record: Record<string, unknown>): ExpressChargeRefs {
+function fromRecord(
+  record: Record<string, unknown>,
+  keys: ReadonlyArray<ChargeRefKey> = CHARGE_REF_KEYS,
+): ExpressChargeRefs {
   const out: ExpressChargeRefs = {};
-  for (const key of CHARGE_REF_KEYS) {
+  for (const key of keys) {
     const value = pickTrimmed(record[key]);
     if (value) out[key] = value;
   }
@@ -65,10 +116,10 @@ export function parseChargeRefsFromSearch(
 ): ExpressChargeRefs {
   const params = typeof search === "string" ? new URLSearchParams(search) : search;
   const record: Record<string, unknown> = {};
-  for (const key of CHARGE_REF_KEYS) {
+  for (const key of URL_REF_KEYS) {
     record[key] = params.get(key) ?? undefined;
   }
-  return fromRecord(record);
+  return fromRecord(record, URL_REF_KEYS);
 }
 
 function parametersToRecord(
@@ -98,7 +149,20 @@ export function parseChargeRefsFromSubmitPayload(payload: unknown): ExpressCharg
     root.data && typeof root.data === "object"
       ? (root.data as Record<string, unknown>)
       : root;
+  const refs = parseChargeRefsFromSubmitData(data);
+  const operationType = pickTrimmed(root.operationType);
+  const presetId =
+    operationType === "PRESET" && data.links && typeof data.links === "object"
+      ? lastPathSegment((data.links as { self?: unknown }).self)
+      : undefined;
+  return {
+    ...refs,
+    ...(operationType ? { operationType } : {}),
+    ...(presetId ? { presetId } : {}),
+  };
+}
 
+function parseChargeRefsFromSubmitData(data: Record<string, unknown>): ExpressChargeRefs {
   const fromRedirect = parametersToRecord(
     data.redirect && typeof data.redirect === "object"
       ? (data.redirect as { parameters?: unknown }).parameters
@@ -145,9 +209,15 @@ function isPlacedOrder(value: unknown): value is PlacedOrder {
   );
 }
 
+/** A stash older than this belongs to a redirect that never happened and must not decorate a receipt. */
+const STASH_MAX_AGE_MS = 5 * 60 * 1000;
+
 export function stashExpressSuccess(stash: ExpressSuccessStash): void {
   try {
-    sessionStorage.setItem(EXPRESS_SUCCESS_STASH_KEY, JSON.stringify(stash));
+    sessionStorage.setItem(
+      EXPRESS_SUCCESS_STASH_KEY,
+      JSON.stringify({ ...stash, savedAt: Date.now() }),
+    );
   } catch {
     // Quota / private mode — soft-nav still has in-memory state; real redirect falls back to URL refs.
   }
@@ -160,10 +230,12 @@ export function takeExpressSuccessStash(): ExpressSuccessStash | null {
     sessionStorage.removeItem(EXPRESS_SUCCESS_STASH_KEY);
     const parsed: unknown = JSON.parse(raw);
     if (!parsed || typeof parsed !== "object") return null;
-    const { order, chargeRefs } = parsed as {
+    const { order, chargeRefs, savedAt } = parsed as {
       order?: unknown;
       chargeRefs?: unknown;
+      savedAt?: unknown;
     };
+    if (typeof savedAt !== "number" || Date.now() - savedAt > STASH_MAX_AGE_MS) return null;
     if (!isPlacedOrder(order)) return null;
     const refs =
       chargeRefs && typeof chargeRefs === "object"
@@ -189,4 +261,10 @@ export const CHARGE_REF_DISPLAY: ReadonlyArray<{ key: ChargeRefKey; label: strin
   { key: "resultCode", label: "Result code" },
   { key: "interactionCode", label: "Interaction" },
   { key: "interactionReason", label: "Reason" },
+  { key: "operationType", label: "Operation" },
+  { key: "presetId", label: "Preset ID" },
 ];
+
+export function hasDisplayableChargeRefs(refs: ExpressChargeRefs): boolean {
+  return CHARGE_REF_DISPLAY.some(({ key }) => Boolean(refs[key]));
+}
