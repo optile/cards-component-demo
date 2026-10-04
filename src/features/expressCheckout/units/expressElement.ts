@@ -13,7 +13,6 @@ import {
   CURRENCY,
   countOf,
   subtotalOf,
-  useExpressCartStore,
   type CartItem,
 } from "@/features/expressCheckout/store/expressCartStore";
 import {
@@ -29,8 +28,9 @@ type ExpressShippingResolver = NonNullable<ExpressShippingConfig["onShippingAddr
 
 /**
  * Builds the OPT-IN dynamic `onShippingAddressChange` resolver for QA. Prices from BOTH the
- * buyer's COARSE address AND the LIVE cart (read at call time, not captured at mount) - the way a real
- * integration sizes a rate against its own order:
+ * buyer's COARSE address AND the LIVE items this element sells (`getItems`, read at call time, not captured
+ * at mount: the cart on checkout, the single book × qty on buy-now) - the way a real integration sizes a
+ * rate against its own order:
  *   • address (`country`/`state`) -> region base rate: a US buyer gets "regional"/"express" tiers, everyone
  *     else a flat international rate; a known-unserviceable region (US/AK) returns `{ unserviceable: true }`.
  *   • cart item COUNT -> a per-extra-item handling surcharge (books carry no weight, so count proxies weight).
@@ -41,7 +41,10 @@ type ExpressShippingResolver = NonNullable<ExpressShippingConfig["onShippingAddr
  * change (the base amount still updates in place via `express.update`). Not for production - a real
  * integration fetches rates from its own backend, keyed by its own order/session reference.
  */
-function buildDynamicRatesResolver(config: ExpressConfig): ExpressShippingResolver {
+function buildDynamicRatesResolver(
+  config: ExpressConfig,
+  getItems: () => CartItem[],
+): ExpressShippingResolver {
   const delayMs = Math.max(0, config.dynamicRatesDelayMs);
   // Resolve now, or after the artificial latency knob - shared by both the reject and the priced arm.
   const settle = (
@@ -63,7 +66,7 @@ function buildDynamicRatesResolver(config: ExpressConfig): ExpressShippingResolv
     // Price off the LIVE cart: item COUNT proxies weight (first book at base, each extra adds handling),
     // and SUBTOTAL proxies order value (a discount tier that grows with the order, floored at 0 so a big
     // order can ship free). Both feed every tier below, so the quote reacts to the cart AND the address.
-    const items = useExpressCartStore.getState().items;
+    const items = getItems();
     const handling = Math.max(0, countOf(items) - 1) * 1.5;
     const subtotal = subtotalOf(items);
     let valueDiscount = 0;
@@ -157,6 +160,7 @@ export function buildExpressBeforeSubmit(): OnBeforeSubmitHandler {
  */
 function buildExpressShipping(
   config: ExpressConfig,
+  getItems: () => CartItem[],
 ): ExpressDropInProps["shipping"] | undefined {
   if (!config.shippingAddressRequired) {
     return undefined;
@@ -171,7 +175,7 @@ function buildExpressShipping(
     // The static preset stays the guaranteed fallback UNLESS dynamic-only omits it.
     ...(dynamicOnly ? {} : { rates: config.shippingRates }),
     ...(allowedCountries.length > 0 ? { allowedCountries } : {}),
-    ...(config.dynamicRates ? { onShippingAddressChange: buildDynamicRatesResolver(config) } : {}),
+    ...(config.dynamicRates ? { onShippingAddressChange: buildDynamicRatesResolver(config, getItems) } : {}),
   };
 }
 
@@ -243,6 +247,9 @@ export interface MountExpressOptions {
   config: ExpressConfig;
   // Current cart items, used only to derive the optional charge-body `products[]` (summing to `amount`).
   items: CartItem[];
+  // Live items this element sells (they change in place via express.update, without a remount); the
+  // dynamic shipping resolver prices against them on each address change.
+  getItems: () => CartItem[];
   node: HTMLElement;
   onStatus: (status: ExpressStatus, error?: string) => void;
   // Live express:order snapshot (provisional while the sheet is open, final after charge). Display-only:
@@ -272,7 +279,7 @@ export interface MountedExpress {
  */
 export function mountExpressElement(
   instance: CheckoutInstance,
-  { amount, config, items, node, onStatus, onOrder }: MountExpressOptions,
+  { amount, config, items, getItems, node, onStatus, onOrder }: MountExpressOptions,
 ): MountedExpress {
   const handleState = (data: unknown) => {
     if (!isExpressState(data)) return;
@@ -288,7 +295,7 @@ export function mountExpressElement(
     : undefined;
   if (handleOrder) instance.on("express:order", handleOrder);
 
-  const shipping = buildExpressShipping(config);
+  const shipping = buildExpressShipping(config, getItems);
   const products = buildExpressProducts(config, items, amount);
   const express = instance.dropIn(EXPRESS_COMPONENT, {
     // Express identity (clientId / country) is declared once at init (see initCheckout), not here.

@@ -325,6 +325,7 @@ export function useCheckoutSession(
           amount,
           config,
           items,
+          getItems: () => itemsRef.current,
           node: expressNode,
           onStatus: (status, error) => {
             if (cancelled) return;
