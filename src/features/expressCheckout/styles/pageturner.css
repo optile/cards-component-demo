@@ -1084,6 +1084,11 @@
     flex-direction: column;
     gap: 8px;
   }
+  & .receipt-charge-refs:first-child {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+  }
   & .receipt-charge-refs-title {
     font-size: 11px;
     letter-spacing: 0.12em;

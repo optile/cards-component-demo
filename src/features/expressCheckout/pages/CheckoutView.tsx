@@ -14,8 +14,8 @@ import { useExpressCheckoutStore } from "@/features/expressCheckout/store/expres
 import { useExpressConfigStore } from "@/features/expressCheckout/store/expressConfigStore";
 import { toExpressOrderOverrides } from "@/features/expressCheckout/utils/toExpressOrderOverrides";
 import {
+  chargeRefsForOutcome,
   hasFollowableRedirect,
-  parseChargeRefsFromSubmitPayload,
   stashExpressSuccess,
 } from "@/features/expressCheckout/utils/chargeRefs";
 
@@ -87,7 +87,10 @@ export default function CheckoutView({ active }: Readonly<{ active: boolean }>) 
         const order = placeOrder(eo ? toExpressOrderOverrides(eo) : undefined);
         const chargeRefs =
           useExpressCheckoutStore.getState().lastChargeRefs ??
-          parseChargeRefsFromSubmitPayload(outcome.data);
+          chargeRefsForOutcome(
+            outcome.data,
+            useExpressCheckoutStore.getState().hostChargeIds,
+          );
         // Bridge the receipt across the hard returnUrl reload; only stash when the SDK will navigate,
         // or the unclaimed stash would decorate a later receipt.
         if (useExpressConfigStore.getState().allowRealRedirect && hasFollowableRedirect(outcome.data)) {
@@ -222,7 +225,13 @@ export default function CheckoutView({ active }: Readonly<{ active: boolean }>) 
               Demo: complete purchase
             </button>
             {" · "}
-            <button type="button" onClick={() => navigate("/express/failure")}>
+            <button
+              type="button"
+              onClick={() => {
+                useExpressCheckoutStore.getState().setChargeRefs(null);
+                navigate("/express/failure");
+              }}
+            >
               simulate a declined payment
             </button>
           </div>

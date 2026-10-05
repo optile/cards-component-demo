@@ -7,7 +7,7 @@ import {
   type CheckoutSessionResult,
 } from "@/features/expressCheckout/hooks/useCheckoutSession";
 import { isExpressOrderDetails } from "@/features/expressCheckout/types/express";
-import { parseChargeRefsFromSubmitPayload } from "@/features/expressCheckout/utils/chargeRefs";
+import { chargeRefsForOutcome } from "@/features/expressCheckout/utils/chargeRefs";
 
 export type CheckoutSlots = CheckoutSessionResult;
 
@@ -35,13 +35,17 @@ export function useCheckout(
       const eo = payload?.expressOrder;
       setFinalExpressOrder(isExpressOrderDetails(eo) ? eo : null);
       // Soft-nav Success reads these; real redirect reloads and falls back to returnUrl query params.
-      setChargeRefs(parseChargeRefsFromSubmitPayload(data));
+      setChargeRefs(
+        chargeRefsForOutcome(data, useExpressCheckoutStore.getState().hostChargeIds),
+      );
       setOutcome({ kind: "success", data });
       if (import.meta.env.DEV) console.log("[checkout] submit success (payload redacted)");
       return allowRealRedirect;
     },
     onSubmitError: (data) => {
-      setChargeRefs(null);
+      setChargeRefs(
+        chargeRefsForOutcome(data, useExpressCheckoutStore.getState().hostChargeIds),
+      );
       setOutcome({ kind: "declined", data });
       if (import.meta.env.DEV) console.log("[checkout] submit error/decline (payload redacted)");
       return false;

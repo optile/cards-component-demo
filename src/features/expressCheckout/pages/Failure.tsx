@@ -1,14 +1,39 @@
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import ShopChrome from "@/features/expressCheckout/components/ShopChrome";
+import ChargeRefsBlock from "@/features/expressCheckout/components/ChargeRefsBlock";
 import { useExpressCartStore } from "@/features/expressCheckout/store/expressCartStore";
+import { useExpressCheckoutStore } from "@/features/expressCheckout/store/expressCheckoutStore";
+import {
+  hasDisplayableChargeRefs,
+  mergeChargeRefs,
+  parseChargeRefsFromSearch,
+  type ExpressChargeRefs,
+} from "@/features/expressCheckout/utils/chargeRefs";
 
 export default function Failure() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const items = useExpressCartStore((s) => s.items);
+  const setChargeRefs = useExpressCheckoutStore((s) => s.setChargeRefs);
+  // Snapshot at mount: the unmount cleanup below clears the store copy, and StrictMode runs that
+  // cleanup once on mount, which would otherwise drop the refs in dev.
+  const [memoryChargeRefs] = useState(() => useExpressCheckoutStore.getState().lastChargeRefs);
+
+  const urlChargeRefs = useMemo(
+    () => parseChargeRefsFromSearch(searchParams),
+    [searchParams],
+  );
+  const chargeRefs: ExpressChargeRefs = mergeChargeRefs(urlChargeRefs, memoryChargeRefs);
+  const showChargeRefs = hasDisplayableChargeRefs(chargeRefs);
+
+  useEffect(() => {
+    return () => setChargeRefs(null);
+  }, [setChargeRefs]);
 
   const retry = () => {
-    if (items.length === 0) navigate("/express");
-    else navigate("/express/checkout");
+    if (items.length === 0) void navigate("/express");
+    else void navigate("/express/checkout");
   };
 
   return (
@@ -27,6 +52,11 @@ export default function Failure() {
           Your payment couldn't be completed and you haven't been charged. Your cart is still saved,
           so give it another try or use a different method.
         </p>
+        {showChargeRefs && (
+          <div className="receipt">
+            <ChargeRefsBlock refs={chargeRefs} />
+          </div>
+        )}
         <div className="result-actions">
           <button type="button" className="btn btn-primary" onClick={retry}>
             Try again
@@ -34,7 +64,7 @@ export default function Failure() {
           <button
             type="button"
             className="btn btn-outline"
-            onClick={() => navigate("/express/cart")}
+            onClick={() => void navigate("/express/cart")}
           >
             Back to cart
           </button>
