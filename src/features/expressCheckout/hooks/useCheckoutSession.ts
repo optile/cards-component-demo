@@ -28,6 +28,7 @@ import type {
   OnSubmitError,
 } from "@/features/expressCheckout/types/express";
 import { useExpressCheckoutStore } from "@/features/expressCheckout/store/expressCheckoutStore";
+import { hostChargeIdsFromExpress } from "@/features/expressCheckout/utils/chargeRefs";
 
 // Stripe card networks are grouped under this component name by the SDK.
 const CARD_COMPONENT = "cards";
@@ -159,6 +160,7 @@ export function useCheckoutSession(
   const config = useExpressConfigStore();
   const setLiveExpressOrder = useExpressCheckoutStore((s) => s.setLiveExpressOrder);
   const setFinalExpressOrder = useExpressCheckoutStore((s) => s.setFinalExpressOrder);
+  const setHostChargeIds = useExpressCheckoutStore((s) => s.setHostChargeIds);
   // Express base amount = goods SUBTOTAL when ECE shipping rates are enabled — the buyer-selected rate
   // is then the ONLY shipping, added on top by the SDK. Otherwise use the cart total (subtotal + the
   // cart's flat/free shipping). This prevents charging shipping twice (the flat cart fee AND a selected
@@ -338,6 +340,7 @@ export function useCheckoutSession(
           },
         });
         cleanupExpress = mounted.cleanup;
+        setHostChargeIds(hostChargeIdsFromExpress(mounted.express));
 
         // Keep the handle so an express-only surface can push post-mount amount changes in place.
         // (Card surfaces rebuild on a cart edit, so no handle is retained there.)
@@ -373,6 +376,7 @@ export function useCheckoutSession(
       expressHandleRef.current = null;
       setLiveExpressOrder(null);
       setFinalExpressOrder(null);
+      setHostChargeIds(null);
       cleanupExpress?.();
       instance?.remove(CARD_COMPONENT);
       instance?.destroy();

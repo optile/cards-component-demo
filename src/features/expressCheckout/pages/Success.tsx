@@ -8,8 +8,8 @@ import {
   type PlacedOrder,
 } from "@/features/expressCheckout/store/expressCartStore";
 import { useExpressCheckoutStore } from "@/features/expressCheckout/store/expressCheckoutStore";
+import ChargeRefsBlock from "@/features/expressCheckout/components/ChargeRefsBlock";
 import {
-  CHARGE_REF_DISPLAY,
   hasChargeRefs,
   hasDisplayableChargeRefs,
   mergeChargeRefs,
@@ -79,24 +79,6 @@ function redirectAmount(refs: ExpressChargeRefs): number | undefined {
   if (!refs.amount) return undefined;
   const n = Number(refs.amount);
   return Number.isNaN(n) ? undefined : n;
-}
-
-function ChargeRefsBlock({ refs }: Readonly<{ refs: ExpressChargeRefs }>) {
-  return (
-    <div className="receipt-charge-refs" data-testid="charge-refs">
-      <div className="receipt-charge-refs-title">Payment details</div>
-      {CHARGE_REF_DISPLAY.map(({ key, label }) => {
-        const value = refs[key];
-        if (!value) return null;
-        return (
-          <div key={key} className="receipt-charge-ref">
-            <span>{label}</span>
-            <code data-charge-ref={key}>{value}</code>
-          </div>
-        );
-      })}
-    </div>
-  );
 }
 
 function OrderReceipt({

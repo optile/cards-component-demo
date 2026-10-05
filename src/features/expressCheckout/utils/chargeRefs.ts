@@ -1,10 +1,11 @@
 import type { PlacedOrder } from "@/features/expressCheckout/store/expressCartStore";
 
 /**
- * Charge or preset identifiers surfaced on the express Success page for QA / e2e follow-up.
- * Sourced from the BE returnUrl query string (real redirect) or from onSubmitSuccess
- * `data.redirect.parameters` / identification fields / `data.links.self` (soft-nav). `operationType`
- * and `presetId` only come from the payload: a returnUrl must not be able to relabel a receipt.
+ * Charge or preset identifiers surfaced on the express Success and Failure pages for QA / e2e
+ * follow-up. Sourced from the BE returnUrl query string (real redirect) or from onSubmitSuccess /
+ * onSubmitError `data.redirect.parameters` / identification fields / `data.links.self` (soft-nav).
+ * `operationType` and `presetId` only come from the payload: a returnUrl must not be able to
+ * relabel a receipt.
  */
 export interface ExpressChargeRefs {
   longId?: string;
@@ -162,27 +163,58 @@ export function parseChargeRefsFromSubmitPayload(payload: unknown): ExpressCharg
   };
 }
 
-function parseChargeRefsFromSubmitData(data: Record<string, unknown>): ExpressChargeRefs {
-  const fromRedirect = parametersToRecord(
-    data.redirect && typeof data.redirect === "object"
-      ? (data.redirect as { parameters?: unknown }).parameters
-      : undefined,
-  );
-  if (fromRedirect) {
-    const refs = fromRecord(fromRedirect);
-    if (hasChargeRefs(refs)) return refs;
-  }
+/** Ids the host stamped on `dropIn('express')`, readable from the returned handle. */
+export function hostChargeIdsFromExpress(express: {
+  transactionId?: string;
+  paymentReference?: string;
+} | null | undefined): ExpressChargeRefs {
+  const transactionId = pickTrimmed(express?.transactionId);
+  const reference = pickTrimmed(express?.paymentReference);
+  return {
+    ...(transactionId ? { transactionId } : {}),
+    ...(reference ? { reference } : {}),
+  };
+}
 
+/**
+ * Payload refs first; fill gaps from the host-stamped charge ids (needed on decline, where OPG
+ * often omits `identification.transactionId` even though it was on the CHARGE request).
+ */
+export function chargeRefsForOutcome(
+  payload: unknown,
+  hostIds?: ExpressChargeRefs | null,
+): ExpressChargeRefs {
+  return mergeChargeRefs(parseChargeRefsFromSubmitPayload(payload), hostIds);
+}
+
+function flattenInteraction(data: Record<string, unknown>): Record<string, unknown> {
+  const interaction =
+    data.interaction && typeof data.interaction === "object"
+      ? (data.interaction as Record<string, unknown>)
+      : null;
+  const code = pickTrimmed(interaction?.code);
+  const reason = pickTrimmed(interaction?.reason);
+  return {
+    ...data,
+    ...(code ? { interactionCode: code } : {}),
+    ...(reason ? { interactionReason: reason } : {}),
+  };
+}
+
+function parseChargeRefsFromSubmitData(data: Record<string, unknown>): ExpressChargeRefs {
+  const fromRedirect =
+    parametersToRecord(
+      data.redirect && typeof data.redirect === "object"
+        ? (data.redirect as { parameters?: unknown }).parameters
+        : undefined,
+    ) ?? {};
   const identification =
     data.identification && typeof data.identification === "object"
       ? (data.identification as Record<string, unknown>)
-      : null;
-  if (identification) {
-    const refs = fromRecord(identification);
-    if (hasChargeRefs(refs)) return refs;
-  }
-
-  return fromRecord(data);
+      : {};
+  // Redirect params overlay identification (same pairs as the returnUrl). Interaction is nested
+  // on decline/error payloads, so flatten it after the merge.
+  return fromRecord(flattenInteraction({ ...data, ...identification, ...fromRedirect }));
 }
 
 /** Prefer non-empty fields from `primary`, fill gaps from `fallback`. */

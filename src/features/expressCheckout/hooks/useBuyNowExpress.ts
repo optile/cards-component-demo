@@ -12,8 +12,8 @@ import { useDebouncedValue } from "@/features/expressCheckout/hooks/useDebounced
 import { isExpressOrderDetails, type Book } from "@/features/expressCheckout/types/express";
 import { toExpressOrderOverrides } from "@/features/expressCheckout/utils/toExpressOrderOverrides";
 import {
+  chargeRefsForOutcome,
   hasFollowableRedirect,
-  parseChargeRefsFromSubmitPayload,
   stashExpressSuccess,
 } from "@/features/expressCheckout/utils/chargeRefs";
 
@@ -62,7 +62,10 @@ export function useBuyNowExpress(
       // shared `finalExpressOrder` store (only the checkout-page CheckoutView subscriber reads that),
       // so we intentionally do not write `finalExpressOrder` here.
       const overrides = isExpressOrderDetails(eo) ? toExpressOrderOverrides(eo) : undefined;
-      const chargeRefs = parseChargeRefsFromSubmitPayload(data);
+      const chargeRefs = chargeRefsForOutcome(
+        data,
+        useExpressCheckoutStore.getState().hostChargeIds,
+      );
       setChargeRefs(chargeRefs);
       const order = placeOrderFor(items, overrides);
       // Bridge the receipt across the hard returnUrl reload; only stash when the SDK will navigate,
@@ -71,8 +74,10 @@ export function useBuyNowExpress(
       navigate("/express/success");
       return allowRealRedirect;
     },
-    onSubmitError: () => {
-      setChargeRefs(null);
+    onSubmitError: (data) => {
+      setChargeRefs(
+        chargeRefsForOutcome(data, useExpressCheckoutStore.getState().hostChargeIds),
+      );
       navigate("/express/failure");
       return false;
     },
