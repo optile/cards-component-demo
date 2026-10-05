@@ -14,6 +14,7 @@ import { useExpressCheckoutStore } from "@/features/expressCheckout/store/expres
 import { useExpressConfigStore } from "@/features/expressCheckout/store/expressConfigStore";
 import { toExpressOrderOverrides } from "@/features/expressCheckout/utils/toExpressOrderOverrides";
 import {
+  hasFollowableRedirect,
   parseChargeRefsFromSubmitPayload,
   stashExpressSuccess,
 } from "@/features/expressCheckout/utils/chargeRefs";
@@ -87,8 +88,11 @@ export default function CheckoutView({ active }: Readonly<{ active: boolean }>) 
         const chargeRefs =
           useExpressCheckoutStore.getState().lastChargeRefs ??
           parseChargeRefsFromSubmitPayload(outcome.data);
-        // Bridge the receipt across a hard returnUrl reload when "Allow real redirect" is on.
-        stashExpressSuccess({ order, chargeRefs });
+        // Bridge the receipt across the hard returnUrl reload; only stash when the SDK will navigate,
+        // or the unclaimed stash would decorate a later receipt.
+        if (useExpressConfigStore.getState().allowRealRedirect && hasFollowableRedirect(outcome.data)) {
+          stashExpressSuccess({ order, chargeRefs });
+        }
         navigate("/express/success");
       } else {
         navigate("/express/failure");
