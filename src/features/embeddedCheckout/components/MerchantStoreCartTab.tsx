@@ -3,6 +3,7 @@ import { useConfigurationStore } from "@/features/embeddedCheckout/store/configu
 import { useCheckoutStore } from "@/features/embeddedCheckout/store/checkoutStore";
 import { buildListSessionUpdates } from "@/features/embeddedCheckout/utils/checkoutUtils";
 import { CURRENCY_OPTIONS } from "@/constants";
+import { getCartTotal, getLineTotal } from "@/utils/cartUtils";
 import type { CartProduct } from "@/types/merchant";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
@@ -85,10 +86,7 @@ const MerchantStoreCartTab: React.FC = () => {
   };
 
   const calculateTotal = () => {
-    return localProducts.reduce(
-      (total, product) => total + product.price * product.quantity,
-      0
-    );
+    return getCartTotal(localProducts);
   };
 
   const currencies = CURRENCY_OPTIONS;
@@ -144,7 +142,7 @@ const MerchantStoreCartTab: React.FC = () => {
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">
-                Line Total: {localCurrency} {(product.price * product.quantity).toFixed(2)}
+                Line Total: {localCurrency} {getLineTotal(product).toFixed(2)}
               </span>
               {localProducts.length > 1 && (
                 <Button

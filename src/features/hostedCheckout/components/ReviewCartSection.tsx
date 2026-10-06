@@ -1,6 +1,7 @@
 import React from "react";
 import { formatCurrency } from "@/features/hostedCheckout/utils/reviewUtils";
 import type { MerchantCart } from "@/types/merchant";
+import { getCartTotal, getLineTotal } from "@/utils/cartUtils";
 import type { ReviewSectionProps } from "@/features/hostedCheckout/types/hostedPayment";
 
 interface ReviewCartSectionProps extends ReviewSectionProps {
@@ -12,10 +13,7 @@ const ReviewCartSection: React.FC<ReviewCartSectionProps> = ({
   className = "",
 }) => {
   const calculateTotal = () => {
-    return merchantCart.products.reduce(
-      (total, product) => total + product.price * product.quantity,
-      0
-    );
+    return getCartTotal(merchantCart.products);
   };
 
   return (
@@ -38,13 +36,32 @@ const ReviewCartSection: React.FC<ReviewCartSectionProps> = ({
               <span className="text-gray-600">Quantity:</span>
               <span className="font-medium">{product.quantity}</span>
             </div>
+            {!!product.taxAmount && (
+              <div className="flex justify-between mb-1">
+                <span className="text-gray-600">Tax:</span>
+                <span className="font-medium">
+                  {formatCurrency(product.taxAmount, merchantCart.currency)}
+                </span>
+              </div>
+            )}
+            {!!product.discountAmount && (
+              <div className="flex justify-between mb-1">
+                <span className="text-gray-600">Discount:</span>
+                <span className="font-medium">
+                  {formatCurrency(product.discountAmount, merchantCart.currency)}
+                </span>
+              </div>
+            )}
+            {product.type === "SHIPPING" && (
+              <div className="flex justify-between mb-1">
+                <span className="text-gray-600">Type:</span>
+                <span className="font-medium">Shipping</span>
+              </div>
+            )}
             <div className="flex justify-between">
               <span className="text-gray-600">Line Total:</span>
               <span className="font-medium">
-                {formatCurrency(
-                  product.price * product.quantity,
-                  merchantCart.currency
-                )}
+                {formatCurrency(getLineTotal(product), merchantCart.currency)}
               </span>
             </div>
           </div>

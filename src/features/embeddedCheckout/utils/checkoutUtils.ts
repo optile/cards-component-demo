@@ -1,4 +1,5 @@
 import { Divisions } from "@/features/embeddedCheckout/constants/checkout";
+import { getCartTotal, getLineTotal } from "@/utils/cartUtils";
 import { getCallbackUrls } from "@/features/hostedCheckout/constants/hostedPaymentConfig";
 import type {
   BillingAddress,
@@ -22,16 +23,18 @@ export const buildListSessionUpdates = (
   const isHosted = integrationType === INTEGRATION_TYPE.HOSTED;
   const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
 
-  // Calculate total amount from products
-  const totalAmount = merchantCart.products.reduce(
-    (total, product) => total + product.price * product.quantity,
-    0
-  );
+  const totalAmount = getCartTotal(merchantCart.products);
 
-  // Map products to API format (name and amount where amount is the line total)
-  const products = merchantCart.products.map((product) => ({
+  // The demo backend reads `orderLines` and maps them to LIST `products`. `amount` is the line total
+  // (all units, incl. tax and discount) so the lines add up to payment.amount and the HPP shows the cart.
+  const orderLines = merchantCart.products.map((product, index) => ({
+    id: String(index + 1),
     name: product.name,
-    amount: product.price * product.quantity,
+    amount: getLineTotal(product),
+    quantity: product.quantity,
+    ...(product.taxAmount && { taxAmount: product.taxAmount }),
+    ...(product.discountAmount && { discountAmount: product.discountAmount }),
+    ...(product.type && { type: product.type }),
   }));
 
   const checkoutRegistrationConfiguration = registrationType !== 'GUEST'
@@ -95,7 +98,7 @@ export const buildListSessionUpdates = (
       currency: merchantCart.currency,
       reference: `ref-${Date.now()}`,
     },
-    products,
+    orderLines,
     ...(isHosted && {
       callback: getCallbackUrls(baseUrl),
       style: {

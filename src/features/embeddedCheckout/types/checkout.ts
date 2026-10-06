@@ -93,9 +93,14 @@ export interface ListSessionRequest {
     birthday: string;
     email: string;
   };
-  products: Array<{
+  orderLines: Array<{
+    id: string;
     name: string;
     amount: number;
+    quantity: number;
+    taxAmount?: number;
+    discountAmount?: number;
+    type?: "SHIPPING";
   }>;
 }
 
