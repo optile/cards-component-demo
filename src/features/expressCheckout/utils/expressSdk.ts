@@ -9,7 +9,7 @@ import type {
   ComponentListDiff,
   OnReadyHandler,
 } from "@/features/embeddedCheckout/types/checkout";
-import type { MerchantCart } from "@/types/merchant";
+import type { CartProduct, MerchantCart } from "@/types/merchant";
 import type { ExpressConfig } from "@/features/expressCheckout/constants/express";
 import { DEMO_BILLING, DEMO_SHIPPING } from "@/features/expressCheckout/constants/express";
 import type { CartItem } from "@/features/expressCheckout/store/expressCartStore";
@@ -59,13 +59,13 @@ export async function createExpressSession(
   items: CartItem[],
   currency: string
 ): Promise<{ longId: string }> {
-  const products = items.map((i) => ({ name: i.title, price: i.price, quantity: i.quantity }));
+  const products: CartProduct[] = items.map((i) => ({ name: i.title, price: i.price, quantity: i.quantity }));
   // Add shipping as a line item so the LIST session total matches the displayed order total. This LIST
   // total backs the CARD drop-in on this surface; the express double-shipping fix lives entirely in the
   // express charge amount (`useCheckoutSession` uses the goods subtotal when ECE rates are on) and never
   // reads this LIST total, so the flat fee stays here unconditionally for card/LIST parity.
   const shippingFee = shippingOf(items);
-  if (shippingFee > 0) products.push({ name: "Shipping", price: shippingFee, quantity: 1 });
+  if (shippingFee > 0) products.push({ name: "Shipping", price: shippingFee, quantity: 1, type: "SHIPPING" });
   const cart: MerchantCart = { products, currency };
   const billing = { ...DEMO_BILLING, country: config.country };
   const shipping = { ...DEMO_SHIPPING, country: config.country };

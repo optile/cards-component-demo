@@ -6,6 +6,7 @@ import type {
   CartProduct,
 } from "../../../types/merchant";
 import type { RegistrationType } from "@/constants/registrations";
+import { getCartTotal } from "@/utils/cartUtils";
 
 export enum CurrentStep {
   CHOOSE_ENV = "choose-env",
@@ -42,12 +43,12 @@ export const useHostedConfigurationStore = create<HostedConfigurationStore>()(
     registrationType: 'GUEST',
     env: "sandbox",
     merchantCart: {
+      // Covers every cart summary case on the HPP: quantity > 1, tax, discount and a shipping line
       products: [
-        {
-          name: "Sample Item",
-          price: 15,
-          quantity: 1,
-        },
+        { name: "Silk pillowcase", price: 50, quantity: 2, taxAmount: 19, discountAmount: -10 },
+        { name: "Silk eye mask", price: 25, quantity: 3, taxAmount: 14.25 },
+        { name: "Gift wrapping", price: 5, quantity: 1 },
+        { name: "Express shipping", price: 7.95, quantity: 1, type: "SHIPPING" },
       ],
       currency: "USD",
     },
@@ -119,10 +120,7 @@ export const useHostedConfigurationStore = create<HostedConfigurationStore>()(
     setSameAddress: (value: boolean) => set({ sameAddress: value }),
     getTotalAmount: () => {
       const state = get();
-      return state.merchantCart.products.reduce(
-        (total, product) => total + product.price * product.quantity,
-        0
-      );
+      return getCartTotal(state.merchantCart.products);
     },
   })
 );

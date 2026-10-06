@@ -11,3 +11,6 @@ export { getCurrencySymbol, formatCurrency } from "./currencyUtils";
 
 // URL hash storage utilities
 export * from "./urlHashStorage";
+
+// Cart utilities
+export { getLineTotal, getCartTotal } from "./cartUtils";

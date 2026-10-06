@@ -1,5 +1,6 @@
 import { getCurrencySymbol } from "@/features/embeddedCheckout/utils/checkoutUtils";
 import type { CartProduct } from "@/types/merchant";
+import { getCartTotal, getLineTotal } from "@/utils/cartUtils";
 
 interface ShoppingCartSectionProps {
   products: CartProduct[];
@@ -11,10 +12,7 @@ const ShoppingCartSection = ({
   currency,
 }: ShoppingCartSectionProps) => {
   const calculateTotal = () => {
-    return products.reduce(
-      (total, product) => total + product.price * product.quantity,
-      0
-    );
+    return getCartTotal(products);
   };
 
   return (
@@ -31,7 +29,7 @@ const ShoppingCartSection = ({
               </span>
               <span>
                 {getCurrencySymbol(currency)}
-                {(product.price * product.quantity).toFixed(2)}
+                {getLineTotal(product).toFixed(2)}
               </span>
             </div>
           ))}

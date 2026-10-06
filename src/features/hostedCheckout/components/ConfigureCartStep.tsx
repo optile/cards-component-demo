@@ -6,6 +6,7 @@ import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 import { useHostedConfigurationStore } from "@/features/hostedCheckout/store/hostedConfigurationStore";
 import { CURRENCY_OPTIONS } from "@/constants";
+import { getCartTotal, getLineTotal } from "@/utils/cartUtils";
 
 const ConfigureCartStep: React.FC<StepComponentProps> = ({
   goToNext,
@@ -27,7 +28,7 @@ const ConfigureCartStep: React.FC<StepComponentProps> = ({
   const handleProductChange = (
     index: number,
     field: keyof CartProduct,
-    value: string | number
+    value: CartProduct[keyof CartProduct]
   ) => {
     const updatedProducts = localProducts.map((product, i) =>
       i === index ? { ...product, [field]: value } : product
@@ -58,10 +59,7 @@ const ConfigureCartStep: React.FC<StepComponentProps> = ({
   };
 
   const calculateTotal = () => {
-    return localProducts.reduce(
-      (total, product) => total + product.price * product.quantity,
-      0
-    );
+    return getCartTotal(localProducts);
   };
 
   const currencyOptions = CURRENCY_OPTIONS;
@@ -120,11 +118,40 @@ const ConfigureCartStep: React.FC<StepComponentProps> = ({
                 label="Quantity"
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
+              <Input
+                type="number"
+                value={product.taxAmount ?? 0}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  handleProductChange(index, "taxAmount", Number(e.target.value))
+                }
+                label="Tax (line total)"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <Input
+                type="number"
+                value={product.discountAmount ?? 0}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  // discounts must be zero or negative for the HPP cart summary
+                  handleProductChange(index, "discountAmount", -Math.abs(Number(e.target.value)))
+                }
+                label="Discount (line total, negative)"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
             </div>
+            <label className="flex items-center gap-2 mb-3 text-sm text-gray-700">
+              <input
+                type="checkbox"
+                checked={product.type === "SHIPPING"}
+                onChange={(e) =>
+                  handleProductChange(index, "type", e.target.checked ? "SHIPPING" : undefined)
+                }
+              />
+              Shipping line (shown as the Shipping row on the hosted page)
+            </label>
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">
                 Line Total: {merchantCart.currency}{" "}
-                {(product.price * product.quantity).toFixed(2)}
+                {getLineTotal(product).toFixed(2)}
               </span>
               {localProducts.length > 1 && (
                 <Button

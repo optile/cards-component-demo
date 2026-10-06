@@ -8,6 +8,7 @@ import type {
   CartProduct,
 } from "../../../types/merchant";
 import type { RegistrationType } from "@/constants/registrations";
+import { getCartTotal } from "@/utils/cartUtils";
 
 type PayButtonType = "default" | "custom";
 
@@ -118,10 +119,7 @@ export const useConfigurationStore = create<ConfigurationState>()(
       setSameAddress: (value) => set({ sameAddress: value }),
       getTotalAmount: () => {
         const state = get();
-        return state.merchantCart.products.reduce(
-          (total, product) => total + product.price * product.quantity,
-          0
-        );
+        return getCartTotal(state.merchantCart.products);
       },
     }),
     {
