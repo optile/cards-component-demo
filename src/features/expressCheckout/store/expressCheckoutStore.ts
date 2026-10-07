@@ -21,10 +21,6 @@ interface ExpressCheckoutState {
   // reloads wipe this; Success then reads returnUrl query params instead. Cleared on result-page unmount.
   lastChargeRefs: ExpressChargeRefs | null;
   setChargeRefs: (refs: ExpressChargeRefs | null) => void;
-  // Merchant ids stamped on dropIn('express') (transactionId / paymentReference). Decline responses
-  // often omit them even though they went out on the CHARGE request; result pages fall back to these.
-  hostChargeIds: ExpressChargeRefs | null;
-  setHostChargeIds: (refs: ExpressChargeRefs | null) => void;
 }
 
 export const useExpressCheckoutStore = create<ExpressCheckoutState>((set) => ({
@@ -36,6 +32,4 @@ export const useExpressCheckoutStore = create<ExpressCheckoutState>((set) => ({
   setFinalExpressOrder: (finalExpressOrder) => set({ finalExpressOrder }),
   lastChargeRefs: null,
   setChargeRefs: (lastChargeRefs) => set({ lastChargeRefs }),
-  hostChargeIds: null,
-  setHostChargeIds: (hostChargeIds) => set({ hostChargeIds }),
 }));
