@@ -28,24 +28,20 @@ export function useCheckout(
     active,
     expressSlotRef,
     cardSlotRef,
-    onSubmitSuccess: (data) => {
+    onSubmitSuccess: (data, hostIds) => {
       // Capture expressOrder BEFORE setOutcome so it's available when the subscriber navigates.
       // Always set (including null) so a card success after a prior express attempt cannot reuse wallet overrides.
       const payload = data as Record<string, unknown> | null;
       const eo = payload?.expressOrder;
       setFinalExpressOrder(isExpressOrderDetails(eo) ? eo : null);
       // Soft-nav Success reads these; real redirect reloads and falls back to returnUrl query params.
-      setChargeRefs(
-        chargeRefsForOutcome(data, useExpressCheckoutStore.getState().hostChargeIds),
-      );
+      setChargeRefs(chargeRefsForOutcome(data, hostIds));
       setOutcome({ kind: "success", data });
       if (import.meta.env.DEV) console.log("[checkout] submit success (payload redacted)");
       return allowRealRedirect;
     },
-    onSubmitError: (data) => {
-      setChargeRefs(
-        chargeRefsForOutcome(data, useExpressCheckoutStore.getState().hostChargeIds),
-      );
+    onSubmitError: (data, hostIds) => {
+      setChargeRefs(chargeRefsForOutcome(data, hostIds));
       setOutcome({ kind: "declined", data });
       if (import.meta.env.DEV) console.log("[checkout] submit error/decline (payload redacted)");
       return false;

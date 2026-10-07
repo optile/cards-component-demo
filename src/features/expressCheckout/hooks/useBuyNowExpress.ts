@@ -55,17 +55,14 @@ export function useBuyNowExpress(
     currency: CURRENCY,
     active: true,
     expressSlotRef: slotRef,
-    onSubmitSuccess: (data) => {
+    onSubmitSuccess: (data, hostIds) => {
       const payload = data as Record<string, unknown> | null;
       const eo = payload?.expressOrder;
       // Buy-now renders the receipt from the placed order's `expressOverrides` (below), not from the
       // shared `finalExpressOrder` store (only the checkout-page CheckoutView subscriber reads that),
       // so we intentionally do not write `finalExpressOrder` here.
       const overrides = isExpressOrderDetails(eo) ? toExpressOrderOverrides(eo) : undefined;
-      const chargeRefs = chargeRefsForOutcome(
-        data,
-        useExpressCheckoutStore.getState().hostChargeIds,
-      );
+      const chargeRefs = chargeRefsForOutcome(data, hostIds);
       setChargeRefs(chargeRefs);
       const order = placeOrderFor(items, overrides);
       // Bridge the receipt across the hard returnUrl reload; only stash when the SDK will navigate,
@@ -74,10 +71,8 @@ export function useBuyNowExpress(
       navigate("/express/success");
       return allowRealRedirect;
     },
-    onSubmitError: (data) => {
-      setChargeRefs(
-        chargeRefsForOutcome(data, useExpressCheckoutStore.getState().hostChargeIds),
-      );
+    onSubmitError: (data, hostIds) => {
+      setChargeRefs(chargeRefsForOutcome(data, hostIds));
       navigate("/express/failure");
       return false;
     },

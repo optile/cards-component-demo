@@ -28,7 +28,10 @@ import type {
   OnSubmitError,
 } from "@/features/expressCheckout/types/express";
 import { useExpressCheckoutStore } from "@/features/expressCheckout/store/expressCheckoutStore";
-import { hostChargeIdsFromExpress } from "@/features/expressCheckout/utils/chargeRefs";
+import {
+  hostChargeIdsFromExpress,
+  type ExpressChargeRefs,
+} from "@/features/expressCheckout/utils/chargeRefs";
 
 // Stripe card networks are grouped under this component name by the SDK.
 const CARD_COMPONENT = "cards";
@@ -39,6 +42,18 @@ const READY_FALLBACK_MS = 8000;
 
 type SlotStatus = "loading" | "ready" | "error";
 
+// `hostIds` are the ids stamped on the express handle of the session that took the payment. They are
+// passed in rather than read from a store because a payment sent before a teardown still settles
+// after it, when a newer session may have stamped its own.
+export type SessionSubmitSuccess = (
+  payload: Parameters<OnSubmitSuccess>[0],
+  hostIds: ExpressChargeRefs | null,
+) => ReturnType<OnSubmitSuccess>;
+export type SessionSubmitError = (
+  payload: Parameters<OnSubmitError>[0],
+  hostIds: ExpressChargeRefs | null,
+) => ReturnType<OnSubmitError>;
+
 export interface UseCheckoutSessionParams {
   items: CartItem[];
   currency: string;
@@ -48,8 +63,8 @@ export interface UseCheckoutSessionParams {
   // Provide to ALSO mount the classic card drop-in on the same instance (checkout page). Omit for
   // an express-only surface (book-detail buy-now).
   cardSlotRef?: RefObject<HTMLDivElement | null>;
-  onSubmitSuccess: OnSubmitSuccess;
-  onSubmitError: OnSubmitError;
+  onSubmitSuccess: SessionSubmitSuccess;
+  onSubmitError: SessionSubmitError;
 }
 
 export interface CheckoutSessionResult {
@@ -160,7 +175,6 @@ export function useCheckoutSession(
   const config = useExpressConfigStore();
   const setLiveExpressOrder = useExpressCheckoutStore((s) => s.setLiveExpressOrder);
   const setFinalExpressOrder = useExpressCheckoutStore((s) => s.setFinalExpressOrder);
-  const setHostChargeIds = useExpressCheckoutStore((s) => s.setHostChargeIds);
   // Express base amount = goods SUBTOTAL when ECE shipping rates are enabled — the buyer-selected rate
   // is then the ONLY shipping, added on top by the SDK. Otherwise use the cart total (subtotal + the
   // cart's flat/free shipping). This prevents charging shipping twice (the flat cart fee AND a selected
@@ -199,8 +213,8 @@ export function useCheckoutSession(
   // Outcome callbacks are read through a ref so the SDK callbacks (captured once at build time) use
   // the LATEST handlers without forcing a session rebuild when the caller re-renders.
   const callbacksRef = useRef<{
-    onSubmitSuccess: OnSubmitSuccess;
-    onSubmitError: OnSubmitError;
+    onSubmitSuccess: SessionSubmitSuccess;
+    onSubmitError: SessionSubmitError;
   }>({ onSubmitSuccess: params.onSubmitSuccess, onSubmitError: params.onSubmitError });
   callbacksRef.current = {
     onSubmitSuccess: params.onSubmitSuccess,
@@ -255,7 +269,7 @@ export function useCheckoutSession(
 
     let cancelled = false;
     let instance: CheckoutInstance | null = null;
-    let cleanupExpress: (() => void) | null = null;
+    let hostIds: ExpressChargeRefs | null = null;
     let cardMounted = false;
 
     const revealCard = () => {
@@ -298,8 +312,8 @@ export function useCheckoutSession(
             builtAtRef.current = at;
           },
           submitHandlers: () => ({
-            onSubmitSuccess: (data) => callbacksRef.current.onSubmitSuccess(data),
-            onSubmitError: (data) => callbacksRef.current.onSubmitError(data),
+            onSubmitSuccess: (data) => callbacksRef.current.onSubmitSuccess(data, hostIds),
+            onSubmitError: (data) => callbacksRef.current.onSubmitError(data, hostIds),
           }),
           // Card-only signals: fires as list data resolves; mount the card form the moment it's
           // available and reveal it when the Stripe PaymentElement reports `ready`.
@@ -310,7 +324,7 @@ export function useCheckoutSession(
         });
         // Re-check cancellation once more: acquireExpressInstance's own isCancelled() guard ends the
         // instant before this continuation adopts `ci`. A teardown landing in that window already ran
-        // while `instance`/`cleanupExpress` were still null, so it destroyed nothing — reap the orphan
+        // while `instance` was still null, so it destroyed nothing — reap the orphan
         // here rather than mount an element the (already-run) cleanup can no longer reach.
         if (cancelled) {
           ci?.destroy();
@@ -323,7 +337,7 @@ export function useCheckoutSession(
 
         // Mount the express element. A SINGLE express:state subscription drives the slot's whole
         // lifecycle (loading → ready | unavailable | error). Reused by the PDP.
-        const mounted = mountExpressElement(ci, {
+        const express = mountExpressElement(ci, {
           amount,
           config,
           items,
@@ -339,19 +353,18 @@ export function useCheckoutSession(
             setLiveExpressOrder(order);
           },
         });
-        cleanupExpress = mounted.cleanup;
-        setHostChargeIds(hostChargeIdsFromExpress(mounted.express));
+        hostIds = hostChargeIdsFromExpress(express);
 
         // Keep the handle so an express-only surface can push post-mount amount changes in place.
         // (Card surfaces rebuild on a cart edit, so no handle is retained there.)
         if (!wantCard) {
-          expressHandleRef.current = mounted.express ?? null;
+          expressHandleRef.current = express ?? null;
           // Reconcile a quantity tick that landed mid-build: the element mounted with the build-time
           // amount, so if a newer one has arrived, push it now (currency is fixed) rather than wait for
           // the next tick. When the cart is being sent, re-push `products` for the latest amount too, so
           // the frozen cart still sums to what the sheet now shows.
-          if (mounted.express && amountRef.current && amountRef.current !== amount) {
-            mounted.express.update(
+          if (express && amountRef.current && amountRef.current !== amount) {
+            express.update(
               inPlaceExpressUpdate(configRef.current, itemsRef.current, amountRef.current),
             );
           }
@@ -376,9 +389,8 @@ export function useCheckoutSession(
       expressHandleRef.current = null;
       setLiveExpressOrder(null);
       setFinalExpressOrder(null);
-      setHostChargeIds(null);
-      cleanupExpress?.();
-      instance?.remove(CARD_COMPONENT);
+      // Removes both drop-ins and every listener. A charge already sent still finishes and reports
+      // through onSubmitSuccess / onSubmitError.
       instance?.destroy();
     };
     // sessionKey encodes every dependency (and gates rebuilds to when the surface is active); fields

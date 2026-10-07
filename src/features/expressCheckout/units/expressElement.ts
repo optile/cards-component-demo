@@ -257,21 +257,16 @@ export interface MountExpressOptions {
   onOrder?: (order: ExpressOrderDetails) => void;
 }
 
-export interface MountedExpress {
-  // Tears down the express:state subscription and removes the drop-in. Idempotent per mount.
-  cleanup: () => void;
-  // The live express handle (undefined only when the SDK declines to build one - e.g. walletMode
-  // 'inline'). Callers keep it to push post-mount amount/currency changes via `express.update(...)`.
-  express: ExpressDropInComponent | undefined;
-}
-
 /**
- * Mounts the Express Checkout Element on a GIVEN CheckoutWeb instance and returns a cleanup.
+ * Mounts the Express Checkout Element on a GIVEN CheckoutWeb instance and returns the live express
+ * handle (undefined only when the SDK declines to build one - e.g. walletMode 'inline'). Callers keep
+ * it to push post-mount amount/currency changes via `express.update(...)`.
  *
  * INSTANCE-AGNOSTIC: it never creates or destroys the instance - the caller (useCheckoutSession)
  * owns that lifecycle. This is what lets the checkout page share ONE instance across express + card
  * (required by the SDK's per-account Stripe singleton) while the book-detail page uses
- * its own instance, with zero duplicated express lifecycle code.
+ * its own instance, with zero duplicated express lifecycle code. There is no separate cleanup: the
+ * caller's `destroy()` removes the drop-in and every listener subscribed here.
  *
  * The whole slot lifecycle is driven by a SINGLE `express:state` subscription and one switch -
  * `loading` shows the skeleton, `ready` reveals the element, and `unavailable`/`error` keep it hidden.
@@ -280,7 +275,7 @@ export interface MountedExpress {
 export function mountExpressElement(
   instance: CheckoutInstance,
   { amount, config, items, getItems, node, onStatus, onOrder }: MountExpressOptions,
-): MountedExpress {
+): ExpressDropInComponent | undefined {
   const handleState = (data: unknown) => {
     if (!isExpressState(data)) return;
     if (data.phase === "error") onStatus("error", data.errorMessage);
@@ -319,13 +314,5 @@ export function mountExpressElement(
   // sheet opens - persist it here to reconcile the charge to the order you create post-approval. e.g.:
   // savePendingOrderReference(express?.paymentReference);
   express?.mount(node);
-
-  return {
-    cleanup: () => {
-      instance.off("express:state", handleState);
-      if (handleOrder) instance.off("express:order", handleOrder);
-      instance.remove(EXPRESS_COMPONENT);
-    },
-    express,
-  };
+  return express;
 }

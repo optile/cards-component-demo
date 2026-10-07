@@ -86,11 +86,7 @@ export default function CheckoutView({ active }: Readonly<{ active: boolean }>) 
         const eo = useExpressCheckoutStore.getState().finalExpressOrder;
         const order = placeOrder(eo ? toExpressOrderOverrides(eo) : undefined);
         const chargeRefs =
-          useExpressCheckoutStore.getState().lastChargeRefs ??
-          chargeRefsForOutcome(
-            outcome.data,
-            useExpressCheckoutStore.getState().hostChargeIds,
-          );
+          useExpressCheckoutStore.getState().lastChargeRefs ?? chargeRefsForOutcome(outcome.data);
         // Bridge the receipt across the hard returnUrl reload; only stash when the SDK will navigate,
         // or the unclaimed stash would decorate a later receipt.
         if (useExpressConfigStore.getState().allowRealRedirect && hasFollowableRedirect(outcome.data)) {
