@@ -102,6 +102,10 @@ export interface ListSessionRequest {
     discountAmount?: number;
     type?: "SHIPPING";
   }>;
+  preselection?: {
+    direction?: string;
+    deferral?: "DEFERRED" | "NON_DEFERRED";
+  };
 }
 
 /** Response from the demo backend's create-session endpoint. */
