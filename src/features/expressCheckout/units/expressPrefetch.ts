@@ -66,6 +66,8 @@ export function expressSessionKey(
     : undefined;
   const amount =
     includeCart && items.length > 0 ? totalOf(items).toFixed(2) : undefined;
+  // Only a card surface uses a LIST session, so only it rebuilds when the deferral changes.
+  const cardDeferral = includeCart ? config.cardDeferral : undefined;
   // `allowRealRedirect` is intentionally excluded: it only affects the submit-time callback (read
   // fresh via callbacksRef), not the built session - so it must not fragment prefetch identity.
   return JSON.stringify([
@@ -76,6 +78,7 @@ export function expressSessionKey(
     itemsSignature,
     amount,
     currency,
+    cardDeferral,
   ]);
 }
 

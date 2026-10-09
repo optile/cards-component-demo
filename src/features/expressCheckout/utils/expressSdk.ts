@@ -69,7 +69,12 @@ export async function createExpressSession(
   const cart: MerchantCart = { products, currency };
   const billing = { ...DEMO_BILLING, country: config.country };
   const shipping = { ...DEMO_SHIPPING, country: config.country };
-  const request = buildListSessionUpdates(cart, billing, shipping, true, config.env);
+  const request = {
+    ...buildListSessionUpdates(cart, billing, shipping, true, config.env),
+    ...(config.cardDeferral !== "default" && {
+      preselection: { deferral: config.cardDeferral },
+    }),
+  };
   const response = await CheckoutApiService.generateListSession(request, config.env);
   return { longId: response.id };
 }

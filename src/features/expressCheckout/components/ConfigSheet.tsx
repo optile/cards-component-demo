@@ -15,6 +15,7 @@ import {
   WALLET_VISIBILITY,
   EXPRESS_OPERATION_TYPES,
   EXPRESS_BEFORE_SUBMIT_OUTCOMES,
+  CARD_DEFERRALS,
   LOCALES,
 } from "@/features/expressCheckout/types/express";
 
@@ -23,8 +24,15 @@ import {
 // comma-separated ISO-alpha-2 string (the shape `buildExpressShipping` + `reinitSignatureOf` expect).
 const SHIPPING_COUNTRY_OPTIONS = ["US", "CA"] as const;
 
+const SETTINGS_TABS = [
+  { id: "card", label: "Card" },
+  { id: "express", label: "Express" },
+] as const;
+type SettingsTab = (typeof SETTINGS_TABS)[number]["id"];
+
 export default function ConfigSheet() {
   const [open, setOpen] = useState(false);
+  const [tab, setTab] = useState<SettingsTab>("express");
   const fabRef = useRef<HTMLButtonElement | null>(null);
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const config = useExpressConfigStore();
@@ -43,7 +51,9 @@ export default function ConfigSheet() {
   // The gate delay doesn't remount the ECE (the gate reads live config at confirm time), but the sheet
   // subscribes to the whole store, so writing on every drag step would re-render it repeatedly. Keep the
   // slider responsive off local state and push the debounced value, mirroring the resolver delay above.
-  const [gateDelayInput, setGateDelayInput] = useState(config.beforeSubmitDelayMs);
+  const [gateDelayInput, setGateDelayInput] = useState(
+    config.beforeSubmitDelayMs,
+  );
   const debouncedGateDelay = useDebouncedValue(gateDelayInput, 400);
   useEffect(() => {
     if (debouncedGateDelay !== config.beforeSubmitDelayMs) {
@@ -96,7 +106,7 @@ export default function ConfigSheet() {
         ref={fabRef}
         type="button"
         onClick={() => setOpen(true)}
-        aria-label="Open express checkout settings"
+        aria-label="Open demo settings"
         className="fixed bottom-4 right-4 z-[55] rounded-full w-14 h-14 shadow-lg text-white text-xl bg-black"
       >
         ⚙
@@ -112,7 +122,7 @@ export default function ConfigSheet() {
               ref={dialogRef}
               role="dialog"
               aria-modal="true"
-              aria-label="Express checkout settings"
+              aria-label="Demo settings"
               tabIndex={-1}
               className="fixed top-0 right-0 bottom-0 z-[70] w-[460px] max-w-[95vw] p-5 overflow-y-auto shadow-2xl"
               style={{ background: "var(--paper)", color: "var(--ink)" }}
@@ -136,13 +146,13 @@ export default function ConfigSheet() {
                 className="text-[12px] mb-4"
                 style={{ color: "var(--ink-faint)" }}
               >
-                Most settings remount the express element. Gate outcome and
-                delay apply live.
+                Most settings rebuild the checkout. Gate outcome and delay apply
+                live.
               </p>
 
               <Group
-                title="Session"
-                description="Environment and buyer language for the LIST session."
+                title="Shared"
+                description="Environment, buyer language, and where wallets appear. Applies to both the card and express elements."
               >
                 <Field label="Environment">
                   <Select
@@ -168,12 +178,6 @@ export default function ConfigSheet() {
                     ))}
                   </select>
                 </Field>
-              </Group>
-
-              <Group
-                title="Wallets & flow"
-                description="Which wallets appear, how they're sourced, and what happens after a successful charge."
-              >
                 <Field label="walletMode">
                   <Select
                     value={config.walletMode}
@@ -181,260 +185,280 @@ export default function ConfigSheet() {
                     onChange={(v) => config.setConfig({ walletMode: v })}
                   />
                 </Field>
-                <Field label="Apple Pay">
-                  <Select
-                    value={config.expressWallets.applePay}
-                    options={WALLET_VISIBILITY}
-                    onChange={(v) =>
-                      config.setConfig({
-                        expressWallets: {
-                          ...config.expressWallets,
-                          applePay: v,
-                        },
-                      })
-                    }
-                  />
-                </Field>
-                <Field label="Google Pay">
-                  <Select
-                    value={config.expressWallets.googlePay}
-                    options={WALLET_VISIBILITY}
-                    onChange={(v) =>
-                      config.setConfig({
-                        expressWallets: {
-                          ...config.expressWallets,
-                          googlePay: v,
-                        },
-                      })
-                    }
-                  />
-                </Field>
-                <Field label="operationType">
-                  <Select
-                    value={config.expressOperationType}
-                    options={EXPRESS_OPERATION_TYPES}
-                    onChange={(v) =>
-                      config.setConfig({ expressOperationType: v })
-                    }
-                  />
-                </Field>
-                <label className="flex items-center gap-2 mt-4 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={config.allowRealRedirect}
-                    onChange={(e) =>
-                      config.setConfig({ allowRealRedirect: e.target.checked })
-                    }
-                  />
-                  Allow real redirect on success
-                </label>
               </Group>
 
-              <Group
-                title="Shipping & rates"
-                description="Collect a shipping address and pick how rates are produced: a dynamic onShippingAddressChange resolver, or the static preset."
-              >
-                <label className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={config.shippingAddressRequired}
-                    onChange={(e) =>
-                      config.setConfig({
-                        shippingAddressRequired: e.target.checked,
-                      })
-                    }
-                  />
-                  Collect shipping address (ECE rates)
-                </label>
-                {config.shippingAddressRequired && (
-                  <Nested>
-                    <Field label="Allowed shipping countries">
-                      <div className="flex gap-4">
-                        {(() => {
-                          const selected = parseAllowedShippingCountries(
-                            config.allowedShippingCountries,
-                          );
-                          return SHIPPING_COUNTRY_OPTIONS.map((code) => (
-                            <label
-                              key={code}
-                              className="flex items-center gap-2 text-sm"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={selected.includes(code)}
-                                onChange={(e) => {
-                                  const next = e.target.checked
-                                    ? [...selected, code]
-                                    : selected.filter((c) => c !== code);
-                                  // Re-derive from the fixed option order so the string is stable + deduped.
-                                  const ordered =
-                                    SHIPPING_COUNTRY_OPTIONS.filter((c) =>
-                                      next.includes(c),
-                                    );
-                                  config.setConfig({
-                                    allowedShippingCountries: ordered.join(","),
-                                  });
-                                }}
-                              />
-                              {code}
-                            </label>
-                          ));
-                        })()}
-                      </div>
-                      <span
-                        className="block text-[11px] mt-1"
-                        style={{ color: "var(--ink-soft)" }}
-                      >
-                        None selected = all countries allowed
-                      </span>
+              <TabToggle value={tab} onChange={setTab} />
+
+              {tab === "card" && <CardSettings />}
+
+              {tab === "express" && (
+                <>
+                  <Group
+                    title="Wallets & flow"
+                    description="Which express wallets appear and what happens after a successful charge."
+                  >
+                    <Field label="Apple Pay">
+                      <Select
+                        value={config.expressWallets.applePay}
+                        options={WALLET_VISIBILITY}
+                        onChange={(v) =>
+                          config.setConfig({
+                            expressWallets: {
+                              ...config.expressWallets,
+                              applePay: v,
+                            },
+                          })
+                        }
+                      />
+                    </Field>
+                    <Field label="Google Pay">
+                      <Select
+                        value={config.expressWallets.googlePay}
+                        options={WALLET_VISIBILITY}
+                        onChange={(v) =>
+                          config.setConfig({
+                            expressWallets: {
+                              ...config.expressWallets,
+                              googlePay: v,
+                            },
+                          })
+                        }
+                      />
+                    </Field>
+                    <Field label="operationType">
+                      <Select
+                        value={config.expressOperationType}
+                        options={EXPRESS_OPERATION_TYPES}
+                        onChange={(v) =>
+                          config.setConfig({ expressOperationType: v })
+                        }
+                      />
                     </Field>
                     <label className="flex items-center gap-2 mt-4 text-sm">
                       <input
                         type="checkbox"
-                        checked={config.dynamicRates}
+                        checked={config.allowRealRedirect}
                         onChange={(e) =>
-                          config.setConfig({ dynamicRates: e.target.checked })
+                          config.setConfig({
+                            allowRealRedirect: e.target.checked,
+                          })
                         }
                       />
-                      Dynamic rates from address (onShippingAddressChange)
+                      Allow real redirect on success
                     </label>
-                    {config.dynamicRates && (
+                  </Group>
+
+                  <Group
+                    title="Shipping & rates"
+                    description="Collect a shipping address and pick how rates are produced: a dynamic onShippingAddressChange resolver, or the static preset."
+                  >
+                    <label className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={config.shippingAddressRequired}
+                        onChange={(e) =>
+                          config.setConfig({
+                            shippingAddressRequired: e.target.checked,
+                          })
+                        }
+                      />
+                      Collect shipping address (ECE rates)
+                    </label>
+                    {config.shippingAddressRequired && (
                       <Nested>
-                        <Field label="Resolver delay">
-                          <MsSlider
-                            value={delayInput}
-                            onChange={setDelayInput}
-                            min={RESOLVER_DELAY_RANGE.min}
-                            max={RESOLVER_DELAY_RANGE.max}
-                            step={RESOLVER_DELAY_RANGE.step}
-                            warnFrom={RESOLVER_DELAY_RANGE.warnFrom}
-                            warnLabel="the payment sheet may be invalidated for a resolver running this long"
-                          />
+                        <Field label="Allowed shipping countries">
+                          <div className="flex gap-4">
+                            {(() => {
+                              const selected = parseAllowedShippingCountries(
+                                config.allowedShippingCountries,
+                              );
+                              return SHIPPING_COUNTRY_OPTIONS.map((code) => (
+                                <label
+                                  key={code}
+                                  className="flex items-center gap-2 text-sm"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={selected.includes(code)}
+                                    onChange={(e) => {
+                                      const next = e.target.checked
+                                        ? [...selected, code]
+                                        : selected.filter((c) => c !== code);
+                                      // Re-derive from the fixed option order so the string is stable + deduped.
+                                      const ordered =
+                                        SHIPPING_COUNTRY_OPTIONS.filter((c) =>
+                                          next.includes(c),
+                                        );
+                                      config.setConfig({
+                                        allowedShippingCountries:
+                                          ordered.join(","),
+                                      });
+                                    }}
+                                  />
+                                  {code}
+                                </label>
+                              ));
+                            })()}
+                          </div>
                           <span
                             className="block text-[11px] mt-1"
                             style={{ color: "var(--ink-soft)" }}
                           >
-                            Artificial latency to exercise the timeout and
-                            static-rate fallback. Matches the SDK&apos;s
-                            resolver-timeout range (1s to 20s).
+                            None selected = all countries allowed
                           </span>
                         </Field>
                         <label className="flex items-center gap-2 mt-4 text-sm">
                           <input
                             type="checkbox"
-                            checked={config.dynamicOnlyOmitRates}
+                            checked={config.dynamicRates}
                             onChange={(e) =>
                               config.setConfig({
-                                dynamicOnlyOmitRates: e.target.checked,
+                                dynamicRates: e.target.checked,
                               })
                             }
                           />
-                          Dynamic-only (omit static rates; failure or empty
-                          then rejects the address)
+                          Dynamic rates from address (onShippingAddressChange)
                         </label>
-                        <div className="mt-4">
-                          <label className="flex items-center gap-2 text-sm">
-                            <input
-                              type="checkbox"
-                              checked={config.dynamicResolverProducts}
-                              onChange={(e) =>
-                                config.setConfig({
-                                  dynamicResolverProducts: e.target.checked,
-                                })
-                              }
-                            />
-                            Resolver returns its own products cart
-                          </label>
+                        {config.dynamicRates && (
+                          <Nested>
+                            <Field label="Resolver delay">
+                              <MsSlider
+                                value={delayInput}
+                                onChange={setDelayInput}
+                                min={RESOLVER_DELAY_RANGE.min}
+                                max={RESOLVER_DELAY_RANGE.max}
+                                step={RESOLVER_DELAY_RANGE.step}
+                                warnFrom={RESOLVER_DELAY_RANGE.warnFrom}
+                                warnLabel="the payment sheet may be invalidated for a resolver running this long"
+                              />
+                              <span
+                                className="block text-[11px] mt-1"
+                                style={{ color: "var(--ink-soft)" }}
+                              >
+                                Artificial latency to exercise the timeout and
+                                static-rate fallback. Matches the SDK&apos;s
+                                resolver-timeout range (1s to 20s).
+                              </span>
+                            </Field>
+                            <label className="flex items-center gap-2 mt-4 text-sm">
+                              <input
+                                type="checkbox"
+                                checked={config.dynamicOnlyOmitRates}
+                                onChange={(e) =>
+                                  config.setConfig({
+                                    dynamicOnlyOmitRates: e.target.checked,
+                                  })
+                                }
+                              />
+                              Dynamic-only (omit static rates; failure or empty
+                              then rejects the address)
+                            </label>
+                            <div className="mt-4">
+                              <label className="flex items-center gap-2 text-sm">
+                                <input
+                                  type="checkbox"
+                                  checked={config.dynamicResolverProducts}
+                                  onChange={(e) =>
+                                    config.setConfig({
+                                      dynamicResolverProducts: e.target.checked,
+                                    })
+                                  }
+                                />
+                                Resolver returns its own products cart
+                              </label>
+                              <span
+                                className="block text-[11px] mt-1"
+                                style={{ color: "var(--ink-soft)" }}
+                              >
+                                Resolver returns its own <code>products</code>{" "}
+                                (one per cart item, summing to the frozen goods
+                                subtotal). They drive both the wallet breakdown
+                                and the charge cart, replacing the mount cart
+                                for that destination. Turn off (with Send
+                                products on) to see the mount-cart breakdown
+                                instead.
+                              </span>
+                            </div>
+                          </Nested>
+                        )}
+                      </Nested>
+                    )}
+                  </Group>
+
+                  <Group
+                    title="Cart products"
+                    description="Itemize the cart for the charge body and the wallet-sheet breakdown. A resolver products cart (Shipping & rates, above) replaces this per destination."
+                  >
+                    <label className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={config.sendProducts}
+                        onChange={(e) =>
+                          config.setConfig({ sendProducts: e.target.checked })
+                        }
+                      />
+                      Send cart products (charge body)
+                    </label>
+                    <span
+                      className="block text-[11px] mt-1"
+                      style={{ color: "var(--ink-soft)" }}
+                    >
+                      Charge-body cart (must sum to <code>amount</code>). Also
+                      powers the SDK&apos;s auto-derived wallet breakdown: one
+                      line per product plus a reconciling <code>Shipping</code>{" "}
+                      line, shown at sheet-open and refreshed on rate change
+                      (dynamic, static, or no-shipping express).
+                    </span>
+                  </Group>
+
+                  <Group
+                    title="Pre-charge gate"
+                    description="An onBeforeSubmit hook that runs before the charge to allow, decline, or fail it. Express only; outcome and delay apply live."
+                  >
+                    <label className="flex items-center gap-2 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={config.beforeSubmit}
+                        onChange={(e) =>
+                          config.setConfig({ beforeSubmit: e.target.checked })
+                        }
+                      />
+                      Pre-charge gate (onBeforeSubmit)
+                    </label>
+                    {config.beforeSubmit && (
+                      <Nested>
+                        <Field label="Gate outcome">
+                          <Select
+                            value={config.beforeSubmitOutcome}
+                            options={EXPRESS_BEFORE_SUBMIT_OUTCOMES}
+                            onChange={(v) =>
+                              config.setConfig({ beforeSubmitOutcome: v })
+                            }
+                          />
+                        </Field>
+                        <Field label="Gate delay">
+                          <MsSlider
+                            value={gateDelayInput}
+                            onChange={setGateDelayInput}
+                            min={GATE_DELAY_RANGE.min}
+                            max={GATE_DELAY_RANGE.max}
+                            step={GATE_DELAY_RANGE.step}
+                            warnFrom={GATE_DELAY_RANGE.warnFrom}
+                            warnLabel="the wallet may invalidate the sheet before the gate resolves"
+                          />
                           <span
                             className="block text-[11px] mt-1"
                             style={{ color: "var(--ink-soft)" }}
                           >
-                            Resolver returns its own <code>products</code> (one
-                            per cart item, summing to the frozen goods
-                            subtotal). They drive both the wallet breakdown and
-                            the charge cart, replacing the mount cart for that
-                            destination. Turn off (with Send products on) to see
-                            the mount-cart breakdown instead.
+                            Express only, no remount. decline shows a generic
+                            failure; throw surfaces your reason.
                           </span>
-                        </div>
+                        </Field>
                       </Nested>
                     )}
-                  </Nested>
-                )}
-              </Group>
-
-              <Group
-                title="Cart products"
-                description="Itemize the cart for the charge body and the wallet-sheet breakdown. A resolver products cart (Shipping & rates, above) replaces this per destination."
-              >
-                <label className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={config.sendProducts}
-                    onChange={(e) =>
-                      config.setConfig({ sendProducts: e.target.checked })
-                    }
-                  />
-                  Send cart products (charge body)
-                </label>
-                <span
-                  className="block text-[11px] mt-1"
-                  style={{ color: "var(--ink-soft)" }}
-                >
-                  Charge-body cart (must sum to <code>amount</code>). Also
-                  powers the SDK&apos;s auto-derived wallet breakdown: one line
-                  per product plus a reconciling <code>Shipping</code> line,
-                  shown at sheet-open and refreshed on rate change (dynamic,
-                  static, or no-shipping express).
-                </span>
-              </Group>
-
-              <Group
-                title="Pre-charge gate"
-                description="An onBeforeSubmit hook that runs before the charge to allow, decline, or fail it. Express only; outcome and delay apply live."
-              >
-                <label className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={config.beforeSubmit}
-                    onChange={(e) =>
-                      config.setConfig({ beforeSubmit: e.target.checked })
-                    }
-                  />
-                  Pre-charge gate (onBeforeSubmit)
-                </label>
-                {config.beforeSubmit && (
-                  <Nested>
-                    <Field label="Gate outcome">
-                      <Select
-                        value={config.beforeSubmitOutcome}
-                        options={EXPRESS_BEFORE_SUBMIT_OUTCOMES}
-                        onChange={(v) =>
-                          config.setConfig({ beforeSubmitOutcome: v })
-                        }
-                      />
-                    </Field>
-                    <Field label="Gate delay">
-                      <MsSlider
-                        value={gateDelayInput}
-                        onChange={setGateDelayInput}
-                        min={GATE_DELAY_RANGE.min}
-                        max={GATE_DELAY_RANGE.max}
-                        step={GATE_DELAY_RANGE.step}
-                        warnFrom={GATE_DELAY_RANGE.warnFrom}
-                        warnLabel="the wallet may invalidate the sheet before the gate resolves"
-                      />
-                      <span
-                        className="block text-[11px] mt-1"
-                        style={{ color: "var(--ink-soft)" }}
-                      >
-                        Express only, no remount. decline shows a generic
-                        failure; throw surfaces your reason.
-                      </span>
-                    </Field>
-                  </Nested>
-                )}
-              </Group>
+                  </Group>
+                </>
+              )}
 
               <LocalDevFooter />
             </div>
@@ -516,6 +540,68 @@ function LocalServerRow({
         {label} (:{port}) {on ? "local" : "CDN"}
       </span>
     </div>
+  );
+}
+
+// Switches the sheet between the card and express settings. The shared group above it stays visible.
+function TabToggle({
+  value,
+  onChange,
+}: Readonly<{ value: SettingsTab; onChange: (v: SettingsTab) => void }>) {
+  return (
+    <div
+      role="group"
+      aria-label="Component settings"
+      className="mb-4 flex rounded-lg border p-1"
+      style={{ background: "var(--card)", borderColor: "var(--line)" }}
+    >
+      {SETTINGS_TABS.map((t) => {
+        const selected = t.id === value;
+        return (
+          <button
+            key={t.id}
+            type="button"
+            aria-pressed={selected}
+            onClick={() => onChange(t.id)}
+            className="flex-1 rounded-md px-3 py-1.5 text-sm font-medium"
+            style={
+              selected
+                ? { background: "var(--ink)", color: "var(--paper)" }
+                : { color: "var(--ink-soft)" }
+            }
+          >
+            {t.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function CardSettings() {
+  const cardDeferral = useExpressConfigStore((s) => s.cardDeferral);
+  const setConfig = useExpressConfigStore((s) => s.setConfig);
+
+  return (
+    <Group
+      title="LIST session"
+      description="The session the card form pays against, created from the cart."
+    >
+      <Field label="Deferral">
+        <Select
+          value={cardDeferral}
+          options={CARD_DEFERRALS}
+          onChange={(v) => setConfig({ cardDeferral: v })}
+        />
+      </Field>
+      <span
+        className="block text-[11px] -mt-2"
+        style={{ color: "var(--ink-soft)" }}
+      >
+        DEFERRED authorizes now and leaves capture to the merchant. default
+        leaves it to the merchant configuration. Express is unaffected.
+      </span>
+    </Group>
   );
 }
 
