@@ -17,7 +17,7 @@ import {
 } from "@/features/expressCheckout/store/expressCartStore";
 import {
   isExpressState,
-  isExpressOrderDetails,
+  toExpressOrder,
   type ExpressOrderDetails,
 } from "@/features/expressCheckout/types/express";
 
@@ -38,7 +38,8 @@ type ExpressShippingResolver = NonNullable<ExpressShippingConfig["onShippingAddr
  * An optional artificial delay exercises the SDK's timeout->static-fallback path on-device. It never throws
  * (a throw is treated as an error and falls back to the static preset). NOTE: the resolver only re-runs on an
  * ADDRESS change, so a cart edit made without touching the address won't re-quote until the next address
- * change (the base amount still updates in place via `express.update`). Not for production - a real
+ * change (`express.update` applies the new base once no sheet is open; an update made while a sheet is open
+ * waits until that sheet and its charge are done). Not for production - a real
  * integration fetches rates from its own backend, keyed by its own order/session reference.
  */
 function buildDynamicRatesResolver(
@@ -83,19 +84,23 @@ function buildDynamicRatesResolver(
           ]
         : [{ code: "dyn-intl", amount: priced(34.49), name: "Dynamic International", deliveryEstimate: "7-14 business days" }];
 
-    // Opt-in: the resolver returns its OWN `products` cart for the destination - one line per cart item, so
-    // it sums to the goods subtotal (the frozen express base when ECE rates are on). Under the unified model
-    // this drives BOTH the wallet-sheet breakdown AND the charge cart, so it MUST reconcile to that base (the
-    // SDK rejects the address otherwise). A real integration would add a destination-tax line here and bump
-    // the returned `amount` to match; this demo keeps the base frozen, so the cart sums to it as-is.
-    const products = config.dynamicResolverProducts
-      ? items.map((item) => ({
-          name: item.quantity > 1 ? `${item.title} x${item.quantity}` : item.title,
-          amount: (item.price * item.quantity).toFixed(2),
-        }))
-      : undefined;
+    // Opt-in: the resolver returns its OWN `products` cart for the destination - one line per cart item,
+    // the same lines (and catalog codes) as the mount cart. Under the unified model this drives BOTH the
+    // wallet-sheet breakdown AND the charge cart, and must sum to the base (the SDK rejects the address
+    // otherwise). The cart is the LIVE one, which can differ from the cart the sheet froze at (a quantity
+    // edit can land after the sheet opened), so the resolver returns `amount` from the same lines: the sheet
+    // reprices to it and the charge matches what the buyer sees. These are browser values: a real
+    // integration prices `products` and `amount` on its server (adding any destination-tax line there) and
+    // reconciles the Payoneer transaction against its own order before fulfilling.
+    const lines = config.dynamicResolverProducts ? cartLinesInCents(items) : undefined;
+    const resolverCart = lines
+      ? {
+          amount: (lines.reduce((sum, { cents }) => sum + cents, 0) / 100).toFixed(2),
+          products: lines.map(({ line }) => line),
+        }
+      : {};
 
-    return settle({ rates, ...(products ? { products } : {}) });
+    return settle({ rates, ...resolverCart });
   };
 }
 
@@ -179,12 +184,29 @@ function buildExpressShipping(
   };
 }
 
+type ExpressProductLine = NonNullable<ExpressDropInProps["products"]>[number];
+
+/**
+ * One product line per cart item, shared by the mount cart and the resolver cart so both carry the catalog
+ * `book-<id>` codes the receipt maps back. Summed in integer cents (USD only in this demo): `amount` is the
+ * line total (unit × qty); `quantity` is descriptive and does not re-scale it.
+ */
+function cartLinesInCents(items: CartItem[]): { line: ExpressProductLine; cents: number }[] {
+  return items.map((item) => {
+    const cents = Math.round(item.price * 100) * item.quantity;
+    return {
+      cents,
+      line: { code: `book-${item.id}`, name: item.title, amount: (cents / 100).toFixed(2), quantity: item.quantity },
+    };
+  });
+}
+
 /**
  * Assembles the optional charge-body `products[]` for `dropIn('express')`, or `undefined` when the QA
  * toggle is off. Sends one line per cart item (`price × quantity`) plus a single remainder line for the
  * cart shipping fee when the drop-in `amount` exceeds the item subtotal, so the set sums EXACTLY to
- * `amount` (the SDK rejects a mismatch). All amounts are 2-dp major-unit strings, matching how the demo
- * derives `amount` (`Number#toFixed(2)`); a production integration would use minor-unit integers.
+ * `amount` (the SDK rejects a mismatch). Amounts are summed in integer cents and sent as 2-dp major-unit
+ * strings, matching how the demo derives `amount` (`Number#toFixed(2)`).
  */
 export function buildExpressProducts(
   config: ExpressConfig,
@@ -194,22 +216,15 @@ export function buildExpressProducts(
   if (!config.sendProducts || items.length === 0) {
     return undefined;
   }
-  const lines: NonNullable<ExpressDropInProps["products"]> = items.map(
-    (item) => ({
-      code: `book-${item.id}`,
-      name: item.title,
-      // `amount` is the line total (unit × qty); `quantity` is descriptive and does not re-scale it.
-      amount: (item.price * item.quantity).toFixed(2),
-      quantity: item.quantity,
-    }),
-  );
-  const itemsTotal = lines.reduce((sum, line) => sum + Number(line.amount), 0);
-  const remainder = Number((Number(amount) - itemsTotal).toFixed(2));
-  if (remainder > 0) {
+  const cartLines = cartLinesInCents(items);
+  const lines: ExpressProductLine[] = cartLines.map(({ line }) => line);
+  const itemsCents = cartLines.reduce((sum, { cents }) => sum + cents, 0);
+  const remainderCents = Math.round(Number(amount) * 100) - itemsCents;
+  if (remainderCents > 0) {
     lines.push({
       code: "shipping-fee",
       name: "Shipping",
-      amount: remainder.toFixed(2),
+      amount: (remainderCents / 100).toFixed(2),
     });
   }
   return lines;
@@ -285,7 +300,8 @@ export function mountExpressElement(
 
   const handleOrder = onOrder
     ? (data: unknown) => {
-        if (isExpressOrderDetails(data)) onOrder(data);
+        const order = toExpressOrder(data);
+        if (order) onOrder(order);
       }
     : undefined;
   if (handleOrder) instance.on("express:order", handleOrder);

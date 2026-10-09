@@ -8,16 +8,14 @@ import {
 } from "@/features/expressCheckout/store/expressCartStore";
 import { useExpressCheckoutStore } from "@/features/expressCheckout/store/expressCheckoutStore";
 import { useCheckoutSession } from "@/features/expressCheckout/hooks/useCheckoutSession";
-import { useDebouncedValue } from "@/features/expressCheckout/hooks/useDebouncedValue";
-import { isExpressOrderDetails, type Book } from "@/features/expressCheckout/types/express";
-import { toExpressOrderOverrides } from "@/features/expressCheckout/utils/toExpressOrderOverrides";
+import { BOOKS } from "@/features/expressCheckout/constants/books";
+import { toExpressOrder, type Book } from "@/features/expressCheckout/types/express";
+import { receiptFromExpressOrder } from "@/features/expressCheckout/utils/receiptFromExpressOrder";
 import {
   chargeRefsForOutcome,
   hasFollowableRedirect,
   stashExpressSuccess,
 } from "@/features/expressCheckout/utils/chargeRefs";
-
-const QTY_DEBOUNCE_MS = 400;
 
 export interface BuyNowExpressResult {
   status: "loading" | "ready" | "unavailable" | "error";
@@ -42,13 +40,13 @@ export function useBuyNowExpress(
 ): BuyNowExpressResult {
   const navigate = useNavigate();
   const allowRealRedirect = useExpressConfigStore((s) => s.allowRealRedirect);
+  const shippingAddressRequired = useExpressConfigStore((s) => s.shippingAddressRequired);
   const placeOrderFor = useExpressCartStore((s) => s.placeOrderFor);
   const setChargeRefs = useExpressCheckoutStore((s) => s.setChargeRefs);
 
-  const debouncedQty = useDebouncedValue(qty, QTY_DEBOUNCE_MS);
-  const items: CartItem[] = book
-    ? [{ ...book, quantity: Math.max(1, debouncedQty) }]
-    : [];
+  // Every quantity tick reaches express.update() at once; the session key excludes items, so nothing is
+  // rebuilt, and the SDK holds an update that lands while the wallet sheet is open.
+  const items: CartItem[] = book ? [{ ...book, quantity: Math.max(1, qty) }] : [];
 
   const { expressStatus, expressAvailable, expressError } = useCheckoutSession({
     items,
@@ -61,10 +59,15 @@ export function useBuyNowExpress(
       // Buy-now renders the receipt from the placed order's `expressOverrides` (below), not from the
       // shared `finalExpressOrder` store (only the checkout-page CheckoutView subscriber reads that),
       // so we intentionally do not write `finalExpressOrder` here.
-      const overrides = isExpressOrderDetails(eo) ? toExpressOrderOverrides(eo) : undefined;
+      const receipt = receiptFromExpressOrder(
+        toExpressOrder(eo),
+        items,
+        BOOKS,
+        shippingAddressRequired,
+      );
       const chargeRefs = chargeRefsForOutcome(data, hostIds);
       setChargeRefs(chargeRefs);
-      const order = placeOrderFor(items, overrides);
+      const order = placeOrderFor(receipt.items, receipt.overrides);
       // Bridge the receipt across the hard returnUrl reload; only stash when the SDK will navigate,
       // or the unclaimed stash would decorate a later receipt.
       if (allowRealRedirect && hasFollowableRedirect(data)) stashExpressSuccess({ order, chargeRefs });

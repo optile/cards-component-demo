@@ -6,7 +6,7 @@ import {
   useCheckoutSession,
   type CheckoutSessionResult,
 } from "@/features/expressCheckout/hooks/useCheckoutSession";
-import { isExpressOrderDetails } from "@/features/expressCheckout/types/express";
+import { toExpressOrder } from "@/features/expressCheckout/types/express";
 import { chargeRefsForOutcome } from "@/features/expressCheckout/utils/chargeRefs";
 
 export type CheckoutSlots = CheckoutSessionResult;
@@ -33,7 +33,7 @@ export function useCheckout(
       // Always set (including null) so a card success after a prior express attempt cannot reuse wallet overrides.
       const payload = data as Record<string, unknown> | null;
       const eo = payload?.expressOrder;
-      setFinalExpressOrder(isExpressOrderDetails(eo) ? eo : null);
+      setFinalExpressOrder(toExpressOrder(eo));
       // Soft-nav Success reads these; real redirect reloads and falls back to returnUrl query params.
       setChargeRefs(chargeRefsForOutcome(data, hostIds));
       setOutcome({ kind: "success", data });
