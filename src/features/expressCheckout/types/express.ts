@@ -108,17 +108,44 @@ export function isExpressState(data: unknown): data is ExpressState {
 /**
  * Wallet-captured order snapshot for Express Checkout. DERIVED from the SDK's public
  * `ExpressOrderDetails` (checkout-web/src/types/expressOrder.ts) - was a structural hand-mirror,
- * now re-exported so the demo's receipt + `isExpressOrderDetails` guard track the SDK contract.
+ * now re-exported so the demo's receipt + `toExpressOrder` reader track the SDK contract.
  *
- * Delivered live on `express:order` (`provisional` while the sheet is open; `final` after a
- * successful charge) and as `onSubmitSuccess.expressOrder`. Commerce-only - no buyer PII; buyer
+ * Delivered live on `express:order` (`provisional` before and during a sheet, frozen while it is open;
+ * `final` after a successful charge) and as
+ * `onSubmitSuccess.expressOrder`. Commerce-only - no buyer PII; buyer
  * details (address, name, email) must be fetched server-side from the CHARGE.
  */
 export type { ExpressOrderDetails };
 
 const EXPRESS_ORDER_STATUSES = ["provisional", "final"] as const;
 
-export function isExpressOrderDetails(data: unknown): data is ExpressOrderDetails {
+/** One charged cart line on `expressOrder.products`. */
+export interface ExpressOrderProductLine {
+  code?: string;
+  name: string;
+  amount: string;
+  quantity?: number;
+}
+
+/**
+ * `products` comes from checkout-web releases newer than the published types this demo builds against
+ * (`^1.31.0`), so it is read only through {@link toExpressOrder}.
+ */
+export type ExpressOrderWithProducts = ExpressOrderDetails & { products?: ExpressOrderProductLine[] };
+
+function isOrderProductLine(value: unknown): value is ExpressOrderProductLine {
+  if (typeof value !== "object" || value === null) return false;
+  const p = value as Record<string, unknown>;
+  return (
+    (p.code === undefined || typeof p.code === "string") &&
+    typeof p.name === "string" &&
+    typeof p.amount === "string" &&
+    Number.isFinite(Number(p.amount)) &&
+    (p.quantity === undefined || (typeof p.quantity === "number" && Number.isInteger(p.quantity) && p.quantity > 0))
+  );
+}
+
+function isExpressOrderDetails(data: unknown): data is ExpressOrderDetails {
   if (typeof data !== "object" || data === null) return false;
   const o = data as Record<string, unknown>;
   if (
@@ -145,6 +172,17 @@ export function isExpressOrderDetails(data: unknown): data is ExpressOrderDetail
     }
   }
   return Number.isFinite(Number(o.amount));
+}
+
+/**
+ * Reads an untrusted order payload: `null` unless the amount, currency, status and rate are well-formed.
+ * `products` is kept only when every line is valid, otherwise dropped on its own, so one bad line never
+ * costs the charged total.
+ */
+export function toExpressOrder(data: unknown): ExpressOrderWithProducts | null {
+  if (!isExpressOrderDetails(data)) return null;
+  const { products, ...order } = data as ExpressOrderDetails & { products?: unknown };
+  return Array.isArray(products) && products.every(isOrderProductLine) ? { ...order, products } : order;
 }
 
 // Derived from the SDK's public submit callback contracts (both return `boolean | Promise<boolean>`).
