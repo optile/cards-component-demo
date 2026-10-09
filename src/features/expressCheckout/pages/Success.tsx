@@ -128,6 +128,9 @@ function OrderReceipt({
         <span>{totalLabel}</span>
         <span>${total.toFixed(2)}</span>
       </div>
+      {eo?.cartChanged ? (
+        <p className="receipt-note">The cart changed after payment started. The total above is what was charged.</p>
+      ) : null}
     </>
   );
 }

@@ -15,6 +15,8 @@ export interface ExpressOrderOverrides {
   total: number;
   shippingAmount?: number;
   shippingLabel?: string;
+  /** The receipt shows the live cart, whose total differs from what was charged. */
+  cartChanged?: boolean;
 }
 
 export interface PlacedOrder {
@@ -37,7 +39,7 @@ interface ExpressCartState {
   updateQty: (id: number, delta: number) => void;
   removeItem: (id: number) => void;
   clear: () => void;
-  placeOrder: (expressOverrides?: ExpressOrderOverrides) => PlacedOrder;
+  placeOrder: (expressOverrides?: ExpressOrderOverrides, items?: CartItem[]) => PlacedOrder;
   placeOrderFor: (items: CartItem[], expressOverrides?: ExpressOrderOverrides) => PlacedOrder;
 }
 
@@ -82,8 +84,8 @@ export const useExpressCartStore = create<ExpressCartState>((set, get) => ({
     return order;
   },
 
-  placeOrder: (expressOverrides?) => {
-    const order = get().placeOrderFor(get().items, expressOverrides);
+  placeOrder: (expressOverrides?, items?) => {
+    const order = get().placeOrderFor(items ?? get().items, expressOverrides);
     set({ lastOrderFromCart: true });
     return order;
   },

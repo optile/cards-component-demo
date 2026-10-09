@@ -202,7 +202,7 @@ export function useCheckoutSession(
   const configRef = useRef(config);
   configRef.current = config;
   // The live express handle for an express-only surface, kept so a post-mount amount change is pushed
-  // to the wallet sheet in place via express.update(). Null for card surfaces (they rebuild instead).
+  // to the express button in place via express.update(). Null for card surfaces (they rebuild instead).
   const expressHandleRef = useRef<ExpressDropInComponent | null>(null);
 
   const [expressStatus, setExpressStatus] = useState<ExpressStatus>("loading");
@@ -231,7 +231,7 @@ export function useCheckoutSession(
   // string an express-only surface uses to claim a hover-prefetched session, so the two can never
   // drift. Passing `wantCard` as `includeCart` is the crux here: for an express-only surface the cart
   // inputs are excluded, so a quantity tick does NOT change the key and therefore does NOT rebuild the
-  // instance — the amount is pushed to the live sheet via express.update() (effect below). A card
+  // instance: the amount is pushed to the button via express.update() (effect below). A card
   // surface keeps them, so its LIST total still rebuilds on a cart edit. `allowRealRedirect` is
   // deliberately excluded (read fresh at submit via callbacksRef). `wantCard` and `staleEpoch` (force a
   // rebuild of an aged kept-alive session) extend that identity into the full rebuild key.
@@ -399,7 +399,8 @@ export function useCheckoutSession(
   }, [sessionKey]);
 
   // In-place amount update: for an express-only surface a quantity tick no longer rebuilds the
-  // instance (see the key derivation above), so push the new amount straight to the live wallet sheet.
+  // instance (see the key derivation above), so push the new amount straight to the express button
+  // (an open wallet sheet keeps its amount; the SDK applies the update when it closes).
   // Currency is the fixed CURRENCY constant; the SDK reconciles the amount via
   // elements.update({ amount, currency }) internally, re-reading the unchanged currency attribute —
   // no teardown, no GET /express refetch. When the cart is being sent, push `products` in the SAME call

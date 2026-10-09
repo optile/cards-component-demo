@@ -86,9 +86,10 @@ export interface ExpressConfig {
   // toggling it re-pushes (products are set at drop-in time, not via `express.update`).
   sendProducts: boolean;
   // Resolver-returned products cart. When on (with `dynamicRates`), the `onShippingAddressChange` result
-  // carries its OWN per-cart-item `products` cart for the destination. Under the unified model this drives
-  // BOTH the wallet-sheet breakdown AND the charge cart, so it MUST sum to the (frozen) express base or the
-  // SDK rejects the address. Baked into the resolver closure at drop-in time, so a toggle remounts (in
+  // carries its OWN per-cart-item `products` cart for the destination, plus an `amount` summed from the same
+  // lines. Under the unified model this drives BOTH the wallet-sheet breakdown AND the charge cart; returning
+  // the matching `amount` keeps a cart edit made after the sheet opened from getting the address rejected.
+  // Baked into the resolver closure at drop-in time, so a toggle remounts (in
   // `reinitSignatureOf`). Requires `dynamicRates`; ignored otherwise.
   dynamicResolverProducts: boolean;
   // Express `onBeforeSubmit` pre-charge gate (QA). When on, the demo attaches a top-level `onBeforeSubmit`

@@ -37,9 +37,9 @@ export default function ConfigSheet() {
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const config = useExpressConfigStore();
 
-  // The resolver delay feeds `reinitSignatureOf`, so committing it on every keystroke would remount the
-  // ECE (fresh LIST + Stripe re-init) per digit. Keep the field responsive off local state and only push
-  // the debounced value to the store (mirrors the qty selector's `useDebouncedValue`).
+  // The resolver delay feeds `reinitSignatureOf`, so committing it on every drag step would remount the
+  // ECE (fresh LIST + Stripe re-init) per step. Keep the slider responsive off local state and only push
+  // the debounced value to the store.
   const [delayInput, setDelayInput] = useState(config.dynamicRatesDelayMs);
   const debouncedDelay = useDebouncedValue(delayInput, 400);
   useEffect(() => {
@@ -371,12 +371,12 @@ export default function ConfigSheet() {
                                 style={{ color: "var(--ink-soft)" }}
                               >
                                 Resolver returns its own <code>products</code>{" "}
-                                (one per cart item, summing to the frozen goods
-                                subtotal). They drive both the wallet breakdown
-                                and the charge cart, replacing the mount cart
-                                for that destination. Turn off (with Send
-                                products on) to see the mount-cart breakdown
-                                instead.
+                                (one per cart item) and an <code>amount</code>{" "}
+                                summed from them. They drive both the wallet
+                                breakdown and the charge cart, replacing the
+                                mount cart for that destination. Turn off (with
+                                Send products on) to see the mount-cart
+                                breakdown instead.
                               </span>
                             </div>
                           </Nested>

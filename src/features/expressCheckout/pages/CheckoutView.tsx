@@ -12,7 +12,8 @@ import {
 } from "@/features/expressCheckout/store/expressCartStore";
 import { useExpressCheckoutStore } from "@/features/expressCheckout/store/expressCheckoutStore";
 import { useExpressConfigStore } from "@/features/expressCheckout/store/expressConfigStore";
-import { toExpressOrderOverrides } from "@/features/expressCheckout/utils/toExpressOrderOverrides";
+import { BOOKS } from "@/features/expressCheckout/constants/books";
+import { receiptFromExpressOrder } from "@/features/expressCheckout/utils/receiptFromExpressOrder";
 import {
   chargeRefsForOutcome,
   hasFollowableRedirect,
@@ -84,7 +85,13 @@ export default function CheckoutView({ active }: Readonly<{ active: boolean }>) 
       if (outcome.kind === "success") {
         // Read finalExpressOrder (captured by useCheckout BEFORE setOutcome) and merge into order.
         const eo = useExpressCheckoutStore.getState().finalExpressOrder;
-        const order = placeOrder(eo ? toExpressOrderOverrides(eo) : undefined);
+        const receipt = receiptFromExpressOrder(
+          eo,
+          useExpressCartStore.getState().items,
+          BOOKS,
+          useExpressConfigStore.getState().shippingAddressRequired,
+        );
+        const order = placeOrder(receipt.overrides, receipt.items);
         const chargeRefs =
           useExpressCheckoutStore.getState().lastChargeRefs ?? chargeRefsForOutcome(outcome.data);
         // Bridge the receipt across the hard returnUrl reload; only stash when the SDK will navigate,
