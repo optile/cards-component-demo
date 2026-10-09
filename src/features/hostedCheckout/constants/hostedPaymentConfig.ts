@@ -8,9 +8,14 @@ export const HOSTED_PAYMENT_CONFIG = {
 export const getHostedPaymentPageUrl = (
   env: string,
   listId: string,
-  language: string = HOSTED_PAYMENT_CONFIG.language
+  language: string = HOSTED_PAYMENT_CONFIG.language,
+  paymentMethodOrder?: string
 ): string => {
-  return `https://${HOSTED_PAYMENT_CONFIG.resourcesDomain}.${env}.oscato.com/${HOSTED_PAYMENT_CONFIG.paymentPagePath}?listId=${listId}&lang=${language}`;
+  const baseUrl = `https://${HOSTED_PAYMENT_CONFIG.resourcesDomain}.${env}.oscato.com/${HOSTED_PAYMENT_CONFIG.paymentPagePath}?listId=${listId}&lang=${language}`;
+  if (paymentMethodOrder) {
+    return `${baseUrl}&paymentMethodOrder=${encodeURIComponent(paymentMethodOrder)}`;
+  }
+  return baseUrl;
 };
 
 export const getCallbackUrls = (baseUrl: string) => ({
