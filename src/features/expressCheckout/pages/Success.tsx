@@ -28,7 +28,7 @@ function claimSuccessStash(urlRefs: ExpressChargeRefs): ExpressSuccessStash | nu
   return stash && stashMatchesUrlRefs(stash.chargeRefs, urlRefs) ? stash : null;
 }
 
-type SuccessKind = "preset" | "order" | "charge" | "unknown";
+type SuccessKind = "preset" | "deferred" | "order" | "charge" | "unknown";
 
 const SUCCESS_COPY: Record<
   SuccessKind,
@@ -39,6 +39,13 @@ const SUCCESS_COPY: Record<
     title: "Authorized. Not charged yet.",
     lead: "The wallet authorized this order as a two-step preset. No money moved; the merchant completes it server-side.",
     receiptHead: "Preset created",
+    totalLabel: "Total authorized",
+  },
+  deferred: {
+    eyebrow: "Order confirmed",
+    title: "Authorized. Not captured yet.",
+    lead: "The card was authorized for this order. The money is held until the merchant captures it.",
+    receiptHead: "Payment authorized",
     totalLabel: "Total authorized",
   },
   order: {
@@ -67,6 +74,9 @@ const SUCCESS_COPY: Record<
 
 function successKind(refs: ExpressChargeRefs, hasOrder: boolean): SuccessKind {
   if (refs.operationType === "PRESET") return "preset";
+  // A deferred charge succeeds while its Stripe PaymentIntent waits for capture; the operation is
+  // still CHARGE, so the result code is the only marker.
+  if (refs.resultCode?.endsWith(".requires_capture")) return "deferred";
   if (hasOrder) return "order";
   return refs.operationType === "CHARGE" ? "charge" : "unknown";
 }
