@@ -19,6 +19,7 @@ export enum CurrentStep {
 interface HostedConfigurationStore {
   currentStep: CurrentStep;
   env: string;
+  paymentMethodOrder: string;
   merchantCart: MerchantCart;
   billingAddress: BillingAddress;
   shippingAddress: ShippingAddress;
@@ -27,6 +28,7 @@ interface HostedConfigurationStore {
   setRegistrationType?: (registrationType: RegistrationType) => void;
   setCurrentStep?: (step: CurrentStep) => void;
   setEnv?: (env: string) => void;
+  setPaymentMethodOrder?: (order: string) => void;
   setMerchantCart?: (cart: Partial<MerchantCart>) => void;
   addProduct?: (product: CartProduct) => void;
   updateProduct?: (index: number, product: Partial<CartProduct>) => void;
@@ -42,6 +44,7 @@ export const useHostedConfigurationStore = create<HostedConfigurationStore>()(
     currentStep: CurrentStep.CHOOSE_ENV,
     registrationType: 'GUEST',
     env: "sandbox",
+    paymentMethodOrder: "",
     merchantCart: {
       // Covers every cart summary case on the HPP: quantity > 1, tax, discount and a shipping line
       products: [
@@ -81,6 +84,7 @@ export const useHostedConfigurationStore = create<HostedConfigurationStore>()(
     sameAddress: true,
     setCurrentStep: (step: CurrentStep) => set({ currentStep: step }),
     setEnv: (env: string) => set({ env }),
+    setPaymentMethodOrder: (order: string) => set({ paymentMethodOrder: order }),
     setRegistrationType: (registrationType: RegistrationType) => set({ registrationType }),
     setMerchantCart: (cart: Partial<MerchantCart>) =>
       set((state) => ({

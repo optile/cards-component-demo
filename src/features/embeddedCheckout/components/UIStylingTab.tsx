@@ -13,6 +13,8 @@ const UIStylingTab: React.FC = () => {
     setPrimaryColor,
     primaryTextColor,
     setPrimaryTextColor,
+    paymentMethodOrder,
+    setPaymentMethodOrder,
   } = useConfigurationStore();
 
   return (
@@ -49,6 +51,22 @@ const UIStylingTab: React.FC = () => {
             id="primaryTextColor"
           />
         </div>
+      </div>
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-1">
+          <h3 className="font-semibold">Payment Method Order (Cards):</h3>
+          <InfoTooltip content="Comma-separated list of payment methods to display in the card payment element. Allowed methods: card, apple_pay, google_pay. Example: 'apple_pay, google_pay, card'" />
+        </div>
+        <input
+          type="text"
+          value={paymentMethodOrder}
+          onChange={(e) => setPaymentMethodOrder(e.target.value)}
+          placeholder="e.g., apple_pay, google_pay, card"
+          className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <p className="text-xs text-gray-500">
+          Leave empty to use default Stripe ordering. Invalid codes are silently ignored.
+        </p>
       </div>
     </div>
   );
