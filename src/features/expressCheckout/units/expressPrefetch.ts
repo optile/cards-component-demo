@@ -50,7 +50,7 @@ const entries = new Map<string, PrefetchEntry>();
  * `includeCart` gates the cart-derived inputs (items signature + amount). For an EXPRESS-ONLY surface
  * (`includeCart: false`) these are excluded, because express keys/wallets/networks are amount-
  * independent (amount/currency are not inputs to the express fetch): a quantity tick must NOT fragment
- * the identity or rebuild the instance - it's pushed to the live wallet sheet via `express.update(...)`
+ * the identity or rebuild the instance - it's pushed to the express button via `express.update(...)`
  * instead. A CARD surface (`includeCart: true`) keeps them, since the classic LIST total the shopper
  * sees is bound to the built session and has no in-place update seam.
  */
