@@ -248,10 +248,20 @@ export default function ConfigSheet() {
                       className="block text-[11px] -mt-2"
                       style={{ color: "var(--ink-soft)" }}
                     >
-                      DEFERRED needs operationType preset (with charge, Express
-                      shows its error state). Charge the preset with the same
-                      deferral: {`{"preselection":{"deferral":"DEFERRED"}}`}.
+                      DEFERRED needs operationType preset. Charge the preset with
+                      the same deferral:{" "}
+                      {`{"preselection":{"deferral":"DEFERRED"}}`}.
                     </span>
+                    {config.expressOperationType === "charge" &&
+                      config.expressDeferral === "DEFERRED" && (
+                        <span
+                          className="block text-[11px] mt-1"
+                          style={{ color: WARN_COLOR }}
+                        >
+                          ⚠ charge + DEFERRED: the SDK refuses this combination,
+                          so Express shows its error state and no button.
+                        </span>
+                      )}
                     <label className="flex items-center gap-2 mt-4 text-sm">
                       <input
                         type="checkbox"

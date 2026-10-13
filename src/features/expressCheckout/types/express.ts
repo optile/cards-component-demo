@@ -1,9 +1,9 @@
 import type {
-  CheckoutConfigurationProps,
   ExpressOrderDetails,
   OnSubmitSuccessCallback,
   OnSubmitErrorCallback,
 } from "@payoneer/checkout-web";
+import type { CheckoutInstanceConfig } from "@/features/embeddedCheckout/types/checkout";
 
 // Enum single-source-of-truth. Mirrors the Payoneer Web SDK's checkout configuration enums
 // (walletMode / ExpressWalletVisibility / expressOperationType).
@@ -33,8 +33,9 @@ export type ExpressDeferral = (typeof EXPRESS_DEFERRALS)[number];
 /**
  * `expressDeferral` comes from checkout-web releases newer than the published types this demo builds
  * against (`^1.31.0`), so the init config adds it here until the package carries it.
+ * `_ExpressDeferralNotYetPublished` in `checkout.type-test.ts` fails once it does.
  */
-export type ExpressInitConfig = CheckoutConfigurationProps & {
+export type ExpressInitConfig = CheckoutInstanceConfig & {
   expressDeferral?: "DEFERRED" | "NON_DEFERRED";
 };
 
