@@ -20,6 +20,11 @@ export type ExpressOperationType = (typeof EXPRESS_OPERATION_TYPES)[number];
 export const EXPRESS_BEFORE_SUBMIT_OUTCOMES = ["proceed", "decline", "throw"] as const;
 export type ExpressBeforeSubmitOutcome = (typeof EXPRESS_BEFORE_SUBMIT_OUTCOMES)[number];
 
+// LIST `preselection.deferral` for the card session the demo creates. "default" sends none, so the
+// merchant configuration decides.
+export const CARD_DEFERRALS = ["default", "DEFERRED", "NON_DEFERRED"] as const;
+export type CardDeferral = (typeof CARD_DEFERRALS)[number];
+
 // Demo-offered gateway environments (the config sheet's env dropdown). A persisted `env` is coerced back
 // into this set on rehydrate before it is interpolated into the API host / SDK <script src>.
 export const ENVS = ["checkout.integration", "sandbox"] as const;

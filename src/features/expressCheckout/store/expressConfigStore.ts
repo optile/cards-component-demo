@@ -6,7 +6,9 @@ import {
   WALLET_VISIBILITY,
   EXPRESS_OPERATION_TYPES,
   EXPRESS_BEFORE_SUBMIT_OUTCOMES,
+  CARD_DEFERRALS,
   LOCALE_VALUES,
+  type CardDeferral,
   type EnvName,
   type WalletMode,
   type WalletVisibility,
@@ -138,6 +140,11 @@ export const useExpressConfigStore = create<ExpressConfigState>()(
             p.beforeSubmitDelayMs,
             GATE_DELAY_RANGE,
             DEFAULT_EXPRESS_CONFIG.beforeSubmitDelayMs,
+          ),
+          cardDeferral: coerce<CardDeferral>(
+            p.cardDeferral,
+            CARD_DEFERRALS,
+            DEFAULT_EXPRESS_CONFIG.cardDeferral,
           ),
           expressOperationType: coerce<ExpressOperationType>(
             p.expressOperationType,
