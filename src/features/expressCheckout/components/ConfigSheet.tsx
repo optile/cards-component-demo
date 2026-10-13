@@ -14,6 +14,7 @@ import {
   WALLET_MODES,
   WALLET_VISIBILITY,
   EXPRESS_OPERATION_TYPES,
+  EXPRESS_DEFERRALS,
   EXPRESS_BEFORE_SUBMIT_OUTCOMES,
   CARD_DEFERRALS,
   LOCALES,
@@ -234,6 +235,23 @@ export default function ConfigSheet() {
                         }
                       />
                     </Field>
+                    <Field label="expressDeferral">
+                      <Select
+                        value={config.expressDeferral}
+                        options={EXPRESS_DEFERRALS}
+                        onChange={(v) =>
+                          config.setConfig({ expressDeferral: v })
+                        }
+                      />
+                    </Field>
+                    <span
+                      className="block text-[11px] -mt-2"
+                      style={{ color: "var(--ink-soft)" }}
+                    >
+                      DEFERRED needs operationType preset (with charge, Express
+                      shows its error state). Charge the preset with the same
+                      deferral: {`{"preselection":{"deferral":"DEFERRED"}}`}.
+                    </span>
                     <label className="flex items-center gap-2 mt-4 text-sm">
                       <input
                         type="checkbox"

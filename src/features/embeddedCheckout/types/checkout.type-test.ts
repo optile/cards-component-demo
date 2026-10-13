@@ -30,6 +30,8 @@ import type {
   TReadyEventData,
 } from "@payoneer/checkout-web";
 import type {
+  ExpressDeferral,
+  ExpressInitConfig,
   ExpressOperationType,
   OnSubmitError,
   OnSubmitSuccess,
@@ -69,6 +71,14 @@ export type _WalletVisibility = Expect<
 >;
 export type _ExpressOperationType = Expect<
   Equals<ExpressOperationType, NonNullable<CheckoutInstanceConfig["expressOperationType"]>>
+>;
+export type _ExpressDeferral = Expect<
+  Equals<Exclude<ExpressDeferral, "default">, NonNullable<ExpressInitConfig["expressDeferral"]>>
+>;
+// Fails once the published types carry `expressDeferral`: then delete `ExpressInitConfig`, type the
+// init config as `CheckoutInstanceConfig`, and point `_ExpressDeferral` at it.
+export type _ExpressDeferralNotYetPublished = Expect<
+  "expressDeferral" extends keyof CheckoutConfigurationProps ? false : true
 >;
 
 // 2) Pin the express-surface assumptions the demo depends on.

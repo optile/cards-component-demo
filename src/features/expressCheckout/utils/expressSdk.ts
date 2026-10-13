@@ -5,7 +5,6 @@ import { detectLocalServers } from "@/utils/localServerDetection";
 import type { LocalModeConfig } from "@/features/embeddedCheckout/constants/checkout";
 import type {
   CheckoutInstance,
-  CheckoutInstanceConfig,
   ComponentListDiff,
   OnReadyHandler,
 } from "@/features/embeddedCheckout/types/checkout";
@@ -15,7 +14,11 @@ import { DEMO_BILLING, DEMO_SHIPPING } from "@/features/expressCheckout/constant
 import type { CartItem } from "@/features/expressCheckout/store/expressCartStore";
 import { shippingOf } from "@/features/expressCheckout/store/expressCartStore";
 import { buildExpressBeforeSubmit } from "@/features/expressCheckout/units/expressElement";
-import type { OnSubmitSuccess, OnSubmitError } from "@/features/expressCheckout/types/express";
+import type {
+  ExpressInitConfig,
+  OnSubmitSuccess,
+  OnSubmitError,
+} from "@/features/expressCheckout/types/express";
 
 // Local-server detection is environment-static for the life of the tab (the dev servers don't come
 // and go mid-session) yet it fires two HEAD probes. Cache the result so every express build - and the
@@ -129,7 +132,7 @@ export async function initCheckout(params: InitCheckoutParams): Promise<Checkout
     throw new Error("Failed to load Checkout Web SDK");
   }
 
-  const checkoutConfig: CheckoutInstanceConfig = {
+  const checkoutConfig: ExpressInitConfig = {
     // Undefined on an express-only surface (no LIST session); the SDK config treats `longId` as
     // optional and resolves dropIn('express') without it.
     longId,
@@ -145,6 +148,7 @@ export async function initCheckout(params: InitCheckoutParams): Promise<Checkout
     walletMode: config.walletMode,
     expressWallets: config.expressWallets,
     expressOperationType: config.expressOperationType,
+    ...(config.expressDeferral !== "default" && { expressDeferral: config.expressDeferral }),
     onComponentListChange,
     // Public "ready" signal: fires when the card form has actually rendered (Stripe
     // PaymentElement `ready`), not merely when the element is attached to the DOM.

@@ -3,6 +3,7 @@ import {
   type CardDeferral,
   type EnvName,
   type ExpressBeforeSubmitOutcome,
+  type ExpressDeferral,
   type ExpressOperationType,
   type ExpressWalletsConfig,
   type WalletMode,
@@ -61,6 +62,7 @@ export interface ExpressConfig {
   walletMode: WalletMode;
   expressWallets: ExpressWalletsConfig;
   expressOperationType: ExpressOperationType;
+  expressDeferral: ExpressDeferral;
   allowRealRedirect: boolean;
   // ECE shipping. QA-editable: the opt-in toggle + a comma-separated ISO alpha-2 allowlist string
   // (parsed to an array when assembling the drop-in config). The rate set is a fixed preset below (not
@@ -150,6 +152,8 @@ export function reinitSignatureOf(config: ExpressConfig): string {
     config.expressWallets.applePay,
     config.expressWallets.googlePay,
     config.expressOperationType,
+    // Read when Express is created (it sets the token's capture method), so a change must remount.
+    config.expressDeferral,
     // ECE shipping is a create-time ECE option (rates are not updatable in place), so a change to the
     // opt-in or the allowlist must remount. Only these two QA-editable fields participate; the rate
     // preset is fixed, so it never fragments the identity.
@@ -201,6 +205,7 @@ export const DEFAULT_EXPRESS_CONFIG: ExpressConfig = {
   walletMode: "both",
   expressWallets: { applePay: "auto", googlePay: "auto" },
   expressOperationType: "charge",
+  expressDeferral: "default",
   allowRealRedirect: false,
   // ECE shipping off by default; a comma-separated allowlist QA can edit; a fixed rate preset.
   shippingAddressRequired: false,

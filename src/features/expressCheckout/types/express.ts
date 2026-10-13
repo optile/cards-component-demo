@@ -1,4 +1,5 @@
 import type {
+  CheckoutConfigurationProps,
   ExpressOrderDetails,
   OnSubmitSuccessCallback,
   OnSubmitErrorCallback,
@@ -24,6 +25,18 @@ export type ExpressBeforeSubmitOutcome = (typeof EXPRESS_BEFORE_SUBMIT_OUTCOMES)
 // merchant configuration decides.
 export const CARD_DEFERRALS = ["default", "DEFERRED", "NON_DEFERRED"] as const;
 export type CardDeferral = (typeof CARD_DEFERRALS)[number];
+
+// Init `expressDeferral` (two-step preset flow only). "default" omits it, so the SDK uses NON_DEFERRED.
+export const EXPRESS_DEFERRALS = ["default", "DEFERRED", "NON_DEFERRED"] as const;
+export type ExpressDeferral = (typeof EXPRESS_DEFERRALS)[number];
+
+/**
+ * `expressDeferral` comes from checkout-web releases newer than the published types this demo builds
+ * against (`^1.31.0`), so the init config adds it here until the package carries it.
+ */
+export type ExpressInitConfig = CheckoutConfigurationProps & {
+  expressDeferral?: "DEFERRED" | "NON_DEFERRED";
+};
 
 // Demo-offered gateway environments (the config sheet's env dropdown). A persisted `env` is coerced back
 // into this set on rehydrate before it is interpolated into the API host / SDK <script src>.
