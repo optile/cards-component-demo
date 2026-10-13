@@ -146,7 +146,7 @@ The browser cannot call the OPG host directly from `https://localhost` because o
 
 Express Checkout works with the existing local development mode. Run checkout-web on port 8700 and checkout-web-stripe on port 8991 as described above.
 
-Use the ⚙ button in the bottom-right corner to change `walletMode`, each Apple Pay and Google Pay setting in `expressWallets` (`auto`, `always`, or `never`), and `expressOperationType` (defaults to `charge`). These settings are applied when the Express Checkout Element is created, so each change remounts the element.
+Use the ⚙ button in the bottom-right corner to change `walletMode`, each Apple Pay and Google Pay setting in `expressWallets` (`auto`, `always`, or `never`), `expressOperationType` (defaults to `charge`), and `expressDeferral` (`default` leaves it unset; `DEFERRED` needs `preset`). These settings are applied when the Express Checkout Element is created, so each change remounts the element.
 
 `'Fraunces'` (the storefront serif) is loaded from Google Fonts. `'Avenir Next World'` is a licensed Payoneer brand font that is not bundled here, so the sans falls back to the system stack. This affects appearance only.
 

@@ -7,9 +7,11 @@ import {
   EXPRESS_OPERATION_TYPES,
   EXPRESS_BEFORE_SUBMIT_OUTCOMES,
   CARD_DEFERRALS,
+  EXPRESS_DEFERRALS,
   LOCALE_VALUES,
   type CardDeferral,
   type EnvName,
+  type ExpressDeferral,
   type WalletMode,
   type WalletVisibility,
   type ExpressOperationType,
@@ -150,6 +152,11 @@ export const useExpressConfigStore = create<ExpressConfigState>()(
             p.expressOperationType,
             EXPRESS_OPERATION_TYPES,
             DEFAULT_EXPRESS_CONFIG.expressOperationType,
+          ),
+          expressDeferral: coerce<ExpressDeferral>(
+            p.expressDeferral,
+            EXPRESS_DEFERRALS,
+            DEFAULT_EXPRESS_CONFIG.expressDeferral,
           ),
           expressWallets: {
             applePay: coerce<WalletVisibility>(
