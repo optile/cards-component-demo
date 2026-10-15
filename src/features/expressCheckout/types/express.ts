@@ -21,14 +21,20 @@ export type ExpressOperationType = (typeof EXPRESS_OPERATION_TYPES)[number];
 export const EXPRESS_BEFORE_SUBMIT_OUTCOMES = ["proceed", "decline", "throw"] as const;
 export type ExpressBeforeSubmitOutcome = (typeof EXPRESS_BEFORE_SUBMIT_OUTCOMES)[number];
 
-// LIST `preselection.deferral` for the card session the demo creates. "default" sends none, so the
-// merchant configuration decides.
-export const CARD_DEFERRALS = ["default", "DEFERRED", "NON_DEFERRED"] as const;
+// Card payment capture: always sent as LIST `preselection.deferral`, because an account can default to
+// deferred and "Immediate" must hold either way.
+export const CARD_DEFERRALS = ["NON_DEFERRED", "DEFERRED"] as const;
 export type CardDeferral = (typeof CARD_DEFERRALS)[number];
 
-// Init `expressDeferral` (two-step preset flow only). "default" omits it, so the SDK uses NON_DEFERRED.
-export const EXPRESS_DEFERRALS = ["default", "DEFERRED", "NON_DEFERRED"] as const;
+// Express payment capture, the init `expressDeferral` (two-step preset flow only). NON_DEFERRED is the SDK
+// default, so the init config omits it.
+export const EXPRESS_DEFERRALS = ["NON_DEFERRED", "DEFERRED"] as const;
 export type ExpressDeferral = (typeof EXPRESS_DEFERRALS)[number];
+
+export const DEFERRAL_LABELS: Record<CardDeferral | ExpressDeferral, string> = {
+  NON_DEFERRED: "Immediate (NON_DEFERRED)",
+  DEFERRED: "Deferred (DEFERRED)",
+};
 
 /**
  * `expressDeferral` comes from checkout-web releases newer than the published types this demo builds
