@@ -1,8 +1,5 @@
 import { create } from "zustand";
-import type {
-  ExpressOrderDetails,
-  ExpressOrderWithProducts,
-} from "@/features/expressCheckout/types/express";
+import type { ExpressOrderDetails } from "@/features/expressCheckout/types/express";
 import type { ExpressChargeRefs } from "@/features/expressCheckout/utils/chargeRefs";
 
 export type ExpressOutcome =
@@ -18,8 +15,8 @@ interface ExpressCheckoutState {
   setLiveExpressOrder: (o: ExpressOrderDetails | null) => void;
   // Final express order captured from onSubmitSuccess BEFORE setOutcome clears. Memory-only (no
   // localStorage). Cleared when leaving the Success page or starting a new checkout.
-  finalExpressOrder: ExpressOrderWithProducts | null;
-  setFinalExpressOrder: (o: ExpressOrderWithProducts | null) => void;
+  finalExpressOrder: ExpressOrderDetails | null;
+  setFinalExpressOrder: (o: ExpressOrderDetails | null) => void;
   // Charge identifiers from the latest onSubmitSuccess / onSubmitError (soft-nav). Real redirect
   // reloads wipe this; Success then reads returnUrl query params instead. Cleared on result-page unmount.
   lastChargeRefs: ExpressChargeRefs | null;

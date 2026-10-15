@@ -1,5 +1,6 @@
 import type {
   ExpressOrderDetails,
+  ExpressProductConfig,
   OnSubmitSuccessCallback,
   OnSubmitErrorCallback,
 } from "@payoneer/checkout-web";
@@ -38,7 +39,7 @@ export const DEFERRAL_LABELS: Record<CardDeferral | ExpressDeferral, string> = {
 
 /**
  * `expressDeferral` comes from checkout-web releases newer than the published types this demo builds
- * against (`^1.31.0`), so the init config adds it here until the package carries it.
+ * against (`^1.32.0`), so the init config adds it here until the package carries it.
  * `_ExpressDeferralNotYetPublished` in `checkout.type-test.ts` fails once it does.
  */
 export type ExpressInitConfig = CheckoutInstanceConfig & {
@@ -144,21 +145,7 @@ export type { ExpressOrderDetails };
 
 const EXPRESS_ORDER_STATUSES = ["provisional", "final"] as const;
 
-/** One charged cart line on `expressOrder.products`. */
-export interface ExpressOrderProductLine {
-  code?: string;
-  name: string;
-  amount: string;
-  quantity?: number;
-}
-
-/**
- * `products` comes from checkout-web releases newer than the published types this demo builds against
- * (`^1.31.0`), so it is read only through {@link toExpressOrder}.
- */
-export type ExpressOrderWithProducts = ExpressOrderDetails & { products?: ExpressOrderProductLine[] };
-
-function isOrderProductLine(value: unknown): value is ExpressOrderProductLine {
+function isOrderProductLine(value: unknown): value is ExpressProductConfig {
   if (typeof value !== "object" || value === null) return false;
   const p = value as Record<string, unknown>;
   return (
@@ -170,7 +157,10 @@ function isOrderProductLine(value: unknown): value is ExpressOrderProductLine {
   );
 }
 
-function isExpressOrderDetails(data: unknown): data is ExpressOrderDetails {
+// `products` is left unchecked here; `toExpressOrder` validates it line by line.
+function isExpressOrderDetails(
+  data: unknown,
+): data is Omit<ExpressOrderDetails, "products"> & { products?: unknown } {
   if (typeof data !== "object" || data === null) return false;
   const o = data as Record<string, unknown>;
   if (
@@ -204,9 +194,9 @@ function isExpressOrderDetails(data: unknown): data is ExpressOrderDetails {
  * `products` is kept only when every line is valid, otherwise dropped on its own, so one bad line never
  * costs the charged total.
  */
-export function toExpressOrder(data: unknown): ExpressOrderWithProducts | null {
+export function toExpressOrder(data: unknown): ExpressOrderDetails | null {
   if (!isExpressOrderDetails(data)) return null;
-  const { products, ...order } = data as ExpressOrderDetails & { products?: unknown };
+  const { products, ...order } = data;
   return Array.isArray(products) && products.every(isOrderProductLine) ? { ...order, products } : order;
 }
 
