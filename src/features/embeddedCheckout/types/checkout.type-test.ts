@@ -11,6 +11,7 @@ import type {
   DropInComponent,
   ExpressDropInComponent,
   ExpressDropInProps,
+  ListSessionRequest,
   NetworkInformation,
   OnReadyHandler,
   PaymentMethod,
@@ -22,6 +23,7 @@ import type {
   DropIn,
   ExpressDropIn,
   ExpressDropInConfig,
+  ListDataProps,
   OnComponentListChangeCallback,
   OnReadyCallback,
   OnSubmitErrorCallback,
@@ -30,6 +32,7 @@ import type {
   TReadyEventData,
 } from "@payoneer/checkout-web";
 import type {
+  CardDeferral,
   ExpressDeferral,
   ExpressInitConfig,
   ExpressOperationType,
@@ -73,12 +76,18 @@ export type _ExpressOperationType = Expect<
   Equals<ExpressOperationType, NonNullable<CheckoutInstanceConfig["expressOperationType"]>>
 >;
 export type _ExpressDeferral = Expect<
-  Equals<Exclude<ExpressDeferral, "default">, NonNullable<ExpressInitConfig["expressDeferral"]>>
+  Equals<ExpressDeferral, NonNullable<ExpressInitConfig["expressDeferral"]>>
 >;
 // Fails once the published types carry `expressDeferral`: then delete `ExpressInitConfig`, type the
 // init config as `CheckoutInstanceConfig`, and point `_ExpressDeferral` at it.
 export type _ExpressDeferralNotYetPublished = Expect<
   "expressDeferral" extends keyof CheckoutConfigurationProps ? false : true
+>;
+// The published types do not export the payment API's `Deferral` enum, so reach it through the LIST result.
+type ApiDeferral = `${NonNullable<NonNullable<ListDataProps["presetAccount"]>["deferral"]>}`;
+export type _CardDeferral = Expect<Equals<CardDeferral, ApiDeferral>>;
+export type _ListRequestDeferral = Expect<
+  Equals<CardDeferral, NonNullable<NonNullable<ListSessionRequest["preselection"]>["deferral"]>>
 >;
 
 // 2) Pin the express-surface assumptions the demo depends on.

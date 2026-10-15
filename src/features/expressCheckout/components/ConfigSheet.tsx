@@ -17,6 +17,7 @@ import {
   EXPRESS_DEFERRALS,
   EXPRESS_BEFORE_SUBMIT_OUTCOMES,
   CARD_DEFERRALS,
+  DEFERRAL_LABELS,
   LOCALES,
 } from "@/features/expressCheckout/types/express";
 
@@ -235,10 +236,11 @@ export default function ConfigSheet() {
                         }
                       />
                     </Field>
-                    <Field label="expressDeferral">
+                    <Field label="Capture (expressDeferral)">
                       <Select
                         value={config.expressDeferral}
                         options={EXPRESS_DEFERRALS}
+                        labels={DEFERRAL_LABELS}
                         onChange={(v) =>
                           config.setConfig({ expressDeferral: v })
                         }
@@ -248,8 +250,9 @@ export default function ConfigSheet() {
                       className="block text-[11px] -mt-2"
                       style={{ color: "var(--ink-soft)" }}
                     >
-                      DEFERRED needs operationType preset. Charge the preset with
-                      the same deferral:{" "}
+                      Deferred authorizes now and leaves capture to the merchant.
+                      It needs operationType preset; charge the preset with the
+                      same deferral:{" "}
                       {`{"preselection":{"deferral":"DEFERRED"}}`}.
                     </span>
                     {config.expressOperationType === "charge" &&
@@ -258,7 +261,7 @@ export default function ConfigSheet() {
                           className="block text-[11px] mt-1"
                           style={{ color: WARN_COLOR }}
                         >
-                          ⚠ charge + DEFERRED: the SDK refuses this combination,
+                          ⚠ charge + Deferred: the SDK refuses this combination,
                           so Express shows its error state and no button.
                         </span>
                       )}
@@ -612,13 +615,14 @@ function CardSettings() {
 
   return (
     <Group
-      title="LIST session"
-      description="The session the card form pays against, created from the cart."
+      title="Payment capture"
+      description="When the card payment is captured. Sent as preselection.deferral on the card session created from the cart."
     >
-      <Field label="Deferral">
+      <Field label="Capture">
         <Select
           value={cardDeferral}
           options={CARD_DEFERRALS}
+          labels={DEFERRAL_LABELS}
           onChange={(v) => setConfig({ cardDeferral: v })}
         />
       </Field>
@@ -626,8 +630,8 @@ function CardSettings() {
         className="block text-[11px] -mt-2"
         style={{ color: "var(--ink-soft)" }}
       >
-        DEFERRED authorizes now and leaves capture to the merchant. default
-        leaves it to the merchant configuration. Express is unaffected.
+        Deferred authorizes now and leaves capture to the merchant. Express has
+        its own capture setting.
       </span>
     </Group>
   );
@@ -774,10 +778,12 @@ function Field({
 function Select<T extends string>({
   value,
   options,
+  labels,
   onChange,
 }: {
   value: T;
   options: readonly T[];
+  labels?: Readonly<Record<T, string>>;
   onChange: (v: T) => void;
 }) {
   return (
@@ -794,7 +800,7 @@ function Select<T extends string>({
     >
       {options.map((o) => (
         <option key={o} value={o}>
-          {o}
+          {labels?.[o] ?? o}
         </option>
       ))}
     </select>

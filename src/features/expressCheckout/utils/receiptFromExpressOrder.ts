@@ -1,10 +1,6 @@
 import type { CartItem, ExpressOrderOverrides } from "@/features/expressCheckout/store/expressCartStore";
 import { subtotalOf, totalOf } from "@/features/expressCheckout/store/expressCartStore";
-import type {
-  Book,
-  ExpressOrderProductLine,
-  ExpressOrderWithProducts,
-} from "@/features/expressCheckout/types/express";
+import type { Book, ExpressOrderDetails } from "@/features/expressCheckout/types/express";
 import { toExpressOrderOverrides } from "@/features/expressCheckout/utils/toExpressOrderOverrides";
 
 const BOOK_CODE = /^book-(\d+)$/;
@@ -16,7 +12,7 @@ const SHIPPING_FEE_CODE = "shipping-fee";
  * caller falls back to the live cart instead of showing a partial receipt.
  */
 export function toReceiptItems(
-  products: readonly ExpressOrderProductLine[] | undefined,
+  products: Readonly<ExpressOrderDetails["products"]>,
   catalog: readonly Book[],
 ): CartItem[] | undefined {
   if (!products || products.length === 0) return undefined;
@@ -38,7 +34,7 @@ const toCents = (major: number): number => Math.round(major * 100);
  * cents. With wallet shipping rates on, that base is the goods subtotal (the cart's flat fee is not charged).
  */
 function chargedDiffersFromCart(
-  eo: ExpressOrderWithProducts,
+  eo: ExpressOrderDetails,
   items: CartItem[],
   shippingAddressRequired: boolean,
 ): boolean {
@@ -52,7 +48,7 @@ function chargedDiffersFromCart(
  * live cart, flagged when its total differs from what was charged.
  */
 export function receiptFromExpressOrder(
-  eo: ExpressOrderWithProducts | null | undefined,
+  eo: ExpressOrderDetails | null | undefined,
   liveItems: CartItem[],
   catalog: readonly Book[],
   shippingAddressRequired: boolean,

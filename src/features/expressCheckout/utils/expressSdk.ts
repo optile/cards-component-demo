@@ -74,9 +74,7 @@ export async function createExpressSession(
   const shipping = { ...DEMO_SHIPPING, country: config.country };
   const request = {
     ...buildListSessionUpdates(cart, billing, shipping, true, config.env),
-    ...(config.cardDeferral !== "default" && {
-      preselection: { deferral: config.cardDeferral },
-    }),
+    preselection: { deferral: config.cardDeferral },
   };
   const response = await CheckoutApiService.generateListSession(request, config.env);
   return { longId: response.id };
@@ -148,7 +146,7 @@ export async function initCheckout(params: InitCheckoutParams): Promise<Checkout
     walletMode: config.walletMode,
     expressWallets: config.expressWallets,
     expressOperationType: config.expressOperationType,
-    ...(config.expressDeferral !== "default" && { expressDeferral: config.expressDeferral }),
+    ...(config.expressDeferral === "DEFERRED" && { expressDeferral: config.expressDeferral }),
     onComponentListChange,
     // Public "ready" signal: fires when the card form has actually rendered (Stripe
     // PaymentElement `ready`), not merely when the element is attached to the DOM.

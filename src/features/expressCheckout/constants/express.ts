@@ -104,7 +104,7 @@ export interface ExpressConfig {
   // Artificial gate latency (ms) to exercise the async pre-charge hook. Ranged 2-20s in the config sheet;
   // ≥15s is flagged as a warning zone (a slow gate risks the wallet invalidating the open sheet).
   beforeSubmitDelayMs: number;
-  // Deferral of the card LIST session. Card surfaces only.
+  // Card payment capture, sent as the LIST `preselection.deferral`. Card surfaces only.
   cardDeferral: CardDeferral;
 }
 
@@ -205,7 +205,7 @@ export const DEFAULT_EXPRESS_CONFIG: ExpressConfig = {
   walletMode: "both",
   expressWallets: { applePay: "auto", googlePay: "auto" },
   expressOperationType: "charge",
-  expressDeferral: "default",
+  expressDeferral: "NON_DEFERRED",
   allowRealRedirect: false,
   // ECE shipping off by default; a comma-separated allowlist QA can edit; a fixed rate preset.
   shippingAddressRequired: false,
@@ -226,5 +226,5 @@ export const DEFAULT_EXPRESS_CONFIG: ExpressConfig = {
   beforeSubmitOutcome: "proceed",
   // Default gate latency 2s (the low end of the 2-20s slider range).
   beforeSubmitDelayMs: 2000,
-  cardDeferral: "default",
+  cardDeferral: "NON_DEFERRED",
 };
