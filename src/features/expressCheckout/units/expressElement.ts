@@ -279,7 +279,7 @@ export interface MountExpressOptions {
  *
  * INSTANCE-AGNOSTIC: it never creates or destroys the instance - the caller (useCheckoutSession)
  * owns that lifecycle. This is what lets the checkout page share ONE instance across express + card
- * (required by the SDK's per-account Stripe singleton) while the book-detail page uses
+ * (the recommended integration model) while the book-detail page uses
  * its own instance, with zero duplicated express lifecycle code. There is no separate cleanup: the
  * caller's `destroy()` removes the drop-in and every listener subscribed here.
  *

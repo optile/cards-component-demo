@@ -101,13 +101,11 @@ export interface InitCheckoutParams {
  * Loads the SDK (local-mode aware) and initialises ONE CheckoutWeb instance that hosts BOTH the
  * express wallet element and the classic card drop-in.
  *
- * Why a single instance: the SDK's Stripe layer exposes a module-level singleton Stripe instance
- * that binds to the FIRST caller's publishable key + connected account and
- * returns that same Stripe object to everyone after. Running two CheckoutWeb instances (one per
- * component) therefore loads Stripe.js twice and makes the express ECE and the card element fight
- * over that singleton - the ECE ends up on the wrong account and reports no wallet, so Google Pay
- * never renders. One instance = one Stripe.js load = one shared instance for the same session, which
- * is also how a real merchant integration mounts multiple drop-ins.
+ * Why a single instance: it is the recommended integration model. `env`, `clientId`, `country`
+ * and `walletMode` are page-wide settings that a second instance would have to repeat exactly
+ * (e.g. a card instance without `walletMode: 'express'` can show its own Google Pay tab next to
+ * the Express button). A second instance is harmless (each Stripe account gets its own Stripe
+ * instance, and Stripe.js and the SDK scripts load once per page) but never needed.
  *
  * `preload: ['stripe:cards']` warms the card component; `dropIn('express')` loads its own chain on
  * mount (preloading "express" is unnecessary and logs an "unknown method" breadcrumb under some
