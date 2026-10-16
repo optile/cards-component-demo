@@ -58,8 +58,8 @@ export default function CheckoutView({ active }: Readonly<{ active: boolean }>) 
     : cartShipping;
   const total = hasLiveExpressShipping ? Number(liveExpressOrder.amount) : cartTotal;
 
-  // ONE CheckoutWeb instance drives both drop-ins (see useCheckout for why a single instance is
-  // required). It mounts the express element and the card form into these two slots.
+  // ONE CheckoutWeb instance drives both drop-ins (see useCheckoutSession for why one instance is
+  // the recommended model). It mounts the express element and the card form into these two slots.
   const expressSlotRef = useRef<HTMLDivElement | null>(null);
   const cardSlotRef = useRef<HTMLDivElement | null>(null);
   const { expressStatus, expressError, expressAvailable, cardStatus, cardError } =
