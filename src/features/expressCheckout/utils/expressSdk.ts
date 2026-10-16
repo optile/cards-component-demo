@@ -105,7 +105,7 @@ export interface InitCheckoutParams {
  * and `walletMode` are page-wide settings that a second instance would have to repeat exactly
  * (e.g. a card instance without `walletMode: 'express'` can show its own Google Pay tab next to
  * the Express button). A second instance is harmless (each Stripe account gets its own Stripe
- * instance, and with a checkout-web that includes PCPAY-5947, Stripe.js and the SDK scripts load
+ * instance, and with a checkout-web that includes PCPAY-5965, Stripe.js and the SDK scripts load
  * once per page) but never needed.
  *
  * `preload: ['stripe:cards']` warms the card component; `dropIn('express')` loads its own chain on
