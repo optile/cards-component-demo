@@ -8,8 +8,16 @@ import {
   useExpressCartStore,
   subtotalOf,
   shippingOf,
-  totalOf,
 } from "@/features/expressCheckout/store/expressCartStore";
+import {
+  BUYER_COUNTRIES,
+  useExpressBuyerStore,
+} from "@/features/expressCheckout/store/expressBuyerStore";
+import {
+  cardOrderOverrides,
+  cardTotalOf,
+  taxOf,
+} from "@/features/expressCheckout/utils/cardTotals";
 import { useExpressCheckoutStore } from "@/features/expressCheckout/store/expressCheckoutStore";
 import { useExpressConfigStore } from "@/features/expressCheckout/store/expressConfigStore";
 import { BOOKS } from "@/features/expressCheckout/constants/books";
@@ -20,18 +28,83 @@ import {
   stashExpressSuccess,
 } from "@/features/expressCheckout/utils/chargeRefs";
 
-// Demo-only shipping options (matches the design). Not wired to the express session — the actual
-// session country is controlled by the ⚙ config sheet.
-const COUNTRIES: Array<[string, string]> = [
-  ["US", "United States"],
-  ["GB", "United Kingdom"],
-  ["CA", "Canada"],
-  ["AU", "Australia"],
-  ["DE", "Germany"],
-  ["IN", "India"],
-  ["PH", "Philippines"],
-  ["OTHER", "Somewhere else"],
-];
+/**
+ * Buyer details for the card LIST (billing + est. tax country). Express keeps the ⚙ config-sheet
+ * country and DEMO_* buyer. Owns the live-field subscriptions so a keystroke re-renders only the form.
+ */
+function BuyerDetails() {
+  const email = useExpressBuyerStore((s) => s.email);
+  const fullName = useExpressBuyerStore((s) => s.fullName);
+  const country = useExpressBuyerStore((s) => s.country);
+  const setEmail = useExpressBuyerStore((s) => s.setEmail);
+  const setFullName = useExpressBuyerStore((s) => s.setFullName);
+  const setCountry = useExpressBuyerStore((s) => s.setCountry);
+  const commitBuyer = useExpressBuyerStore((s) => s.commit);
+  const showHint = !email.trim() || !fullName.trim();
+
+  return (
+    <div className="pay-section">
+      <div className="pay-section-head">
+        <span className="pay-section-title">Your details</span>
+      </div>
+      <div className="form-group">
+        <label className="form-label" htmlFor="co-email">
+          Email
+        </label>
+        <input
+          id="co-email"
+          type="email"
+          autoComplete="email"
+          className="form-input"
+          placeholder="you@example.com"
+          aria-describedby={showHint ? "co-details-hint" : undefined}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          onBlur={() => commitBuyer()}
+        />
+      </div>
+      <div className="form-row">
+        <div className="form-group">
+          <label className="form-label" htmlFor="co-name">
+            Full name
+          </label>
+          <input
+            id="co-name"
+            type="text"
+            autoComplete="name"
+            className="form-input"
+            placeholder="Alex Reader"
+            aria-describedby={showHint ? "co-details-hint" : undefined}
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            onBlur={() => commitBuyer()}
+          />
+        </div>
+        <div className="form-group">
+          <label className="form-label" htmlFor="co-country">
+            Shipping country
+          </label>
+          <select
+            id="co-country"
+            autoComplete="country"
+            className="form-input"
+            value={country}
+            onChange={(e) => setCountry(e.target.value)}
+          >
+            {BUYER_COUNTRIES.map(([code, name]) => (
+              <option key={code} value={code}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <p id="co-details-hint" className="form-hint" aria-live="polite">
+        {showHint ? "Add your email and name for the card receipt. Wallets still work." : ""}
+      </p>
+    </div>
+  );
+}
 
 /**
  * `active` = the checkout route is the one on screen. The surface is kept mounted (hidden) while
@@ -48,7 +121,12 @@ export default function CheckoutView({ active }: Readonly<{ active: boolean }>) 
 
   const subtotal = subtotalOf(items);
   const cartShipping = shippingOf(items);
-  const cartTotal = totalOf(items);
+
+  const country = useExpressBuyerStore((s) => s.country);
+
+  // Card totals (shipping + est. tax by buyer country). Live express shipping bypasses tax.
+  const estTax = taxOf(items, country);
+  const cartTotal = cardTotalOf(items, country);
 
   // When ECE shipping is on and the wallet sheet has sent a provisional order, prefer its shipping +
   // total over the cart's flat/free shippingOf/totalOf. Display-only: NEVER call express.update here.
@@ -85,19 +163,30 @@ export default function CheckoutView({ active }: Readonly<{ active: boolean }>) 
       if (outcome.kind === "success") {
         // Read finalExpressOrder (captured by useCheckout BEFORE setOutcome) and merge into order.
         const eo = useExpressCheckoutStore.getState().finalExpressOrder;
+        const cartItems = useExpressCartStore.getState().items;
         const receipt = receiptFromExpressOrder(
           eo,
-          useExpressCartStore.getState().items,
+          cartItems,
           BOOKS,
           useExpressConfigStore.getState().shippingAddressRequired,
         );
-        const order = placeOrder(receipt.overrides, receipt.items);
+        // Card: totals of the country the LIST was priced for (est. tax). Express: the wallet's own
+        // tax-free overrides.
+        const { lastSuccessSource, cardListCountry } = useExpressCheckoutStore.getState();
+        const overrides =
+          lastSuccessSource === "card"
+            ? cardOrderOverrides(
+                cartItems,
+                cardListCountry ?? useExpressBuyerStore.getState().country,
+              )
+            : receipt.overrides;
+        const order = placeOrder(overrides, receipt.items);
         const chargeRefs =
           useExpressCheckoutStore.getState().lastChargeRefs ?? chargeRefsForOutcome(outcome.data);
         // Bridge the receipt across the hard returnUrl reload; only stash when the SDK will navigate,
         // or the unclaimed stash would decorate a later receipt.
         if (useExpressConfigStore.getState().allowRealRedirect && hasFollowableRedirect(outcome.data)) {
-          stashExpressSuccess({ order, chargeRefs });
+          stashExpressSuccess({ order, chargeRefs, fromCart: true });
         }
         navigate("/express/success");
       } else {
@@ -108,7 +197,7 @@ export default function CheckoutView({ active }: Readonly<{ active: boolean }>) 
   }, [active, navigate, placeOrder]);
 
   const completePurchase = () => {
-    placeOrder();
+    placeOrder(cardOrderOverrides(items, country));
     navigate("/express/success");
   };
 
@@ -126,42 +215,7 @@ export default function CheckoutView({ active }: Readonly<{ active: boolean }>) 
       <div className="checkout-page">
         {/* Left: customer details + order summary */}
         <div className="checkout-col">
-          <div className="pay-section">
-            <div className="pay-section-head">
-              <span className="pay-section-title">Your details</span>
-            </div>
-            <div className="form-group">
-              <label className="form-label" htmlFor="co-email">
-                Email
-              </label>
-              <input
-                id="co-email"
-                type="email"
-                className="form-input"
-                placeholder="you@example.com"
-              />
-            </div>
-            <div className="form-row">
-              <div className="form-group">
-                <label className="form-label" htmlFor="co-name">
-                  Full name
-                </label>
-                <input id="co-name" type="text" className="form-input" placeholder="Alex Reader" />
-              </div>
-              <div className="form-group">
-                <label className="form-label" htmlFor="co-country">
-                  Shipping country
-                </label>
-                <select id="co-country" className="form-input" defaultValue="US">
-                  {COUNTRIES.map(([code, name]) => (
-                    <option key={code} value={code}>
-                      {name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
+          <BuyerDetails />
 
           <div className="pay-section">
             <div className="pay-section-head">
@@ -186,6 +240,12 @@ export default function CheckoutView({ active }: Readonly<{ active: boolean }>) 
               <span>Shipping</span>
               <span>{shipping === 0 ? "Free*" : `$${shipping.toFixed(2)}`}</span>
             </div>
+            {!hasLiveExpressShipping && (
+              <div className="summary-row">
+                <span>Est. tax</span>
+                <span>${estTax.toFixed(2)}</span>
+              </div>
+            )}
             <div className="summary-total">
               <span>Total</span>
               <span>${total.toFixed(2)}</span>

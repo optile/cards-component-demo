@@ -70,7 +70,7 @@ export function useBuyNowExpress(
       const order = placeOrderFor(receipt.items, receipt.overrides);
       // Bridge the receipt across the hard returnUrl reload; only stash when the SDK will navigate,
       // or the unclaimed stash would decorate a later receipt.
-      if (allowRealRedirect && hasFollowableRedirect(data)) stashExpressSuccess({ order, chargeRefs });
+      if (allowRealRedirect && hasFollowableRedirect(data)) stashExpressSuccess({ order, chargeRefs, fromCart: false });
       navigate("/express/success");
       return allowRealRedirect;
     },

@@ -4,6 +4,8 @@ import { subtotalOf, totalOf, type CartItem } from "@/features/expressCheckout/s
 import {
   createExpressSession,
   initCheckout,
+  updateCardListSession,
+  type CardListSession,
   type InitCheckoutParams,
 } from "@/features/expressCheckout/utils/expressSdk";
 import {
@@ -27,9 +29,16 @@ import type {
   OnSubmitSuccess,
   OnSubmitError,
 } from "@/features/expressCheckout/types/express";
+import {
+  buyerSignatureOf,
+  useExpressBuyerStore,
+  type BuyerForm,
+} from "@/features/expressCheckout/store/expressBuyerStore";
 import { useExpressCheckoutStore } from "@/features/expressCheckout/store/expressCheckoutStore";
+import { cardTotalOf } from "@/features/expressCheckout/utils/cardTotals";
 import {
   hostChargeIdsFromExpress,
+  markCartCheckoutList,
   type ExpressChargeRefs,
 } from "@/features/expressCheckout/utils/chargeRefs";
 
@@ -82,6 +91,8 @@ interface AcquireInstanceArgs {
   config: ExpressConfig;
   items: CartItem[];
   currency: string;
+  // The committed buyer the card LIST is created for (read at creation time). Card surfaces only.
+  readBuyer: () => BuyerForm;
   isCancelled: () => boolean;
   stampBuiltAt: (at: number) => void;
   submitHandlers: () => {
@@ -90,6 +101,21 @@ interface AcquireInstanceArgs {
   };
   onComponentListChange?: InitCheckoutParams["onComponentListChange"];
   onReady?: InitCheckoutParams["onReady"];
+  cardBeforeSubmit?: InitCheckoutParams["cardBeforeSubmit"];
+}
+
+/** The card LIST a built instance pays against, and the committed buyer and total it carries. */
+interface BuiltCardList {
+  session: CardListSession;
+  buyerSig: string;
+  total: number;
+}
+
+interface AcquiredInstance {
+  instance: CheckoutInstance;
+  // Set only for a card surface.
+  cardList?: BuiltCardList;
+  cardListCountry?: string;
 }
 
 /**
@@ -100,7 +126,7 @@ interface AcquireInstanceArgs {
  */
 async function acquireExpressInstance(
   args: AcquireInstanceArgs,
-): Promise<CheckoutInstance | null> {
+): Promise<AcquiredInstance | null> {
   const { wantCard, prefetchKey, config, items, currency, isCancelled } = args;
 
   const claimed = wantCard ? null : claimExpressSession(prefetchKey);
@@ -116,7 +142,7 @@ async function acquireExpressInstance(
       args.stampBuiltAt(claimed.createdAt);
       const { onSubmitSuccess, onSubmitError } = args.submitHandlers();
       claimed.setHandlers(onSubmitSuccess, onSubmitError);
-      return instance;
+      return { instance };
     } catch {
       // Prefetch build failed — fall through to a fresh build.
     }
@@ -125,26 +151,37 @@ async function acquireExpressInstance(
   // A CARD surface needs a LIST session (the classic drop-in resolves its methods from the LIST);
   // an EXPRESS-ONLY surface does not - dropIn('express') resolves without a longId, so skip the
   // POST /checkout/session round-trip entirely and init the instance with no LIST.
-  const longId = wantCard
-    ? (await createExpressSession(config, items, currency)).longId
-    : undefined;
+  let cardList: BuiltCardList | undefined;
+  let cardListCountry: string | undefined;
+  if (wantCard) {
+    const buyer = args.readBuyer();
+    const session = await createExpressSession(config, items, currency, buyer);
+    cardList = {
+      session,
+      buyerSig: buyerSignatureOf(buyer),
+      total: cardTotalOf(items, buyer.country),
+    };
+    cardListCountry = buyer.country;
+  }
+  if (isCancelled()) return null;
   // Stamp build age for the keep-alive TTL guard (fresh build = clock reset).
-  if (!isCancelled()) args.stampBuiltAt(Date.now());
+  args.stampBuiltAt(Date.now());
   const { onSubmitSuccess, onSubmitError } = args.submitHandlers();
   const instance = await initCheckout({
     config,
-    longId,
+    longId: cardList?.session.longId,
     preloadCards: wantCard,
     onSubmitSuccess,
     onSubmitError,
     onComponentListChange: args.onComponentListChange,
     onReady: args.onReady,
+    cardBeforeSubmit: args.cardBeforeSubmit,
   });
   if (isCancelled()) {
     instance.destroy();
     return null;
   }
-  return instance;
+  return { instance, cardList, cardListCountry };
 }
 
 /**
@@ -175,6 +212,8 @@ export function useCheckoutSession(
   const config = useExpressConfigStore();
   const setLiveExpressOrder = useExpressCheckoutStore((s) => s.setLiveExpressOrder);
   const setFinalExpressOrder = useExpressCheckoutStore((s) => s.setFinalExpressOrder);
+  const setCardListCountry = useExpressCheckoutStore((s) => s.setCardListCountry);
+  const committedBuyer = useExpressBuyerStore((s) => s.committed);
   // Express base amount = goods SUBTOTAL when ECE shipping rates are enabled — the buyer-selected rate
   // is then the ONLY shipping, added on top by the SDK. Otherwise use the cart total (subtotal + the
   // cart's flat/free shipping). This prevents charging shipping twice (the flat cart fee AND a selected
@@ -238,8 +277,35 @@ export function useCheckoutSession(
   // `sendProducts` is deliberately NOT in the key: the cart now rides the in-place update
   // (`update({ amount, products })`, effect below), so a quantity tick re-prices and re-pushes a cart
   // that still sums to the new amount without a remount.
+  // The committed buyer is deliberately NOT in the key either: a blur that lands as the shopper clicks
+  // into the card form or a wallet button must not tear that drop-in down. It is synced to the live
+  // card LIST in place instead (effect below).
   const prefetchKey = expressSessionKey(config, items, currency, wantCard);
   const rebuildKey = JSON.stringify([prefetchKey, wantCard, staleEpoch]);
+  const buyerSig = wantCard ? buyerSignatureOf(committedBuyer) : undefined;
+
+  // The built instance and its card LIST, for the in-place buyer sync. Null between builds.
+  const instanceRef = useRef<CheckoutInstance | null>(null);
+  const cardListRef = useRef<BuiltCardList | null>(null);
+  // Serialises LIST updates so they reach the backend in commit order. Reset per build.
+  const buyerSyncRef = useRef<Promise<void>>(Promise.resolve());
+  // Bumped when a card LIST lands, so a commit made during the build is synced right after it.
+  const [cardListEpoch, setCardListEpoch] = useState(0);
+  // The last card build threw; the next buyer commit retries it (the buyer is not in the rebuild key).
+  const cardBuildFailedRef = useRef(false);
+
+  // Card pre-charge gate: let pending LIST updates land first, so no PUT races the charge. Declines
+  // when that sync replaced the LIST or re-created the card form (`updateLongId`) under this submit.
+  const cardBeforeSubmitRef = useRef(async () => {
+    const list = cardListRef.current;
+    const total = list?.total;
+    let pending: Promise<void>;
+    do {
+      pending = buyerSyncRef.current;
+      await pending;
+    } while (pending !== buyerSyncRef.current);
+    return list !== null && cardListRef.current === list && list.total === total;
+  });
 
   // The signature the session is CURRENTLY built for. It only advances while the surface is ACTIVE,
   // so cart edits made while a kept-alive checkout is hidden (off-route) don't tear down and rebuild a
@@ -301,12 +367,13 @@ export function useCheckoutSession(
 
     (async () => {
       try {
-        const ci = await acquireExpressInstance({
+        const acquired = await acquireExpressInstance({
           wantCard,
           prefetchKey,
           config,
           items,
           currency,
+          readBuyer: () => useExpressBuyerStore.getState().committed,
           isCancelled: () => cancelled,
           stampBuiltAt: (at) => {
             builtAtRef.current = at;
@@ -321,19 +388,29 @@ export function useCheckoutSession(
             ? (checkout) => mountCard(checkout)
             : undefined,
           onReady: wantCard ? () => revealCard() : undefined,
+          cardBeforeSubmit: wantCard ? cardBeforeSubmitRef.current : undefined,
         });
         // Re-check cancellation once more: acquireExpressInstance's own isCancelled() guard ends the
         // instant before this continuation adopts `ci`. A teardown landing in that window already ran
         // while `instance` was still null, so it destroyed nothing — reap the orphan
         // here rather than mount an element the (already-run) cleanup can no longer reach.
         if (cancelled) {
-          ci?.destroy();
+          acquired?.instance.destroy();
           return;
         }
         // null = cancelled mid-build (the orphan, if any, was already destroyed).
-        if (!ci) return;
+        if (!acquired) return;
 
+        const ci = acquired.instance;
         instance = ci;
+        if (acquired.cardList) {
+          cardBuildFailedRef.current = false;
+          instanceRef.current = ci;
+          cardListRef.current = acquired.cardList;
+          setCardListCountry(acquired.cardListCountry ?? null);
+          markCartCheckoutList(acquired.cardList.session.longId);
+          setCardListEpoch((e) => e + 1);
+        }
 
         // Mount the express element. A SINGLE express:state subscription drives the slot's whole
         // lifecycle (loading → ready | unavailable | error). Reused by the PDP.
@@ -374,6 +451,7 @@ export function useCheckoutSession(
         if (wantCard) mountCard(ci);
       } catch (e) {
         if (cancelled) return;
+        if (wantCard) cardBuildFailedRef.current = true;
         const msg =
           e instanceof Error ? e.message : "Failed to initialise checkout";
         setExpressStatus("error");
@@ -387,8 +465,15 @@ export function useCheckoutSession(
       cancelled = true;
       if (cardFallback) window.clearTimeout(cardFallback);
       expressHandleRef.current = null;
+      instanceRef.current = null;
+      cardListRef.current = null;
+      // Tasks still queued for the torn-down list no-op on the ownership check; don't make the next
+      // build's sync wait on a hung PUT.
+      buyerSyncRef.current = Promise.resolve();
       setLiveExpressOrder(null);
       setFinalExpressOrder(null);
+      // An express-only surface (book page) shares the store but never priced a card LIST.
+      if (wantCard) setCardListCountry(null);
       // Removes both drop-ins and every listener. A charge already sent still finishes and reports
       // through onSubmitSuccess / onSubmitError.
       instance?.destroy();
@@ -397,6 +482,43 @@ export function useCheckoutSession(
     // are read fresh inside the effect body.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionKey]);
+
+  // In-place buyer sync for a card surface: PUT the new committed billing and tax-bearing lines to the
+  // existing LIST. Neither drop-in remounts. Only a changed total (country → tax) calls `updateLongId`:
+  // that refresh re-creates the card form frame, so an email/name commit, which lands as the shopper
+  // clicks into the card form, must not trigger it (OPG reads the customer from the server-side LIST).
+  // Updates run one at a time and each reads the latest committed buyer, so rapid commits collapse. If
+  // the update fails, fall back to a rebuild, which creates a fresh LIST for the latest buyer.
+  useEffect(() => {
+    if (!active || !buyerSig) return;
+    buyerSyncRef.current = buyerSyncRef.current.then(async () => {
+      const list = cardListRef.current;
+      const ci = instanceRef.current;
+      const buyer = useExpressBuyerStore.getState().committed;
+      const sig = buyerSignatureOf(buyer);
+      if (!list || !ci) {
+        if (cardBuildFailedRef.current) {
+          cardBuildFailedRef.current = false;
+          setStaleEpoch((e) => e + 1);
+        }
+        return;
+      }
+      if (list.buyerSig === sig) return;
+      const total = cardTotalOf(itemsRef.current, buyer.country);
+      try {
+        await updateCardListSession(configRef.current, list.session, itemsRef.current, currency, buyer);
+        if (cardListRef.current !== list) return;
+        list.buyerSig = sig;
+        setCardListCountry(buyer.country);
+        if (total !== list.total) {
+          list.total = total;
+          ci.updateLongId(list.session.longId);
+        }
+      } catch {
+        if (cardListRef.current === list) setStaleEpoch((e) => e + 1);
+      }
+    });
+  }, [active, buyerSig, cardListEpoch, currency, setCardListCountry]);
 
   // In-place amount update: for an express-only surface a quantity tick no longer rebuilds the
   // instance (see the key derivation above), so push the new amount straight to the express button

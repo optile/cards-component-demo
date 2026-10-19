@@ -10,11 +10,13 @@ import {
 import { useExpressCheckoutStore } from "@/features/expressCheckout/store/expressCheckoutStore";
 import ChargeRefsBlock from "@/features/expressCheckout/components/ChargeRefsBlock";
 import {
+  forgetCartCheckoutList,
   hasChargeRefs,
   hasDisplayableChargeRefs,
   mergeChargeRefs,
   parseChargeRefsFromSearch,
   stashMatchesUrlRefs,
+  takeCartCheckoutListMatch,
   takeExpressSuccessStash,
   type ExpressChargeRefs,
   type ExpressSuccessStash,
@@ -123,6 +125,12 @@ function OrderReceipt({
           <span>Shipping{shippingLabel ? ` (${shippingLabel})` : ""}</span>
           <span>{shipping > 0 ? `$${shipping.toFixed(2)}` : "On us"}</span>
         </div>
+        {eo?.taxAmount != null && eo.taxAmount > 0 ? (
+          <div className="receipt-item">
+            <span>Est. tax</span>
+            <span>${eo.taxAmount.toFixed(2)}</span>
+          </div>
+        ) : null}
       </div>
       <div className="receipt-total">
         <span>{totalLabel}</span>
@@ -183,6 +191,11 @@ export default function Success() {
   );
   const [stashed] = useState(() => claimSuccessStash(urlChargeRefs));
   const order: PlacedOrder | null = memoryOrder ?? stashed?.order ?? null;
+  // The cart persists across the returnUrl reload, so a cold load decides from the stash, or from the
+  // cart checkout's LIST id when only the returnUrl survived.
+  // The marker is consumed on every load, so a later Back/reload to this URL can't match it again.
+  const [listMatch] = useState(() => takeCartCheckoutListMatch(urlChargeRefs.longId));
+  const clearCart = memoryOrder ? fromCart : (stashed?.fromCart ?? listMatch);
 
   const chargeRefs: ExpressChargeRefs = mergeChargeRefs(
     urlChargeRefs,
@@ -196,7 +209,10 @@ export default function Success() {
       void navigate("/express", { replace: true });
       return;
     }
-    if (order && fromCart) clear();
+    if (clearCart) {
+      clear();
+      forgetCartCheckoutList();
+    }
     // Clear only the live/final express holders on unmount. The receipt's own snapshot lives in
     // `lastOrder.expressOverrides` (memory-only, never persisted) and MUST survive here: clearing it on
     // unmount corrupts the receipt under React StrictMode's mount→cleanup→remount, and breaks re-viewing
@@ -210,7 +226,7 @@ export default function Success() {
   }, [
     order,
     hasChargeIds,
-    fromCart,
+    clearCart,
     clear,
     navigate,
     setFinalExpressOrder,

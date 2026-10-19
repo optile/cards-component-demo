@@ -49,6 +49,39 @@ export const EXPRESS_SUCCESS_STASH_KEY = "pt-express-success";
 export interface ExpressSuccessStash {
   order: PlacedOrder;
   chargeRefs: ExpressChargeRefs;
+  /** The order came from the persisted cart, which the cold-loaded Success page must clear. */
+  fromCart: boolean;
+}
+
+/** sessionStorage key: the card LIST longId of the cart checkout, for returnUrl-only successes. */
+const CART_CHECKOUT_LIST_KEY = "pt-cart-checkout-list";
+
+export function markCartCheckoutList(longId: string): void {
+  try {
+    sessionStorage.setItem(CART_CHECKOUT_LIST_KEY, longId);
+  } catch {
+    // Quota / private mode — a returnUrl-only success then leaves the cart for the shopper to clear.
+  }
+}
+
+export function forgetCartCheckoutList(): void {
+  try {
+    sessionStorage.removeItem(CART_CHECKOUT_LIST_KEY);
+  } catch {
+    // Storage unavailable: nothing was marked.
+  }
+}
+
+/** True (and forgets the mark) when `longId` is the cart checkout's LIST. */
+export function takeCartCheckoutListMatch(longId: string | undefined): boolean {
+  if (!longId) return false;
+  try {
+    if (sessionStorage.getItem(CART_CHECKOUT_LIST_KEY) !== longId) return false;
+    sessionStorage.removeItem(CART_CHECKOUT_LIST_KEY);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function hasChargeRefs(refs: ExpressChargeRefs | null | undefined): boolean {
@@ -262,9 +295,10 @@ export function takeExpressSuccessStash(): ExpressSuccessStash | null {
     sessionStorage.removeItem(EXPRESS_SUCCESS_STASH_KEY);
     const parsed: unknown = JSON.parse(raw);
     if (!parsed || typeof parsed !== "object") return null;
-    const { order, chargeRefs, savedAt } = parsed as {
+    const { order, chargeRefs, fromCart, savedAt } = parsed as {
       order?: unknown;
       chargeRefs?: unknown;
+      fromCart?: unknown;
       savedAt?: unknown;
     };
     if (typeof savedAt !== "number" || Date.now() - savedAt > STASH_MAX_AGE_MS) return null;
@@ -273,7 +307,7 @@ export function takeExpressSuccessStash(): ExpressSuccessStash | null {
       chargeRefs && typeof chargeRefs === "object"
         ? fromRecord(chargeRefs as Record<string, unknown>)
         : {};
-    return { order, chargeRefs: refs };
+    return { order, chargeRefs: refs, fromCart: fromCart === true };
   } catch {
     try {
       sessionStorage.removeItem(EXPRESS_SUCCESS_STASH_KEY);

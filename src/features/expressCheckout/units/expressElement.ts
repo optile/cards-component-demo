@@ -109,6 +109,10 @@ function buildDynamicRatesResolver(
 // contains "express", so it always proceeds and the gate knob can't block card QA.
 const EXPRESS_GATE_COMPONENT = "express";
 
+export function isExpressComponent(componentName: string): boolean {
+  return componentName.toLowerCase().includes(EXPRESS_GATE_COMPONENT);
+}
+
 /**
  * Builds the express `onBeforeSubmit` pre-charge gate for QA. STABLE across config edits: it reads the
  * LIVE config via `getState` at call time, so changing the outcome/delay never remounts (the gate is
@@ -116,11 +120,14 @@ const EXPRESS_GATE_COMPONENT = "express";
  * shared card drop-in on the same instance always proceeds. Exercises the boolean gate contract:
  * `proceed`, `decline` (false -> visible generic failure), and `throw` (a host-authored reason surfaced on
  * the sheet, truncated to 128 chars, and logged via onConfirmError).
+ * Non-express components go to `cardGate` instead (proceed when omitted).
  */
-export function buildExpressBeforeSubmit(): OnBeforeSubmitHandler {
+export function buildExpressBeforeSubmit(
+  cardGate?: () => Promise<boolean>,
+): OnBeforeSubmitHandler {
   return ({ componentName }) => {
-    // Global pre-charge hook: only gate express, never the card path sharing this instance.
-    if (!componentName.toLowerCase().includes(EXPRESS_GATE_COMPONENT)) return true;
+    // Global pre-charge hook: the QA knob gates express only, never the card path sharing this instance.
+    if (!isExpressComponent(componentName)) return cardGate ? cardGate() : true;
     const config = useExpressConfigStore.getState();
     if (!config.beforeSubmit) return true;
 
