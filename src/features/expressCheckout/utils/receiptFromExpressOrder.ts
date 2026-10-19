@@ -2,6 +2,7 @@ import type { CartItem, ExpressOrderOverrides } from "@/features/expressCheckout
 import { subtotalOf, totalOf } from "@/features/expressCheckout/store/expressCartStore";
 import type { Book, ExpressOrderDetails } from "@/features/expressCheckout/types/express";
 import { toExpressOrderOverrides } from "@/features/expressCheckout/utils/toExpressOrderOverrides";
+import { toCents } from "@/features/expressCheckout/utils/money";
 
 const BOOK_CODE = /^book-(\d+)$/;
 const SHIPPING_FEE_CODE = "shipping-fee";
@@ -26,8 +27,6 @@ export function toReceiptItems(
   }
   return items.length > 0 ? items : undefined;
 }
-
-const toCents = (major: number): number => Math.round(major * 100);
 
 /**
  * True when the charged base (total minus the wallet rate) differs from the live cart's express base, in

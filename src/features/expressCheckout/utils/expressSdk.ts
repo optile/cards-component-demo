@@ -8,11 +8,13 @@ import type {
   ComponentListDiff,
   OnReadyHandler,
 } from "@/features/embeddedCheckout/types/checkout";
-import type { CartProduct, MerchantCart } from "@/types/merchant";
+import type { MerchantCart } from "@/types/merchant";
 import type { ExpressConfig } from "@/features/expressCheckout/constants/express";
-import { DEMO_BILLING, DEMO_SHIPPING } from "@/features/expressCheckout/constants/express";
+import { DEMO_SHIPPING } from "@/features/expressCheckout/constants/express";
 import type { CartItem } from "@/features/expressCheckout/store/expressCartStore";
-import { shippingOf } from "@/features/expressCheckout/store/expressCartStore";
+import type { BuyerForm } from "@/features/expressCheckout/store/expressBuyerStore";
+import { billingFromBuyer } from "@/features/expressCheckout/store/expressBuyerStore";
+import { buildCardListProducts } from "@/features/expressCheckout/utils/cardTotals";
 import { buildExpressBeforeSubmit } from "@/features/expressCheckout/units/expressElement";
 import type {
   ExpressInitConfig,
@@ -56,28 +58,70 @@ export function warmCheckoutWeb(env: string): void {
   })();
 }
 
-/** Creates a LIST session for the whole cart (order total) using the demo identity. */
+/** The card LIST a checkout surface pays against. */
+export interface CardListSession {
+  longId: string;
+  transactionId: string;
+}
+
+function cardListRequest(
+  config: ExpressConfig,
+  items: CartItem[],
+  currency: string,
+  buyer: BuyerForm
+) {
+  const products = buildCardListProducts(items, buyer.country);
+  const cart: MerchantCart = { products, currency };
+  const billing = billingFromBuyer(buyer);
+  const shipping = {
+    ...DEMO_SHIPPING,
+    firstName: billing.firstName,
+    lastName: billing.lastName,
+    country: billing.country,
+  };
+  // The LIST country stays the shop's (config) country: OPG picks the card form language from it at
+  // creation, and in-place updates can't change it. The buyer's country rides the addresses only.
+  return { ...buildListSessionUpdates(cart, billing, shipping, true, config.env), country: config.country };
+}
+
+/**
+ * Creates a LIST session for the card drop-in: the committed buyer form drives billing, and the book
+ * lines carry the est. tax (see `buildCardListProducts`). Card-only; the express wallet amount never
+ * reads this total (it stays tax-free, see `useCheckoutSession`).
+ */
 export async function createExpressSession(
   config: ExpressConfig,
   items: CartItem[],
-  currency: string
-): Promise<{ longId: string }> {
-  const products: CartProduct[] = items.map((i) => ({ name: i.title, price: i.price, quantity: i.quantity }));
-  // Add shipping as a line item so the LIST session total matches the displayed order total. This LIST
-  // total backs the CARD drop-in on this surface; the express double-shipping fix lives entirely in the
-  // express charge amount (`useCheckoutSession` uses the goods subtotal when ECE rates are on) and never
-  // reads this LIST total, so the flat fee stays here unconditionally for card/LIST parity.
-  const shippingFee = shippingOf(items);
-  if (shippingFee > 0) products.push({ name: "Shipping", price: shippingFee, quantity: 1, type: "SHIPPING" });
-  const cart: MerchantCart = { products, currency };
-  const billing = { ...DEMO_BILLING, country: config.country };
-  const shipping = { ...DEMO_SHIPPING, country: config.country };
+  currency: string,
+  buyer: BuyerForm
+): Promise<CardListSession> {
   const request = {
-    ...buildListSessionUpdates(cart, billing, shipping, true, config.env),
+    ...cardListRequest(config, items, currency, buyer),
     preselection: { deferral: config.cardDeferral },
   };
   const response = await CheckoutApiService.generateListSession(request, config.env);
-  return { longId: response.id };
+  return { longId: response.id, transactionId: response.transactionId };
+}
+
+/**
+ * Re-sends billing and the tax-bearing lines for a new committed buyer to the existing LIST. The
+ * caller then refreshes the instance with `updateLongId`, so neither drop-in remounts.
+ */
+export async function updateCardListSession(
+  config: ExpressConfig,
+  session: CardListSession,
+  items: CartItem[],
+  currency: string,
+  buyer: BuyerForm
+): Promise<void> {
+  const response = await CheckoutApiService.updateListSession(
+    session.longId,
+    { ...cardListRequest(config, items, currency, buyer), transactionId: session.transactionId },
+    config.env
+  );
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
 }
 
 export interface InitCheckoutParams {
@@ -95,6 +139,8 @@ export interface InitCheckoutParams {
   // Warm the card component. False on express-only surfaces so we don't preload a component we
   // never mount. Defaults to true (the checkout page).
   preloadCards?: boolean;
+  // Pre-charge gate for the card drop-in (non-express components). Proceeds when omitted.
+  cardBeforeSubmit?: () => Promise<boolean>;
 }
 
 /**
@@ -122,6 +168,7 @@ export async function initCheckout(params: InitCheckoutParams): Promise<Checkout
     onComponentListChange,
     onReady,
     preloadCards = true,
+    cardBeforeSubmit,
   } = params;
   const localMode = await resolveLocalMode();
   const loaded = await PayoneerSDKUtils.loadCheckoutWeb(config.env, localMode);
@@ -155,7 +202,7 @@ export async function initCheckout(params: InitCheckoutParams): Promise<Checkout
     // Express pre-charge gate (QA): attached unconditionally but a transparent proceed unless the config
     // sheet enables it. The callback reads live config + gates only the express component, so toggling the
     // outcome/delay applies on the next confirm without a re-init (it is not in `reinitSignatureOf`).
-    onBeforeSubmit: buildExpressBeforeSubmit(),
+    onBeforeSubmit: buildExpressBeforeSubmit(cardBeforeSubmit),
   };
 
   return window.Payoneer.CheckoutWeb(checkoutConfig);

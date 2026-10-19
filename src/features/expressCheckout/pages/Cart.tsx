@@ -7,6 +7,7 @@ import {
   subtotalOf,
   shippingOf,
   totalOf,
+  FREE_SHIPPING_THRESHOLD,
 } from "@/features/expressCheckout/store/expressCartStore";
 
 export default function Cart() {
@@ -94,6 +95,13 @@ export default function Cart() {
               <span>Shipping</span>
               <span>{shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}</span>
             </div>
+            <p className="summary-note">
+              {shipping === 0
+                ? "You've unlocked free shipping."
+                : FREE_SHIPPING_THRESHOLD - subtotal <= 0
+                  ? `Go a little over $${FREE_SHIPPING_THRESHOLD} for free shipping.`
+                  : `$${(FREE_SHIPPING_THRESHOLD - subtotal).toFixed(2)} away from free shipping.`}
+            </p>
             <div className="summary-total">
               <span>Total</span>
               <span>${total.toFixed(2)}</span>
@@ -107,7 +115,6 @@ export default function Cart() {
                 Complete purchase
               </button>
             </div>
-            <p className="summary-note">Free shipping on orders over $50</p>
           </aside>
         </div>
       )}

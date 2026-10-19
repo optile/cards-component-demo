@@ -21,6 +21,12 @@ interface ExpressCheckoutState {
   // reloads wipe this; Success then reads returnUrl query params instead. Cleared on result-page unmount.
   lastChargeRefs: ExpressChargeRefs | null;
   setChargeRefs: (refs: ExpressChargeRefs | null) => void;
+  // Which drop-in reported the latest onSubmitSuccess; picks wallet vs card receipt totals.
+  lastSuccessSource: "express" | "card" | null;
+  setLastSuccessSource: (source: "express" | "card" | null) => void;
+  // Form country the card LIST is currently priced for (est. tax). Null while no card LIST exists.
+  cardListCountry: string | null;
+  setCardListCountry: (country: string | null) => void;
 }
 
 export const useExpressCheckoutStore = create<ExpressCheckoutState>((set) => ({
@@ -32,4 +38,8 @@ export const useExpressCheckoutStore = create<ExpressCheckoutState>((set) => ({
   setFinalExpressOrder: (finalExpressOrder) => set({ finalExpressOrder }),
   lastChargeRefs: null,
   setChargeRefs: (lastChargeRefs) => set({ lastChargeRefs }),
+  lastSuccessSource: null,
+  setLastSuccessSource: (lastSuccessSource) => set({ lastSuccessSource }),
+  cardListCountry: null,
+  setCardListCountry: (cardListCountry) => set({ cardListCountry }),
 }));
