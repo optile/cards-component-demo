@@ -295,7 +295,7 @@ export function useCheckoutSession(
   const cardBuildFailedRef = useRef(false);
 
   // Card pre-charge gate: let pending LIST updates land first, so no PUT races the charge. Declines
-  // when that sync replaced the LIST or re-created the card form (`updateLongId`) under this submit.
+  // when that sync replaced the LIST or changed its total under this submit.
   const cardBeforeSubmitRef = useRef(async () => {
     const list = cardListRef.current;
     const total = list?.total;
@@ -484,9 +484,10 @@ export function useCheckoutSession(
   }, [sessionKey]);
 
   // In-place buyer sync for a card surface: PUT the new committed billing and tax-bearing lines to the
-  // existing LIST. Neither drop-in remounts. Only a changed total (country → tax) calls `updateLongId`:
-  // that refresh re-creates the card form frame, so an email/name commit, which lands as the shopper
-  // clicks into the card form, must not trigger it (OPG reads the customer from the server-side LIST).
+  // existing LIST, then `updateLongId` with the same longId so the card form gets the refreshed LIST.
+  // Neither drop-in remounts: the card form keeps what the shopper typed, takes the new billing details,
+  // and applies a changed total in place. Needs checkout-web-stripe with PCPAY-5976; older builds
+  // re-create the card form on every refresh.
   // Updates run one at a time and each reads the latest committed buyer, so rapid commits collapse. If
   // the update fails, fall back to a rebuild, which creates a fresh LIST for the latest buyer.
   useEffect(() => {
@@ -509,11 +510,9 @@ export function useCheckoutSession(
         await updateCardListSession(configRef.current, list.session, itemsRef.current, currency, buyer);
         if (cardListRef.current !== list) return;
         list.buyerSig = sig;
+        list.total = total;
         setCardListCountry(buyer.country);
-        if (total !== list.total) {
-          list.total = total;
-          ci.updateLongId(list.session.longId);
-        }
+        ci.updateLongId(list.session.longId);
       } catch {
         if (cardListRef.current === list) setStaleEpoch((e) => e + 1);
       }
