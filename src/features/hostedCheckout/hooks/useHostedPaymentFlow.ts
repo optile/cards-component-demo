@@ -28,6 +28,7 @@ export const useHostedPaymentFlow = () => {
     registrationType: RegistrationType
   ) => {
     setState({ isLoading: true, error: null, success: false });
+    const paymentTab = window.open("", "_blank");
 
     try {
       // Step 1: Build the list session request with hosted-specific config
@@ -57,10 +58,16 @@ export const useHostedPaymentFlow = () => {
         listSessionResponse.id
       );
 
-      // Step 4: Redirect user to the hosted payment page
+      // Step 4: Open the hosted payment page in the new tab
       setState({ isLoading: false, error: null, success: true });
-      window.location.href = hostedPageUrl;
+      if (paymentTab) {
+        paymentTab.opener = null;
+        paymentTab.location.href = hostedPageUrl;
+      } else {
+        window.location.href = hostedPageUrl;
+      }
     } catch (error) {
+      paymentTab?.close();
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error occurred";
       console.error("Error initiating hosted payment:", error);
