@@ -33,7 +33,7 @@ const SelectEnvironment = () => {
             <div className="mb-4">
               <h3 className="text-xl font-semibold mb-2">Sandbox</h3>
               <p className="text-gray-600 text-sm mb-4">
-                Integration environment for pre-production testing.
+                Pre-production environment for testing.
               </p>
               <div className="bg-gray-50 p-3 rounded text-xs font-mono mb-4 space-y-2">
                 <div>
@@ -61,7 +61,7 @@ const SelectEnvironment = () => {
                 Checkout Integration
               </h3>
               <p className="text-gray-600 text-sm mb-4">
-                Test environment for development and integration testing.
+                Environment for development and integration testing.
               </p>
 
               <div className="bg-gray-50 p-3 rounded text-xs font-mono mb-4 space-y-2">

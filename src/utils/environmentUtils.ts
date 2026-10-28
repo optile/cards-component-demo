@@ -41,11 +41,11 @@ export const createDetailedEnvironmentOptions =
       > = {
         sandbox: {
           title: "Sandbox",
-          description: "Development environment for testing",
+          description: "Pre-production environment for testing",
         },
         "checkout.integration": {
           title: "Checkout Integration",
-          description: "Integration testing environment",
+          description: "Environment for development and integration testing",
         },
         production: {
           title: "Production",
