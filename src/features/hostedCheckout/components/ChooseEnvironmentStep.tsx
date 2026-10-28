@@ -48,6 +48,11 @@ const ChooseEnvironmentStep: React.FC<StepComponentProps> = ({
             <div>
               <span className="font-semibold">{environment.title}</span>
               <p className="text-sm text-gray-500">{environment.description}</p>
+              <p className="text-xs text-gray-500 font-mono mt-1">
+                Merchant Code: {environment.merchantCode}{" "}
+                <span aria-hidden="true">·</span> Division:{" "}
+                {environment.division}
+              </p>
             </div>
           </label>
         ))}

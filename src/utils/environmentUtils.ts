@@ -1,4 +1,7 @@
-import { Divisions } from "@/features/embeddedCheckout/constants/checkout";
+import {
+  Divisions,
+  MerchantCodes,
+} from "@/features/embeddedCheckout/constants/checkout";
 
 export interface EnvironmentOption {
   value: string;
@@ -8,6 +11,8 @@ export interface EnvironmentOption {
 export interface EnvironmentOptionWithDescription extends EnvironmentOption {
   title: string;
   description: string;
+  division: string;
+  merchantCode: string;
 }
 
 /**
@@ -36,11 +41,11 @@ export const createDetailedEnvironmentOptions =
       > = {
         sandbox: {
           title: "Sandbox",
-          description: "Development environment for testing",
+          description: "Pre-production environment for testing",
         },
         "checkout.integration": {
           title: "Checkout Integration",
-          description: "Integration testing environment",
+          description: "Environment for development and integration testing",
         },
         production: {
           title: "Production",
@@ -53,10 +58,14 @@ export const createDetailedEnvironmentOptions =
         description: `${option.label} environment`,
       };
 
+      const envKey = option.value as keyof typeof Divisions;
+
       return {
         ...option,
         title: details.title,
         description: details.description,
+        division: Divisions[envKey],
+        merchantCode: MerchantCodes[envKey],
       };
     });
   };

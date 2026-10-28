@@ -69,7 +69,7 @@ Use the header navigation to switch flows or return to the chooser.
 
 ## Configuration and Environment Notes
 
-* Environment and division mappings are defined in `src/features/embeddedCheckout/constants/checkout.ts`. Add new divisions or override endpoints there if you test against additional Payoneer environments.
+* Environment, division and merchant code mappings are defined in `src/features/embeddedCheckout/constants/checkout.ts`. To test against an additional Payoneer environment, add it to both `Divisions` and `MerchantCodes` there, or override endpoints.
 
 * Callback URLs for the hosted experience are derived from the current origin in `src/features/hostedCheckout/constants/hostedPaymentConfig.ts`. Adjust them if you deploy behind a different base path.
 * If your network blocks cross-origin requests to Payoneer domains, the list session calls will fail. Use the browser console to inspect errors and confirm connectivity.

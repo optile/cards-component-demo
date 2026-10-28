@@ -7,8 +7,10 @@
 import type {
   CheckoutInstance,
   CheckoutInstanceConfig,
+  CardsPaymentMethodCode,
   ComponentListDiff,
   DropInComponent,
+  DropInOptions,
   ExpressDropInComponent,
   ExpressDropInProps,
   ListSessionRequest,
@@ -21,6 +23,7 @@ import type {
   Checkout,
   CheckoutConfigurationProps,
   DropIn,
+  DropInProps,
   ExpressDropIn,
   ExpressDropInConfig,
   ListDataProps,
@@ -29,12 +32,12 @@ import type {
   OnSubmitErrorCallback,
   OnSubmitSuccessCallback,
   TAvailableDropInComponent,
+  TCardsPaymentMethodCode,
   TReadyEventData,
 } from "@payoneer/checkout-web";
 import type {
   CardDeferral,
   ExpressDeferral,
-  ExpressInitConfig,
   ExpressOperationType,
   OnSubmitError,
   OnSubmitSuccess,
@@ -52,6 +55,8 @@ type Equals<A, B> =
 // 1) The demo aliases ARE the SDK public types (no independent re-declaration).
 export type _Instance = Expect<Equals<CheckoutInstance, Checkout>>;
 export type _DropIn = Expect<Equals<DropInComponent, DropIn>>;
+export type _DropInOptions = Expect<Equals<DropInOptions, DropInProps>>;
+export type _CardsOrderCode = Expect<Equals<CardsPaymentMethodCode, TCardsPaymentMethodCode>>;
 export type _ExpressHandle = Expect<Equals<ExpressDropInComponent, ExpressDropIn>>;
 export type _ExpressProps = Expect<Equals<ExpressDropInProps, ExpressDropInConfig>>;
 export type _Method = Expect<Equals<PaymentMethod, TAvailableDropInComponent>>;
@@ -76,12 +81,7 @@ export type _ExpressOperationType = Expect<
   Equals<ExpressOperationType, NonNullable<CheckoutInstanceConfig["expressOperationType"]>>
 >;
 export type _ExpressDeferral = Expect<
-  Equals<ExpressDeferral, NonNullable<ExpressInitConfig["expressDeferral"]>>
->;
-// Fails once the published types carry `expressDeferral`: then delete `ExpressInitConfig`, type the
-// init config as `CheckoutInstanceConfig`, and point `_ExpressDeferral` at it.
-export type _ExpressDeferralNotYetPublished = Expect<
-  "expressDeferral" extends keyof CheckoutConfigurationProps ? false : true
+  Equals<ExpressDeferral, NonNullable<CheckoutInstanceConfig["expressDeferral"]>>
 >;
 // The published types do not export the payment API's `Deferral` enum, so reach it through the LIST result.
 type ApiDeferral = `${NonNullable<NonNullable<ListDataProps["presetAccount"]>["deferral"]>}`;

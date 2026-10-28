@@ -2,11 +2,13 @@ import type {
   Checkout,
   CheckoutConfigurationProps,
   DropIn,
+  DropInProps,
   ExpressDropIn,
   ExpressDropInConfig,
   OnComponentListChangeCallback,
   OnReadyCallback,
   TAvailableDropInComponent,
+  TCardsPaymentMethodCode,
   TReadyEventData,
 } from "@payoneer/checkout-web";
 
@@ -28,6 +30,12 @@ export type CheckoutInstance = Checkout;
 
 /** A classic (card) drop-in handle. `dropIn(name, ...)` returns this or `undefined`. */
 export type DropInComponent = DropIn;
+
+/** Options for a classic drop-in (`dropIn(name, options)`). */
+export type DropInOptions = DropInProps;
+
+/** A payment method code accepted by the cards drop-in's `paymentMethodOrder`. */
+export type CardsPaymentMethodCode = TCardsPaymentMethodCode;
 
 /** The express drop-in handle (`dropIn('express', ...)`). */
 export type ExpressDropInComponent = ExpressDropIn;

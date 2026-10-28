@@ -5,6 +5,7 @@ import { detectLocalServers } from "@/utils/localServerDetection";
 import type { LocalModeConfig } from "@/features/embeddedCheckout/constants/checkout";
 import type {
   CheckoutInstance,
+  CheckoutInstanceConfig,
   ComponentListDiff,
   OnReadyHandler,
 } from "@/features/embeddedCheckout/types/checkout";
@@ -17,7 +18,6 @@ import { billingFromBuyer } from "@/features/expressCheckout/store/expressBuyerS
 import { buildCardListProducts } from "@/features/expressCheckout/utils/cardTotals";
 import { buildExpressBeforeSubmit } from "@/features/expressCheckout/units/expressElement";
 import type {
-  ExpressInitConfig,
   OnSubmitSuccess,
   OnSubmitError,
 } from "@/features/expressCheckout/types/express";
@@ -176,7 +176,7 @@ export async function initCheckout(params: InitCheckoutParams): Promise<Checkout
     throw new Error("Failed to load Checkout Web SDK");
   }
 
-  const checkoutConfig: ExpressInitConfig = {
+  const checkoutConfig: CheckoutInstanceConfig = {
     // Undefined on an express-only surface (no LIST session); the SDK config treats `longId` as
     // optional and resolves dropIn('express') without it.
     longId,

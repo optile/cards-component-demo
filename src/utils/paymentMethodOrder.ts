@@ -1,6 +1,8 @@
+import type { CardsPaymentMethodCode } from "@/features/embeddedCheckout/types/checkout";
+
 // Payment methods whose Payment Element tab order can be overridden, keyed by the lowercased
 // method name.
-const ALLOWED_ORDER_CODES: Readonly<Record<string, readonly string[]>> = {
+const ALLOWED_ORDER_CODES: Readonly<Record<string, readonly CardsPaymentMethodCode[]>> = {
     'card': ['card', 'apple_pay', 'google_pay'],
 };
 
@@ -9,7 +11,7 @@ const ALLOWED_ORDER_CODES: Readonly<Record<string, readonly string[]>> = {
  * Returns `undefined` (Stripe's own ordering) when nothing is provided, the method does not support
  * ordering, or any code is not allowed - an invalid list is rejected as a whole.
  */
-export function resolvePaymentMethodOrder(methodKey: string, raw?: string): string[] | undefined {
+export function resolvePaymentMethodOrder(methodKey: string, raw?: string): CardsPaymentMethodCode[] | undefined {
     if (!raw) {
         return undefined;
     }
@@ -25,8 +27,10 @@ export function resolvePaymentMethodOrder(methodKey: string, raw?: string): stri
         return undefined;
     }
 
-    const invalid = codes.filter((code) => !allowed.includes(code));
-    if (invalid.length) {
+    const allowedCodes: readonly string[] = allowed;
+    const isAllowed = (code: string): code is CardsPaymentMethodCode => allowedCodes.includes(code);
+    if (!codes.every(isAllowed)) {
+        const invalid = codes.filter((code) => !isAllowed(code));
         console.warn(`Invalid paymentMethodOrder codes [${invalid.join(', ')}], ignoring. Allowed: ${allowed.join(', ')}`);
         return undefined;
     }

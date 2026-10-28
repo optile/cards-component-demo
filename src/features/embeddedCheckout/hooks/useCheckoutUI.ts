@@ -5,6 +5,7 @@ import { resolvePaymentMethodOrder } from "@/utils/paymentMethodOrder";
 import type {
   CheckoutInstance,
   DropInComponent,
+  DropInOptions,
 } from "@/features/embeddedCheckout/types/checkout";
 
 export const useCheckoutUI = (checkout: CheckoutInstance | null) => {
@@ -41,7 +42,7 @@ export const useCheckoutUI = (checkout: CheckoutInstance | null) => {
         const method = availableMethods.find((m) => m.name === methodName);
         const container = componentRefs.current[methodName];
         if (method && container) {
-          const dropInOptions: any = { hideSubmitButton: false };
+          const dropInOptions: DropInOptions = { hideSubmitButton: false };
 
           // Add paymentMethodOrder for stripe:card if configured
           if (methodName === 'cards') {
@@ -75,7 +76,7 @@ export const useCheckoutUI = (checkout: CheckoutInstance | null) => {
       useCheckoutStore.setState({ dropIns: updatedDropIns });
 
       // Re-mount with potentially new payment method order
-      const dropInOptions: any = { hideSubmitButton: false };
+      const dropInOptions: DropInOptions = { hideSubmitButton: false };
       const resolvedOrder = resolvePaymentMethodOrder('card', paymentMethodOrder);
       if (resolvedOrder) {
         dropInOptions.paymentMethodOrder = resolvedOrder;
