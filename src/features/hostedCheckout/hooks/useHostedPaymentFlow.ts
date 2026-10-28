@@ -25,7 +25,8 @@ export const useHostedPaymentFlow = () => {
     shippingAddress: ShippingAddress,
     sameAddress: boolean,
     env: string,
-    registrationType: RegistrationType
+    registrationType: RegistrationType,
+    paymentMethodOrder?: string
   ) => {
     setState({ isLoading: true, error: null, success: false });
     const paymentTab = window.open("", "_blank");
@@ -55,7 +56,9 @@ export const useHostedPaymentFlow = () => {
       // Step 3: Construct the hosted payment page URL
       const hostedPageUrl = getHostedPaymentPageUrl(
         env,
-        listSessionResponse.id
+        listSessionResponse.id,
+        "en",
+        paymentMethodOrder
       );
 
       // Step 4: Open the hosted payment page in the new tab

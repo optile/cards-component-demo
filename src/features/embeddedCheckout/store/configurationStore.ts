@@ -16,6 +16,7 @@ interface ConfigurationState {
   payButtonType: PayButtonType;
   primaryColor: string;
   primaryTextColor: string;
+  paymentMethodOrder: string;
   merchantCart: MerchantCart;
   billingAddress: BillingAddress;
   shippingAddress: ShippingAddress;
@@ -25,6 +26,7 @@ interface ConfigurationState {
   setPayButtonType: (type: PayButtonType) => void;
   setPrimaryColor: (color: string) => void;
   setPrimaryTextColor: (color: string) => void;
+  setPaymentMethodOrder: (order: string) => void;
   setMerchantCart: (cart: Partial<MerchantCart>) => void;
   addProduct: (product: CartProduct) => void;
   updateProduct: (index: number, product: Partial<CartProduct>) => void;
@@ -41,6 +43,7 @@ export const useConfigurationStore = create<ConfigurationState>()(
       payButtonType: "default",
       primaryColor: "#000000",
       primaryTextColor: "#ffffff",
+      paymentMethodOrder: "",
       merchantCart: {
         products: [
           {
@@ -82,6 +85,7 @@ export const useConfigurationStore = create<ConfigurationState>()(
       setPayButtonType: (type) => set({ payButtonType: type }),
       setPrimaryColor: (color) => set({ primaryColor: color }),
       setPrimaryTextColor: (color) => set({ primaryTextColor: color }),
+      setPaymentMethodOrder: (order) => set({ paymentMethodOrder: order }),
       setRegistrationType: (registrationType: RegistrationType) => set({ registrationType }),
       setMerchantCart: (cart) =>
         set((state) => ({ merchantCart: { ...state.merchantCart, ...cart } })),
@@ -127,6 +131,7 @@ export const useConfigurationStore = create<ConfigurationState>()(
       storage: createJSONStorage(() => hashStorage),
       partialize: (state) => ({
         registrationType: state.registrationType,
+        paymentMethodOrder: state.paymentMethodOrder,
         merchantCart: {
           products: state.merchantCart.products,
           currency: state.merchantCart.currency,

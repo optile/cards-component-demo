@@ -3,6 +3,7 @@ import type { StepComponentProps } from "@/components/ui/MultiStepper";
 import Button from "@/components/ui/Button";
 import { useHostedConfigurationStore } from "@/features/hostedCheckout/store/hostedConfigurationStore";
 import { createDetailedEnvironmentOptions } from "@/utils";
+import InfoTooltip from "@/components/ui/InfoTooltip";
 
 const ChooseEnvironmentStep: React.FC<StepComponentProps> = ({
   goToNext,
@@ -10,7 +11,7 @@ const ChooseEnvironmentStep: React.FC<StepComponentProps> = ({
   isFirstStep,
   isLastStep,
 }) => {
-  const { env, setEnv } = useHostedConfigurationStore();
+  const { env, setEnv, paymentMethodOrder, setPaymentMethodOrder } = useHostedConfigurationStore();
   const environments = createDetailedEnvironmentOptions();
 
   const handleEnvironmentChange = (value: string) => {
@@ -50,6 +51,23 @@ const ChooseEnvironmentStep: React.FC<StepComponentProps> = ({
             </div>
           </label>
         ))}
+      </div>
+
+      <div className="mb-8">
+        <div className="flex items-center gap-1 mb-2">
+          <label className="font-semibold text-gray-700">Payment Method Order (Cards):</label>
+          <InfoTooltip content="Comma-separated list of payment methods to display in the card payment element. Allowed methods: card, apple_pay, google_pay. Example: 'apple_pay, google_pay, card'" />
+        </div>
+        <input
+          type="text"
+          value={paymentMethodOrder}
+          onChange={(e) => setPaymentMethodOrder?.(e.target.value)}
+          placeholder="e.g., apple_pay, google_pay, card"
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <p className="text-xs text-gray-500 mt-2">
+          Leave empty to use default Stripe ordering. Invalid codes are silently ignored.
+        </p>
       </div>
 
       <div className="flex justify-between">

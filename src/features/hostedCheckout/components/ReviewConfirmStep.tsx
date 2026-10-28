@@ -9,13 +9,14 @@ import ReviewCustomerSection from "./ReviewCustomerSection";
 import ReadyMessage from "./ReadyMessage";
 import ErrorAlert from "./ErrorAlert";
 import ReviewRegistrationSetup from "./ReviewRegistrationSetup";
+import ReviewPaymentMethodOrderSection from "./ReviewPaymentMethodOrderSection";
 
 const ReviewConfirmStep: React.FC<StepComponentProps> = ({
   goToPrevious,
   isFirstStep,
   isLastStep,
 }) => {
-  const { env, merchantCart, billingAddress, shippingAddress, sameAddress, registrationType } =
+  const { env, merchantCart, billingAddress, shippingAddress, sameAddress, registrationType, paymentMethodOrder } =
     useHostedConfigurationStore();
 
   const { isLoading, error, initiateHostedPayment, clearError } =
@@ -28,7 +29,8 @@ const ReviewConfirmStep: React.FC<StepComponentProps> = ({
       shippingAddress,
       sameAddress,
       env,
-      registrationType || 'GUEST'
+      registrationType || 'GUEST',
+      paymentMethodOrder || undefined
     );
   };
 
@@ -50,6 +52,7 @@ const ReviewConfirmStep: React.FC<StepComponentProps> = ({
           sameAddress={sameAddress}
         />
         <ReviewRegistrationSetup registrationType={registrationType}/>
+        <ReviewPaymentMethodOrderSection paymentMethodOrder={paymentMethodOrder} />
       </div>
 
       <ReadyMessage className="mb-8" />
