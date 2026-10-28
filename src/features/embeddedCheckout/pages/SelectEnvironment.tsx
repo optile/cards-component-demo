@@ -1,4 +1,8 @@
 import Button from "@/components/ui/Button";
+import {
+  Divisions,
+  MerchantCodes,
+} from "@/features/embeddedCheckout/constants/checkout";
 
 const SelectEnvironment = () => {
   const handleEnvironmentSelect = (env: string) => {
@@ -31,9 +35,15 @@ const SelectEnvironment = () => {
               <p className="text-gray-600 text-sm mb-4">
                 Integration environment for pre-production testing.
               </p>
-              <div className="bg-gray-50 p-3 rounded text-xs font-mono mb-4">
-                <div className="text-gray-500">Division</div>
-                <div className="font-semibold">17875</div>
+              <div className="bg-gray-50 p-3 rounded text-xs font-mono mb-4 space-y-2">
+                <div>
+                  <div className="text-gray-500">Merchant Code</div>
+                  <div className="font-semibold">{MerchantCodes.sandbox}</div>
+                </div>
+                <div>
+                  <div className="text-gray-500">Division</div>
+                  <div className="font-semibold">{Divisions.sandbox}</div>
+                </div>
               </div>
             </div>
             <Button
@@ -54,9 +64,19 @@ const SelectEnvironment = () => {
                 Test environment for development and integration testing.
               </p>
 
-              <div className="bg-gray-50 p-3 rounded text-xs font-mono mb-4">
-                <div className="text-gray-500">Division</div>
-                <div className="font-semibold">58783</div>
+              <div className="bg-gray-50 p-3 rounded text-xs font-mono mb-4 space-y-2">
+                <div>
+                  <div className="text-gray-500">Merchant Code</div>
+                  <div className="font-semibold">
+                    {MerchantCodes["checkout.integration"]}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-gray-500">Division</div>
+                  <div className="font-semibold">
+                    {Divisions["checkout.integration"]}
+                  </div>
+                </div>
               </div>
             </div>
             <Button

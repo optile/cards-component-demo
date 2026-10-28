@@ -3,6 +3,11 @@ export const Divisions = {
   sandbox: "17875",
 };
 
+export const MerchantCodes = {
+  "checkout.integration": "76W1DZBG",
+  sandbox: "FGZ3A8R0",
+} satisfies Record<keyof typeof Divisions, string>;
+
 export interface LocalModeConfig {
   enabled: boolean;
   checkoutWebAvailable: boolean;
