@@ -28,6 +28,7 @@ import {
 
 interface ExpressConfigState extends ExpressConfig {
   setConfig: (patch: Partial<ExpressConfig>) => void;
+  resetConfig: () => void;
 }
 
 const coerce = <T extends string>(
@@ -68,6 +69,7 @@ export const useExpressConfigStore = create<ExpressConfigState>()(
           }
           return patch;
         }),
+      resetConfig: () => set({ ...DEFAULT_EXPRESS_CONFIG }),
     }),
     {
       name: "express-config-storage",

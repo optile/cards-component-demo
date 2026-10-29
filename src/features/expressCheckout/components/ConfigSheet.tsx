@@ -38,30 +38,14 @@ export default function ConfigSheet() {
   const fabRef = useRef<HTMLButtonElement | null>(null);
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const config = useExpressConfigStore();
+  // Keys the debounced sliders, so a reset remounts them: a pending slider value is dropped instead of
+  // being written over the defaults.
+  const [resetCount, setResetCount] = useState(0);
 
-  // The resolver delay feeds `reinitSignatureOf`, so committing it on every drag step would remount the
-  // ECE (fresh LIST + Stripe re-init) per step. Keep the slider responsive off local state and only push
-  // the debounced value to the store.
-  const [delayInput, setDelayInput] = useState(config.dynamicRatesDelayMs);
-  const debouncedDelay = useDebouncedValue(delayInput, 400);
-  useEffect(() => {
-    if (debouncedDelay !== config.dynamicRatesDelayMs) {
-      config.setConfig({ dynamicRatesDelayMs: debouncedDelay });
-    }
-  }, [debouncedDelay, config]);
-
-  // The gate delay doesn't remount the ECE (the gate reads live config at confirm time), but the sheet
-  // subscribes to the whole store, so writing on every drag step would re-render it repeatedly. Keep the
-  // slider responsive off local state and push the debounced value, mirroring the resolver delay above.
-  const [gateDelayInput, setGateDelayInput] = useState(
-    config.beforeSubmitDelayMs,
-  );
-  const debouncedGateDelay = useDebouncedValue(gateDelayInput, 400);
-  useEffect(() => {
-    if (debouncedGateDelay !== config.beforeSubmitDelayMs) {
-      config.setConfig({ beforeSubmitDelayMs: debouncedGateDelay });
-    }
-  }, [debouncedGateDelay, config]);
+  const resetToDefaults = () => {
+    config.resetConfig();
+    setResetCount((n) => n + 1);
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -149,7 +133,15 @@ export default function ConfigSheet() {
                 style={{ color: "var(--ink-faint)" }}
               >
                 Most settings rebuild the checkout. Gate outcome and delay apply
-                live.
+                live. Settings are saved in this browser.{" "}
+                <button
+                  type="button"
+                  onClick={resetToDefaults}
+                  className="underline"
+                  style={{ color: "var(--ink-soft)" }}
+                >
+                  Reset to defaults
+                </button>
               </p>
 
               <Group
@@ -187,6 +179,16 @@ export default function ConfigSheet() {
                     onChange={(v) => config.setConfig({ walletMode: v })}
                   />
                 </Field>
+                {config.walletMode !== "both" && (
+                  <span
+                    className="block text-[11px] -mt-2"
+                    style={{ color: WARN_COLOR }}
+                  >
+                    {config.walletMode === "express"
+                      ? "⚠ express: the card form hides its Apple Pay and Google Pay tabs; wallets show only as the Express button."
+                      : "⚠ inline: the SDK refuses the Express element, so there is no Express button; wallets show only in the card form."}
+                  </span>
+                )}
               </Group>
 
               <TabToggle value={tab} onChange={setTab} />
@@ -353,13 +355,10 @@ export default function ConfigSheet() {
                         {config.dynamicRates && (
                           <Nested>
                             <Field label="Resolver delay">
-                              <MsSlider
-                                value={delayInput}
-                                onChange={setDelayInput}
-                                min={RESOLVER_DELAY_RANGE.min}
-                                max={RESOLVER_DELAY_RANGE.max}
-                                step={RESOLVER_DELAY_RANGE.step}
-                                warnFrom={RESOLVER_DELAY_RANGE.warnFrom}
+                              <DebouncedDelaySlider
+                                key={resetCount}
+                                field="dynamicRatesDelayMs"
+                                range={RESOLVER_DELAY_RANGE}
                                 warnLabel="the payment sheet may be invalidated for a resolver running this long"
                               />
                               <span
@@ -468,13 +467,10 @@ export default function ConfigSheet() {
                           />
                         </Field>
                         <Field label="Gate delay">
-                          <MsSlider
-                            value={gateDelayInput}
-                            onChange={setGateDelayInput}
-                            min={GATE_DELAY_RANGE.min}
-                            max={GATE_DELAY_RANGE.max}
-                            step={GATE_DELAY_RANGE.step}
-                            warnFrom={GATE_DELAY_RANGE.warnFrom}
+                          <DebouncedDelaySlider
+                            key={resetCount}
+                            field="beforeSubmitDelayMs"
+                            range={GATE_DELAY_RANGE}
                             warnLabel="the wallet may invalidate the sheet before the gate resolves"
                           />
                           <span
@@ -687,9 +683,42 @@ function msToSecondsLabel(ms: number): string {
 
 const WARN_COLOR = "var(--warn)"; // amber-700 latency-warning token
 
+// A latency slider that stays responsive off local state and pushes only the debounced value to the
+// store. The resolver delay feeds `reinitSignatureOf`, so committing every drag step would remount the
+// ECE (fresh LIST + Stripe re-init) per step; the gate delay doesn't remount, but the sheet subscribes to
+// the whole store and would re-render on every step.
+function DebouncedDelaySlider({
+  field,
+  range,
+  warnLabel,
+}: Readonly<{
+  field: "dynamicRatesDelayMs" | "beforeSubmitDelayMs";
+  range: { min: number; max: number; step: number; warnFrom: number };
+  warnLabel: string;
+}>) {
+  const [value, setValue] = useState(() => useExpressConfigStore.getState()[field]);
+  const debounced = useDebouncedValue(value, 400);
+  useEffect(() => {
+    const state = useExpressConfigStore.getState();
+    if (debounced !== state[field]) state.setConfig({ [field]: debounced });
+  }, [debounced, field]);
+
+  return (
+    <MsSlider
+      value={value}
+      onChange={setValue}
+      min={range.min}
+      max={range.max}
+      step={range.step}
+      warnFrom={range.warnFrom}
+      warnLabel={warnLabel}
+    />
+  );
+}
+
 // A bounded latency knob: range slider + a live seconds readout. Preferable to a number spinner for a
-// capped, coarse-step value. Emits the numeric ms value; callers decide whether to debounce (resolver
-// delay) or write straight through (gate delay, which doesn't remount). When `warnFrom` is set, the upper
+// capped, coarse-step value. Emits the numeric ms value; `DebouncedDelaySlider` debounces it before it
+// reaches the store. When `warnFrom` is set, the upper
 // part of the track is tinted amber and the readout flips amber past that threshold, flagging a range
 // where a request this slow risks the wallet invalidating the open sheet (`warnLabel` explains why).
 function MsSlider({
