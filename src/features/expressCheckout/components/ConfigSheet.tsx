@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useExpressConfigStore } from "@/features/expressCheckout/store/expressConfigStore";
 import {
+  DEFAULT_EXPRESS_CONFIG,
   parseAllowedShippingCountries,
   RESOLVER_DELAY_RANGE,
   GATE_DELAY_RANGE,
@@ -41,14 +42,16 @@ export default function ConfigSheet() {
 
   // The resolver delay feeds `reinitSignatureOf`, so committing it on every drag step would remount the
   // ECE (fresh LIST + Stripe re-init) per step. Keep the slider responsive off local state and only push
-  // the debounced value to the store.
+  // the debounced value to the store. Keyed on the debounced value alone: a reset changes the store
+  // while the debounce still holds the old value, which must not be written back.
   const [delayInput, setDelayInput] = useState(config.dynamicRatesDelayMs);
   const debouncedDelay = useDebouncedValue(delayInput, 400);
   useEffect(() => {
-    if (debouncedDelay !== config.dynamicRatesDelayMs) {
-      config.setConfig({ dynamicRatesDelayMs: debouncedDelay });
+    const { dynamicRatesDelayMs, setConfig } = useExpressConfigStore.getState();
+    if (debouncedDelay !== dynamicRatesDelayMs) {
+      setConfig({ dynamicRatesDelayMs: debouncedDelay });
     }
-  }, [debouncedDelay, config]);
+  }, [debouncedDelay]);
 
   // The gate delay doesn't remount the ECE (the gate reads live config at confirm time), but the sheet
   // subscribes to the whole store, so writing on every drag step would re-render it repeatedly. Keep the
@@ -58,10 +61,17 @@ export default function ConfigSheet() {
   );
   const debouncedGateDelay = useDebouncedValue(gateDelayInput, 400);
   useEffect(() => {
-    if (debouncedGateDelay !== config.beforeSubmitDelayMs) {
-      config.setConfig({ beforeSubmitDelayMs: debouncedGateDelay });
+    const { beforeSubmitDelayMs, setConfig } = useExpressConfigStore.getState();
+    if (debouncedGateDelay !== beforeSubmitDelayMs) {
+      setConfig({ beforeSubmitDelayMs: debouncedGateDelay });
     }
-  }, [debouncedGateDelay, config]);
+  }, [debouncedGateDelay]);
+
+  const resetToDefaults = () => {
+    setDelayInput(DEFAULT_EXPRESS_CONFIG.dynamicRatesDelayMs);
+    setGateDelayInput(DEFAULT_EXPRESS_CONFIG.beforeSubmitDelayMs);
+    config.resetConfig();
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -149,7 +159,15 @@ export default function ConfigSheet() {
                 style={{ color: "var(--ink-faint)" }}
               >
                 Most settings rebuild the checkout. Gate outcome and delay apply
-                live.
+                live. Settings are saved in this browser.{" "}
+                <button
+                  type="button"
+                  onClick={resetToDefaults}
+                  className="underline"
+                  style={{ color: "var(--ink-soft)" }}
+                >
+                  Reset to defaults
+                </button>
               </p>
 
               <Group
@@ -187,6 +205,16 @@ export default function ConfigSheet() {
                     onChange={(v) => config.setConfig({ walletMode: v })}
                   />
                 </Field>
+                {config.walletMode !== "both" && (
+                  <span
+                    className="block text-[11px] -mt-2"
+                    style={{ color: WARN_COLOR }}
+                  >
+                    {config.walletMode === "express"
+                      ? "⚠ express: the card form hides its Apple Pay and Google Pay tabs; wallets show only as the Express button."
+                      : "⚠ inline: the SDK refuses the Express element, so there is no Express button; wallets show only in the card form."}
+                  </span>
+                )}
               </Group>
 
               <TabToggle value={tab} onChange={setTab} />
