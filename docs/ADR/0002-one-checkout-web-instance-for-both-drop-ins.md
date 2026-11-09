@@ -3,12 +3,11 @@
 ## Status
 
 Accepted (2026-08-20). Teardown order superseded by [ADR-0004](0004-teardown-is-destroy-alone.md).
-Since PCPAY-5947 (workspace ADR-0023), a second instance no longer loads Stripe.js again with a checkout-web that
+Since PCPAY-5947, a second instance no longer loads Stripe.js again with a checkout-web that
 includes it; one instance stays the recommended model.
 
 - **Supersedes:** two `CheckoutWeb` instances, one per drop-in
-- **Sources:** `src/features/expressCheckout/hooks/useCheckout.ts`, `hooks/useCheckoutSession.ts`, workspace learning
-  `docs/solutions/integration-issues/stripe-instance-singleton-bound-to-first-account-20260820.md`
+- **Sources:** `src/features/expressCheckout/hooks/useCheckout.ts`, `hooks/useCheckoutSession.ts`
 
 ## Context
 

@@ -12,8 +12,6 @@ root_cause: Local-server detection (resolveLocalMode) and the SDK warm-up are me
 resolution_type: workaround
 severity: low
 tags: [vite, hmr, local-dev, sdk-loader]
-related:
-  - docs/reference/express-performance.md
 ---
 
 # Local SDK detection is cached across HMR
@@ -35,5 +33,5 @@ warm-up code.
 
 ## Prevention
 
-The local-dev recipe (`LOCAL_DEVELOPMENT.md`, workspace `run-local-dev` skill) starts the SDK servers
+The local-dev recipe (`LOCAL_DEVELOPMENT.md`) starts the SDK servers
 before the demo.

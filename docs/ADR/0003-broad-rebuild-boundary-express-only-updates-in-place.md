@@ -2,10 +2,10 @@
 
 ## Status
 
-Accepted (2026-08-25; narrowed for express-only surfaces with S8).
+Accepted (2026-08-25; later narrowed for express-only surfaces).
 
 - **Supersedes:** rebuilding on every amount change everywhere
-- **Sources:** `src/features/expressCheckout/hooks/useCheckoutSession.ts` (`expressSessionKey`, `reinitSignatureOf`), workspace ADR-0019
+- **Sources:** `src/features/expressCheckout/hooks/useCheckoutSession.ts` (`expressSessionKey`, `reinitSignatureOf`)
 
 ## Context
 

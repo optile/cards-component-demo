@@ -1,8 +1,5 @@
 # cards-component-demo
 
-This repo is developed inside the SDK workspace, cloned as `projects/cards-component-demo`; the `../../` paths
-below resolve there. Read the workspace playbook first: `../../docs/AGENT_PLAYBOOK.md`.
-
 ## Role
 
 A React 19 and Vite playground for the Payoneer Checkout Web SDK. It is also the reference integrators copy from, so
@@ -65,12 +62,10 @@ npm run build                       # tsc -b + Vite build
 npm run preview                     # serve the production build
 ```
 
-Gate: `npm run lint && npm run build` (`../../scripts/check-all.sh cards-component-demo`).
+Gate: `npm run lint && npm run build`.
 
 Local SDK detection, the `/opg-proxy` route, HTTPS and troubleshooting are in `LOCAL_DEVELOPMENT.md`.
 
 ## Knowledge base
 
-- Project decisions: `docs/ADR/README.md`. Cross-repo decisions: `../../docs/ADR/README.md`.
-- Project learnings: `docs/solutions/README.md`. Cross-repo learnings: `../../docs/solutions/README.md`.
-- ECE load performance: `../../docs/reference/express-performance.md`.
+- Decisions: `docs/ADR/README.md`. Learnings: `docs/solutions/README.md`.

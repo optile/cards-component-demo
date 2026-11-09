@@ -2,11 +2,10 @@
 
 ## Status
 
-Accepted (2026-09-07; tracker O6).
+Accepted (2026-09-07).
 
 - **Supersedes:** hand-written local copies of the SDK types
-- **Sources:** workspace `docs/superpowers/specs/2026-09-07-derive-demo-express-types-from-sdk-design.md`, workspace
-  learning `docs/solutions/build-errors/demo-typecheck-green-locally-red-in-ci-20260910.md`
+- **Sources:** `src/features/expressCheckout/types/express.ts`
 
 ## Context
 

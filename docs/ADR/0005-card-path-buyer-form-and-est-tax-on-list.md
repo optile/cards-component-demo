@@ -2,11 +2,11 @@
 
 ## Status
 
-Proposed
+Accepted (2026-10-19, #135).
 
 - **Projects:** `cards-component-demo`
 - **Supersedes:** -
-- **Sources:** `docs/superpowers/specs/2026-10-19-pageturner-shop-realism-design.md`
+- **Sources:** #135, `src/features/embeddedCheckout/store/checkoutStore.ts`
 
 ## Context
 

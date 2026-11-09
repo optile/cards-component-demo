@@ -2,11 +2,11 @@
 
 ## Status
 
-Proposed
+Accepted (2026-10-07, PCPAY-5901, #127).
 
 - **Supersedes:** [ADR-0002](0002-one-checkout-web-instance-for-both-drop-ins.md) (the teardown order only)
 - **Sources:** `src/features/expressCheckout/hooks/useCheckoutSession.ts`, `units/expressElement.ts`
-  (`mountExpressElement`), workspace ADR-0020, PCPAY-5901 / PCPAY-5902
+  (`mountExpressElement`), PCPAY-5901 / PCPAY-5902
 
 ## Context
 
@@ -15,8 +15,8 @@ The extra steps came from the SDK leaving the Express button in place on `remove
 knowing what a teardown mid-payment would do.
 
 The SDK now removes the Express button on `unmount()`, `remove('express')` and `destroy()`, and a payment whose
-charge request was sent still reports through `onSubmitSuccess` / `onSubmitError` after the teardown (workspace
-ADR-0020). `destroy()` unmounts every drop-in and removes every listener, so the steps before it repeat what it
+charge request was sent still reports through `onSubmitSuccess` / `onSubmitError` after the teardown.
+`destroy()` unmounts every drop-in and removes every listener, so the steps before it repeat what it
 already does. Against an SDK without that change, `remove('express')` and `destroy()` both leave the Express
 button in place, so dropping the extra steps changes nothing there.
 

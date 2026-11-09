@@ -12,7 +12,7 @@ resolution_type: config_change
 severity: medium
 tags: [cors, vite-proxy, opg, local-dev]
 related:
-  - projects/cards-component-demo/LOCAL_DEVELOPMENT.md
+  - LOCAL_DEVELOPMENT.md
 ---
 
 # Express lookup blocked by CORS from localhost

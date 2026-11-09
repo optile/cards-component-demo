@@ -1,8 +1,7 @@
 # cards-component-demo - solutions
 
-Single-repo learnings. Cross-repo ones live in the workspace
-[`docs/solutions`](../../../../docs/solutions/README.md). Same format and
-[template](../../../../docs/solutions/TEMPLATE.md).
+Learnings specific to this repo: problem, root cause, fix and prevention. New entries follow the frontmatter of the
+existing ones; `related` paths are relative to the repo root.
 
 ## Index
 
