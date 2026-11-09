@@ -75,6 +75,8 @@ export function useBuyNowExpress(
       return allowRealRedirect;
     },
     onSubmitError: (data, hostIds) => {
+      // A recoverable decline keeps the buyer on the page to retry; returning true lets the SDK show it.
+      if (data.severity === "recoverable_decline") return true;
       setChargeRefs(chargeRefsForOutcome(data, hostIds));
       navigate("/express/failure");
       return false;
