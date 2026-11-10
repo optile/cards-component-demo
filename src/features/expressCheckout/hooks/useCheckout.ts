@@ -49,6 +49,12 @@ export function useCheckout(
       return allowRealRedirect;
     },
     onSubmitError: (data, hostIds) => {
+      // A recoverable decline (failed 3DS, RETRY, TRY_OTHER_*) keeps the buyer on checkout so they can
+      // retry; returning true lets the SDK show its inline error. Only a terminal failure leaves the page.
+      if (data.severity === "recoverable_decline") {
+        if (import.meta.env.DEV) console.log("[checkout] recoverable decline, staying on checkout");
+        return true;
+      }
       setChargeRefs(chargeRefsForOutcome(data, hostIds));
       setOutcome({ kind: "declined", data });
       if (import.meta.env.DEV) console.log("[checkout] submit error/decline (payload redacted)");
